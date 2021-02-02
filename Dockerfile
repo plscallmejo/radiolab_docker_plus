@@ -137,10 +137,10 @@ COPY ["content/license.txt", "/opt/freesurfer-7.1.1/"]
 
 COPY [ "content/ants-Linux-centos6_x86_64-v2.3.4.tar.gz", "/tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz"]
  
-ENV ANTSPATH="/opt/ants-2.3.1" \
-    PATH="/opt/ants-2.3.1:$PATH"
+ENV ANTSPATH="/opt/ants-2.3.4" \
+    PATH="/opt/ants-2.3.4:$PATH"
 RUN echo "Downloading ANTs ..." \
-    && mkdir -p /opt/ants-2.3.1 \
+    && mkdir -p /opt/ants-2.3.4 \
 #     && curl -fsSL --retry 5 https://dl.dropbox.com/s/1xfhydsf4t4qoxg/ants-Linux-centos6_x86_64-v2.3.1.tar.gz \
 #     | tar -xz -C /opt/ants-2.3.1 --strip-components 1 \
     && tar -zxvf /tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz -C /opt/ants-2.3.4 --strip-components 1 \
