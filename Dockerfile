@@ -150,6 +150,11 @@ COPY ["content/linux_openmp_64.tgz", "/tmp/linux_openmp_64.tgz"]
 
 ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
+RUN dpkg --add-architecture amd64
+RUN wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1.2_amd64.deb \
+    && dpkg -i multiarch-support_2.27-3ubuntu1.2_amd64.deb \
+    && rm multiarch-support_2.27-3ubuntu1.2_amd64.deb
+
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            ed \
@@ -183,12 +188,13 @@ RUN apt-get update -qq \
     && if [ -n "$gsl2_path" ]; then \
          ln -sfv "$gsl2_path" "$(dirname $gsl2_path)/libgsl.so.0"; \
     fi \
-    && ldconfig \
-    && echo "Downloading AFNI ..." \
+    && ldconfig 
+
+RUN echo "Downloading AFNI ..." \
     && mkdir -p /opt/afni-latest \
 #     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
 #     | tar -xz -C /opt/afni-latest --strip-components 1 \
-    && tar -xz /tmp/linux_openmp_64.tgz -C /opt/afni-latest --strip-components 1 \
+    && tar -zxvf /tmp/linux_openmp_64.tgz -C /opt/afni-latest --strip-components 1 \
     && PATH=$PATH:/opt/afni-latest rPkgsInstall -pkgs ALL \
     && rm /tmp/linux_openmp_64.tgz
 
@@ -204,13 +210,14 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
-    && sync && conda clean -y --all && sync \
-    && conda create -y -q --name radiolab \
+    && sync && conda clean -y --all && sync 
+
+RUN conda create -y -q --name radiolab \
     && conda install -y -q --name radiolab \
            "numpy" \
            "scipy" \
            "pandas" \
-           "nilean" \
+           "nilearn" \
            "nipype" \
            "matplotlib" \
     && sync && conda clean -y --all && sync
@@ -258,7 +265,7 @@ RUN echo '{ \
     \n          "numpy", \
     \n          "scipy", \
     \n          "pandas", \
-    \n          "nilean", \
+    \n          "nilearn", \
     \n          "nipype" \
     \n          "matplotlib" \
     \n        ] \
