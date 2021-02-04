@@ -26,6 +26,8 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            curl \
            locales \
            unzip \
+	   htop \
+	   bmon \
            shadowsocks-libev \
            simple-obfs \
            proxychains4 \
