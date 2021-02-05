@@ -7,7 +7,7 @@
 # pull request on our GitHub repository:
 #     https://github.com/ReproNim/neurodocker
 
-FROM ubuntu:focal
+FROM nvidia/cuda:9.1-base-ubuntu16.04
 
 USER root
 
@@ -17,8 +17,11 @@ ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
-    && sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list \
-    && apt-get update -qq \
+#    && curl -fsSL https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/7fa2af80.pub | apt-key add - \
+    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+    && sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list 
+    
+RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            apt-utils \
            bzip2 \
@@ -28,13 +31,13 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            unzip \
 	   htop \
 	   bmon \
-           shadowsocks-libev \
-           simple-obfs \
-           proxychains4 \
+	   software-properties-common \
+	   python-software-properties \
+#           simple-obfs \
+#           proxychains4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
-    && sed -i "s/socks4 	127.0.0.1 9050/socks5 127.0.0.1 1080/g" /etc/proxychains4.conf \
     && dpkg-reconfigure --frontend=noninteractive locales \
     && update-locale LANG="en_US.UTF-8" \
     && chmod 777 /opt && chmod a+s /opt \
@@ -46,6 +49,43 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
+    
+RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+	    shadowsocks-libev \
+	    build-essential \
+	    autoconf \
+	    libtool \
+	    libssl-dev \
+	    libpcre3-dev \
+	    libc-ares-dev \
+	    libev-dev \
+	    asciidoc \
+	    xmlto \
+	    automake \
+	    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
+
+RUN git clone https://github.com/shadowsocks/simple-obfs.git \
+    && cd simple-obfs \
+    && git submodule update --init --recursive \
+    && ./autogen.sh \
+    && ./configure \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf simple-obfs 
+    
+RUN git clone https://github.com/rofl0r/proxychains-ng.git \
+    && cd proxychains-ng \
+    && ./configure --prefix=/usr --sysconfdir=/etc \
+    && make \
+    && make install \
+    && make install-config \
+    && cd .. \
+    && rm -rf proxychains-ng 
 
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
@@ -98,7 +138,7 @@ RUN echo "Installing FSL ..." \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT \
     && echo "Installing FSL conda environment ..." \
-    && proxychains bash /opt/fsl-6.0.4/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.4 \
+    && proxychains4 bash /opt/fsl-6.0.4/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.4 \
     && rm /tmp/fsl-6.0.4-centos7_64.tar.gz
 
 COPY ["content/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz", "/tmp/"]
@@ -152,10 +192,10 @@ COPY ["content/linux_openmp_64.tgz", "/tmp/linux_openmp_64.tgz"]
 
 ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
-RUN dpkg --add-architecture amd64
-RUN wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1.2_amd64.deb \
-    && dpkg -i multiarch-support_2.27-3ubuntu1.2_amd64.deb \
-    && rm multiarch-support_2.27-3ubuntu1.2_amd64.deb
+# RUN dpkg --add-architecture amd64
+# RUN wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1.2_amd64.deb \
+#     && dpkg -i multiarch-support_2.27-3ubuntu1.2_amd64.deb \
+#     && rm multiarch-support_2.27-3ubuntu1.2_amd64.deb
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -229,7 +269,7 @@ RUN echo '{ \
     \n  "instructions": [ \
     \n    [ \
     \n      "base", \
-    \n      "debian:stretch" \
+    \n      "nvidia/cuda:9.1-base-ubuntu16.04" \
     \n    ], \
     \n    [ \
     \n      "fsl", \
