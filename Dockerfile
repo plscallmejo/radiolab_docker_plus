@@ -267,6 +267,9 @@ RUN conda create -y -q --name radiolab \
            "matplotlib" \
     && sync && conda clean -y --all && sync
 
+RUN rm /etc/proxychains.conf \
+    && rm /etc/shadowsocks.json
+
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
     \n  "instructions": [ \
