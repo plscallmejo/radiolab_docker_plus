@@ -7,7 +7,7 @@
 # pull request on our GitHub repository:
 #     https://github.com/ReproNim/neurodocker
 
-FROM nvidia/cuda:9.1-base-ubuntu16.04
+FROM nvidia/cuda:9.1-runtime-ubuntu16.04
 
 USER root
 
@@ -197,8 +197,11 @@ ENV PATH="/opt/afni-latest:$PATH" \
 #     && dpkg -i multiarch-support_2.27-3ubuntu1.2_amd64.deb \
 #     && rm multiarch-support_2.27-3ubuntu1.2_amd64.deb
 
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list \
+    && sed -i "s/mirrors.aliyun.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends --fix-missing \
            ed \
            gsl-bin \
            libglib2.0-0 \
@@ -220,9 +223,9 @@ RUN apt-get update -qq \
     && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
     && dpkg -i /tmp/toinstall.deb \
     && rm /tmp/toinstall.deb \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
+#    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
+#    && dpkg -i /tmp/toinstall.deb \
+#    && rm /tmp/toinstall.deb \
     && apt-get install -f \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
