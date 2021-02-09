@@ -257,8 +257,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync 
 
-RUN conda create -y -q --name radiolab \
-    && conda install -y -q --name radiolab \
+RUN conda install -y -q --name radiolab \
            "numpy" \
            "scipy" \
            "pandas" \
@@ -273,6 +272,32 @@ RUN rm /etc/proxychains.conf \
 RUN groupadd --gid 1001 radiolab \
     && useradd --home-dir /home/radiolab --create-home --uid 1001 \
         --gid 1001 --shell /bin/bash --skel /dev/null radiolab
+
+USER radiolab
+
+ENV LANG="en_US.UTF-8" \
+    LC_ALL="en_US.UTF-8" \
+    ND_ENTRYPOINT="/neurodocker/startup.sh"
+
+ENV FSLDIR="/opt/fsl-6.0.4" \
+    PATH="/opt/fsl-6.0.4/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl-6.0.4/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.4/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL="" \
+    FSLGECUDAQ="cuda.q"
+
+ENV FREESURFER_HOME="/opt/freesurfer-7.1.1" \
+    PATH="/opt/freesurfer-7.1.1/bin:$PATH"
+
+ENV ANTSPATH="/opt/ants-2.3.4" \
+    PATH="/opt/ants-2.3.4:$PATH"
+
+ENV CONDA_DIR="/opt/miniconda-latest" \
+    PATH="/opt/miniconda-latest/bin:$PATH"
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
