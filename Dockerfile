@@ -270,6 +270,10 @@ RUN conda create -y -q --name radiolab \
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
+RUN groupadd --gid 5000 radiolab \
+    && useradd --home-dir /home/radiolab --create-home --uid 5000 \
+        --gid 5000 --shell /bin/bash --skel /dev/null radiolab
+
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
     \n  "instructions": [ \
