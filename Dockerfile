@@ -7,7 +7,11 @@
 # pull request on our GitHub repository:
 #     https://github.com/ReproNim/neurodocker
 
-FROM nvidia/cuda:9.1-runtime-ubuntu16.04
+FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
+ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
 USER root
 
@@ -17,7 +21,6 @@ ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
-#    && curl -fsSL https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/7fa2af80.pub | apt-key add - \
     && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
     && sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list 
     
@@ -29,10 +32,11 @@ RUN apt-get update -qq \
            curl \
            locales \
            unzip \
-	   htop \
-	   bmon \
-	   software-properties-common \
-	   python-software-properties \
+    	   htop \
+    	   bmon \
+    	   software-properties-common \
+    	   python-software-properties \
+           vi \
 #           simple-obfs \
 #           proxychains4 \
     && apt-get clean \
@@ -257,7 +261,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync 
 
-RUN conda install -y -q --name radiolab \
+RUN conda install -y -q \
            "numpy" \
            "scipy" \
            "pandas" \
@@ -269,35 +273,34 @@ RUN conda install -y -q --name radiolab \
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
-RUN groupadd --gid 1001 radiolab \
-    && useradd --home-dir /home/radiolab --create-home --uid 1001 \
-        --gid 1001 --shell /bin/bash --skel /dev/null radiolab
-
-USER radiolab
-
-ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8" \
-    ND_ENTRYPOINT="/neurodocker/startup.sh"
-
-ENV FSLDIR="/opt/fsl-6.0.4" \
-    PATH="/opt/fsl-6.0.4/bin:$PATH" \
-    FSLOUTPUTTYPE="NIFTI_GZ" \
-    FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl-6.0.4/bin/fsltclsh" \
-    FSLWISH="/opt/fsl-6.0.4/bin/fslwish" \
-    FSLLOCKDIR="" \
-    FSLMACHINELIST="" \
-    FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q"
-
-ENV FREESURFER_HOME="/opt/freesurfer-7.1.1" \
-    PATH="/opt/freesurfer-7.1.1/bin:$PATH"
-
-ENV ANTSPATH="/opt/ants-2.3.4" \
-    PATH="/opt/ants-2.3.4:$PATH"
-
-ENV CONDA_DIR="/opt/miniconda-latest" \
-    PATH="/opt/miniconda-latest/bin:$PATH"
+RUN sed -i '$iif [[ -n ${OUSER} && -n ${OGID} && -n ${OUID} ]]; then' $ND_ENTRYPOINT \
+    && sed -i '$i   echo "Creating a $OUSER user with current GID and UID";' $ND_ENTRYPOINT \
+    && sed -i '$i   groupadd --gid $OGID $OUSER;' $ND_ENTRYPOINT \
+    && sed -i '$i   useradd --home-dir /home/$OUSER --create-home --uid $OUID \\' $ND_ENTRYPOINT \
+    && sed -i '$i   --gid $OGID --shell /bin/bash $OUSER;' $ND_ENTRYPOINT \
+    && sed -i '$i   USER_HOME_ENV="/home/$OUSER/.bashrc"' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'LANG="en_US.UTF-8"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'LC_ALL="en_US.UTF-8"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLDIR="/opt/fsl-6.0.4"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'PATH="/opt/fsl-6.0.4/bin:$PATH"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLOUTPUTTYPE="NIFTI_GZ"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLMULTIFILEQUIT="TRUE"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLTCLSH="/opt/fsl-6.0.4/bin/fsltclsh"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLWISH="/opt/fsl-6.0.4/bin/fslwish"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLLOCKDIR=""' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLMACHINELIST=""' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLREMOTECALL=""' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FSLGECUDAQ="cuda.q"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'FREESURFER_HOME="/opt/freesurfer-7.1.1"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'PATH="/opt/freesurfer-7.1.1/bin:$PATH"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'ANTSPATH="/opt/ants-2.3.4"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'PATH="/opt/ants-2.3.4:$PATH"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'CONDA_DIR="/opt/miniconda-latest"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   echo 'PATH="/opt/miniconda-latest/bin:$PATH"' >> $USER_HOME_ENV' $ND_ENTRYPOINT \
+    && sed -i '$i   su ${OUSER}' $ND_ENTRYPOINT \
+    && sed -i '$ielse' $ND_ENTRYPOINT \
+    && sed -i '$i   echo "Be Caution! Using root!";' $ND_ENTRYPOINT \
+    && sed -i '$ifi' $ND_ENTRYPOINT
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
@@ -337,7 +340,6 @@ RUN echo '{ \
     \n      "miniconda", \
     \n      { \
     \n        "version": "latest", \
-    \n        "create_env": "radiolab", \
     \n        "conda_install": [ \
     \n          "numpy", \
     \n          "scipy", \
