@@ -36,7 +36,7 @@ RUN apt-get update -qq \
     	   bmon \
     	   software-properties-common \
     	   python-software-properties \
-           vi \
+           vim \
 #           simple-obfs \
 #           proxychains4 \
     && apt-get clean \
