@@ -283,7 +283,7 @@ RUN apt-get update -qq \
         zsh \
         tmux \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* 
 
 RUN sed -i '$iif [[ -n ${OUSER} && -n ${OGID} && -n ${OUID} ]]; then' $ND_ENTRYPOINT \
     && sed -i '$i   echo "Creating a $OUSER user with current GID and UID";' $ND_ENTRYPOINT \
