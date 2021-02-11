@@ -7,11 +7,12 @@
 # pull request on our GitHub repository:
 #     https://github.com/ReproNim/neurodocker
 
-FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
+# FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
+FROM ubuntu:16.04
 
 # nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+# ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
+# ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
 USER root
 
@@ -21,7 +22,7 @@ ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+#    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
     && sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list 
     
 RUN apt-get update -qq \
@@ -201,7 +202,11 @@ ENV PATH="/opt/afni-latest:$PATH" \
 #     && dpkg -i multiarch-support_2.27-3ubuntu1.2_amd64.deb \
 #     && rm multiarch-support_2.27-3ubuntu1.2_amd64.deb
 
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list \
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends --fix-missing \
+        apt-transport-https \
+        ca-certificates \
+    && echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list \
     && sed -i "s/mirrors.aliyun.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && apt-get update -qq \
