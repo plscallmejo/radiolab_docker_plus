@@ -273,6 +273,13 @@ RUN conda install -y -q \
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends --fix-missing \
+        zsh \
+        tmux \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+
 RUN sed -i '$iif [[ -n ${OUSER} && -n ${OGID} && -n ${OUID} ]]; then' $ND_ENTRYPOINT \
     && sed -i '$i   echo "Creating a $OUSER user with current GID and UID";' $ND_ENTRYPOINT \
     && sed -i '$i   groupadd --gid $OGID $OUSER;' $ND_ENTRYPOINT \
