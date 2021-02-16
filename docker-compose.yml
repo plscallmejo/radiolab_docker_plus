@@ -6,7 +6,8 @@ services:
         working_dir: $HOME
         stdin_open: true
         environment:
-            - DISPLAY:$DISPLAY
+            - DISPLAY=$DISPLAY
+            - USER=$USER
         volumes:
             - $HOME:$HOME
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
