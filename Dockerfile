@@ -15,7 +15,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" 
 RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list 
     
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
