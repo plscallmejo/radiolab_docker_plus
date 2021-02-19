@@ -2,12 +2,10 @@ version: '2.3'
 services:
     radiolab_flow:
         image: radiolab:latest
-        runtime: nvidia
         user: $CURRENT_UID
         working_dir: $HOME
         stdin_open: true
         environment:
-            - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=$DISPLAY
             - FSLPARALLEL=1
             - USER=$USER
