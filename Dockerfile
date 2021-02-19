@@ -202,11 +202,11 @@ COPY ["content/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz", "/tmp/"]
 COPY ["content/license.txt", "/tmp/"]
 ENV FREESURFER_HOME="/opt/freesurfer-7.1.1" \
     PATH="/opt/freesurfer-7.1.1/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
+# RUN apt-get update -qq \
+#     && apt-get install -y -q --no-install-recommends \
+#            qt5-default \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/* 
 RUN echo "Installing FreeSurfer ..." \
     && mkdir -p /opt/freesurfer-7.1.1 \
 #    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-Linux-centos6_x86_64-stable-pub-v7.1.1.tar.gz \
