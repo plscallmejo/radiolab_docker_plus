@@ -231,6 +231,14 @@ RUN rm /etc/proxychains.conf \
 COPY ["content/fsl_sub", "/opt/fsl-6.0.4/bin/fsl_sub"]
 RUN chmod a+x /opt/fsl-6.0.4/bin/fsl_sub
 
+ENV QT_X11_NO_MITSHM=1
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           python-qt4 \
+           libgtk2.0-0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT \
     && echo '{ \
