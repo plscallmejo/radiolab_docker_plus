@@ -35,6 +35,7 @@ RUN apt-get update -qq \
     	   python-software-properties \
            tmux \
            vim \
+           firefox \
            bc \
            dc \
            file \
@@ -227,6 +228,9 @@ RUN echo "Installing ANTs ..." \
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
+COPY ["content/fsl_sub", "/opt/fsl-6.0.4/bin/fsl_sub"]
+RUN chmod a+x /opt/fsl-6.0.4/bin/fsl_sub
+
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT \
     && echo '{ \
@@ -261,20 +265,6 @@ RUN chmod 755 /radiolabdocker/startup.sh \
     \n        "install_r": "true", \
     \n        "install_r_pkgs": "true", \
     \n        "install_python3": "true" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "miniconda", \
-    \n      { \
-    \n        "version": "latest", \
-    \n        "conda_install": [ \
-    \n          "numpy", \
-    \n          "scipy", \
-    \n          "pandas", \
-    \n          "nilearn", \
-    \n          "nipype" \
-    \n          "matplotlib" \
-    \n        ] \
     \n      } \
     \n    ] \
     \n  ] \
