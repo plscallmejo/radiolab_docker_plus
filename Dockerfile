@@ -17,6 +17,11 @@ FROM ubuntu:16.04 AS ubuntu-xenial-intel
 ENV NV_RUNTIME=FALSE
 ENV BASE="ubuntu:16.04"
 RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           qt5-default \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
 
 FROM ubuntu-xenial-${RUNTIME}
 
@@ -31,12 +36,6 @@ ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="2.3.4"
-
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -76,8 +75,6 @@ RUN apt-get update -qq \
            libgomp1 \
            libxmu6 \
            libxt6 \
-           python-qt4 \
-           libgtk2.0-0 \
            perl \
            tcsh \
     && apt-get clean \
@@ -203,6 +200,12 @@ RUN echo "Installing AFNI ..." \
     && tar -zxvf /tmp/linux_ubuntu_16_64.tgz -C /opt/afni --strip-components 1 \
     && rm /tmp/linux_ubuntu_16_64.tgz \
     && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL 
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           python-qt4 \
+           libgtk2.0-0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
 
 COPY ["content/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz", "/tmp/"]
 COPY ["content/license.txt", "/tmp/"]
