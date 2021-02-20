@@ -17,11 +17,6 @@ FROM ubuntu:16.04 AS ubuntu-xenial-intel
 ENV NV_RUNTIME=FALSE
 ENV BASE="ubuntu:16.04"
 RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
 
 FROM ubuntu-xenial-${RUNTIME}
 
@@ -36,6 +31,12 @@ ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="2.3.4"
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           qt5-default \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -212,7 +213,7 @@ RUN echo "Installing FreeSurfer ..." \
 #    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
 #     | tar -xz -C /opt/freesurfer --strip-components 1 \
     && tar -zxvf /tmp/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz -C /opt/freesurfer --strip-components 1 \
-    && sed -i '$isource "/opt/freesurfer-7.1.1/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" \
     && mv /tmp/license.txt /opt/freesurfer/ \
     && rm /tmp/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
 
