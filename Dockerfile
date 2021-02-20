@@ -192,7 +192,8 @@ RUN chmod a+x /opt/fsl/bin/fsl_sub
 
 COPY ["content/linux_ubuntu_16_64.tgz", "/tmp/linux_ubuntu_16_64.tgz"]
 ENV PATH="/opt/afni:$PATH" \
-    AFNI_PLUGINPATH="/opt/afni"
+    AFNI_PLUGINPATH="/opt/afni"\
+    QT_X11_NO_MITSHM=1
 RUN echo "Installing AFNI ..." \
     && mkdir -p /opt/afni \
 #     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz \
