@@ -194,6 +194,15 @@ COPY ["content/linux_ubuntu_16_64.tgz", "/tmp/linux_ubuntu_16_64.tgz"]
 ENV PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
     QT_X11_NO_MITSHM=1
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           python-qt4 \
+           libgtk2.0-0 \
+           libcurl4-openssl-dev \
+           libxml2-dev \
+           libudunits2-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
 RUN echo "Installing AFNI ..." \
     && mkdir -p /opt/afni \
 #     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz \
@@ -201,12 +210,6 @@ RUN echo "Installing AFNI ..." \
     && tar -zxvf /tmp/linux_ubuntu_16_64.tgz -C /opt/afni --strip-components 1 \
     && rm /tmp/linux_ubuntu_16_64.tgz \
     && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL 
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           python-qt4 \
-           libgtk2.0-0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
 
 COPY ["content/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz", "/tmp/"]
 COPY ["content/license.txt", "/tmp/"]
