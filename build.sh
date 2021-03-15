@@ -31,6 +31,7 @@ if [[ ! -n ${RUNTIME} ]]; then
     echo -e "${WARNING}: no ${hint}-r${normal} (RUNTIME) option was supplied, so automatically setting to \"${hint}intel${normal}\""
     RUNTIME="intel"
 fi
+echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
 if [[ ${RUNTIME} = "nvidia" ]]; then
 echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
 echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
@@ -42,6 +43,28 @@ ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
 ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
     && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list'  > build/base/Dockerfile
+echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
+echo '# docker-compose.yml that uses nvidia runtime
+version: '2.3'
+services:
+    radiolab_flow:
+        image: radiolab:latest
+        runtime: nvidia
+        user: $CURRENT_UID
+        working_dir: $HOME
+        stdin_open: true
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=all
+            - FSLPARALLEL=1
+            - DISPLAY=$DISPLAY
+            - USER=$USER
+        volumes:
+            - $HOME:$HOME
+            - /tmp/.X11-unix:/tmp/.X11-unix:rw
+            - /etc/group:/etc/group:ro
+            - /etc/passwd:/etc/passwd:ro
+            - /etc/shadow:/etc/shadow:ro
+        tty: true' > docker-compose.yml
 elif [[ ${RUNTIME} = "intel" ]]; then
 echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
 echo '#ubuntu:16.04
@@ -55,6 +78,26 @@ RUN apt-get update -qq \
            qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
+echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
+echo '# docker-compose.yml that use intel
+version: '2.3'
+services:
+    radiolab_flow:
+        image: radiolab:latest
+        user: $CURRENT_UID
+        working_dir: $HOME
+        stdin_open: true
+        environment:
+            - FSLPARALLEL=1
+            - DISPLAY=$DISPLAY
+            - USER=$USER
+        volumes:
+            - $HOME:$HOME
+            - /tmp/.X11-unix:/tmp/.X11-unix:rw
+            - /etc/group:/etc/group:ro
+            - /etc/passwd:/etc/passwd:ro
+            - /etc/shadow:/etc/shadow:ro
+        tty: true' > docker-compose.yml
 else
 echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}intel${normal}\" or \"${hint}nvidia${normal}\""
 exit 1

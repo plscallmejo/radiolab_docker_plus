@@ -229,6 +229,7 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN echo "Installing MRtrix3 ..." \
+    $$ cd /opt \
     && git clone https://github.com/MRtrix3/mrtrix3.git \
     && cd mrtrix3 \
     && ./configure \
@@ -249,11 +250,12 @@ ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="2.3.4" \
-    ANTS_UPDATE="2021-03-15" \
     MRTRIX3_VERSION="latest-git" \
-    FSL_UPDATE="2021-03-15" \
+
+ENV FSL_UPDATE="2021-03-15" \
     AFNI_UPDATE="2021-03-15" \
     FREESURFER_UPDATE="2021-03-15" \
+    ANTS_UPDATE="2021-03-15" \
     MRTRIX3_UPDATE="2021-03-15"
 
 RUN chmod 755 /radiolabdocker/startup.sh \
