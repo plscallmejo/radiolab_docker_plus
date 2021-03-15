@@ -32,7 +32,7 @@ if [[ ! -n ${RUNTIME} ]]; then
     RUNTIME="intel"
 fi
 if [[ ${RUNTIME} = "nvidia" ]]; then
-echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal}\ with \"${hint}nvidia runtime${normal}\" support"
+echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
 echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
 FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
 # nvidia-container-runtime
