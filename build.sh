@@ -45,7 +45,7 @@ RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/source
     && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list'  > build/base/Dockerfile
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
 echo '# docker-compose.yml that uses nvidia runtime
-version: '2.3'
+version: "2.3"
 services:
     radiolab_flow:
         image: radiolab:latest
@@ -80,7 +80,7 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
 echo '# docker-compose.yml that use intel
-version: '2.3'
+version: "2.3"
 services:
     radiolab_flow:
         image: radiolab:latest

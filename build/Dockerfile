@@ -229,9 +229,8 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN echo "Installing MRtrix3 ..." \
-    $$ cd /opt \
-    && git clone https://github.com/MRtrix3/mrtrix3.git \
-    && cd mrtrix3 \
+    && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
+    && cd /opt/mrtrix3 \
     && ./configure \
     && ./build
 
@@ -241,16 +240,16 @@ RUN echo "Installing MRtrix3 ..." \
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
-RUN apt-get update -qq \
-    && apt-get upgrade -qq \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update -qq \
+#     && apt-get upgrade -qq \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
 
 ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="2.3.4" \
-    MRTRIX3_VERSION="latest-git" \
+    MRTRIX3_VERSION="latest-git"
 
 ENV FSL_UPDATE="2021-03-15" \
     AFNI_UPDATE="2021-03-15" \
