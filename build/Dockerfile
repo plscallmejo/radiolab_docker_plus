@@ -212,24 +212,49 @@ RUN echo "Installing ANTs ..." \
     && tar -zxvf /tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz -C /opt/ants --strip-components 1 \
     && rm /tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz
 
-RUN rm /etc/proxychains.conf \
-    && rm /etc/shadowsocks.json
-
-COPY ["content/fsl_sub", "/opt/fsl-6.0.4/bin/fsl_sub"]
-RUN chmod a+x /opt/fsl-6.0.4/bin/fsl_sub
-
-ENV QT_X11_NO_MITSHM=1
 RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           python-qt4 \
-           libgtk2.0-0 \
+    && apt-get install  -y -q --no-install-recommends \
+        git \
+        g++ \
+        python \
+        qt5-default \
+        libeigen3-dev \
+        zlib1g-dev \
+        libqt5opengl5-dev \
+        libqt5svg5-dev \
+        libgl1-mesa-dev \
+        libfftw3-dev \
+        libtiff5-dev \
+        libpng-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+RUN echo "Installing MRtrix3 ..." \
+    && git clone https://github.com/MRtrix3/mrtrix3.git \
+    && cd mrtrix3 \
+    && ./configure \
+    && ./build
+
+####################
+#### Post Build ####
+####################
+RUN rm /etc/proxychains.conf \
+    && rm /etc/shadowsocks.json
 
 RUN apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+ENV FSL_VERSION="6.0.4" \
+    AFNI_VERSION="ubuntu_16_64" \
+    FREESURFER_VERSION="7.1.1" \
+    ANTS_VERSION="2.3.4" \
+    ANTS_UPDATE="2021-03-15" \
+    MRTRIX3_VERSION="latest-git" \
+    FSL_UPDATE="2021-03-15" \
+    AFNI_UPDATE="2021-03-15" \
+    FREESURFER_UPDATE="2021-03-15" \
+    MRTRIX3_UPDATE="2021-03-15"
 
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT \
@@ -266,5 +291,11 @@ RUN chmod 755 /radiolabdocker/startup.sh \
     \n        "install_r_pkgs": "true" \
     \n      } \
     \n    ] \
+    \n    [ \
+    \n      "MRtrix3", \
+    \n      { \
+    \n        "version": "latest-release" \
+    \n      } \
+    \n    ], \
     \n  ] \
     \n}' > /radiolabdocker/radiolabdocker_specs.json
