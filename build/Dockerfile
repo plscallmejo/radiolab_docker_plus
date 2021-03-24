@@ -178,6 +178,7 @@ RUN apt-get update -qq \
            libgtk2.0-0 \
            libcurl4-openssl-dev \
            libxml2-dev \
+	   libv8-dev \
            libudunits2-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
