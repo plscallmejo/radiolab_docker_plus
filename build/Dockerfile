@@ -202,18 +202,36 @@ RUN echo "Installing FreeSurfer ..." \
     && mv /tmp/license.txt /opt/freesurfer/ \
     && rm /tmp/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
 
-COPY ["content/ants-Linux-centos6_x86_64-v2.3.4.tar.gz", "/tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz"]
-ENV ANTSPATH="/opt/ants" \
-    PATH="/opt/ants:$PATH"
+RUN mkdir /tmp/cmake \
+    && cd /tmp/cmake \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.20.0-rc5/cmake-3.20.0-rc5.tar.gz \
+    && tar -zxvf /tmp/cmake/cmake-3.20.0-rc5.tar.gz -C /tmp/cmake --strip-components 1 \
+    && ./bootstrap --prefix=/opt/cmake \
+    && make -j 6 \
+    && make install \
+    && ln -s /opt/cmake/bin/cmake /usr/bin/cmake && cd /opt \
+    && rm -r /tmp/cmake
+ENV ANTSPATH="/opt/ants/bin" \
+    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
 RUN echo "Installing ANTs ..." \
-    && mkdir -p /opt/ants \
-#     && curl -fsSL --retry 5 https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz \
-#     | tar -xz -C /opt/ants --strip-components 1 \
-    && tar -zxvf /tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz -C /opt/ants --strip-components 1 \
-    && rm /tmp/ants-Linux-centos6_x86_64-v2.3.4.tar.gz
+    && mkdir -p /tmp/ants-build/build \
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+    && git config --global http.proxy 'socks5://127.0.0.1:1080' \
+    && git config --global https.proxy 'socks5://127.0.0.1:1080' \
+    && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
+    && cd /tmp/ants-build/build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && make -j 6 2>&1 \
+    && cd ANTS-build \
+    && make install 2>&1 \
+    && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
+    && rm -r /tmp/ants-build \
+    && git config --global --unset http.proxy \
+    && git config --global --unset https.proxy
 
 RUN apt-get update -qq \
     && apt-get install  -y -q --no-install-recommends \
+        pexec \
         git \
         g++ \
         python \
@@ -228,8 +246,10 @@ RUN apt-get update -qq \
         libpng-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+ENV MRTRIX3PATH="/opt/mrtrix3" \
+    PATH="/opt/mrtrix3/bin:$PATH"
 RUN echo "Installing MRtrix3 ..." \
-    && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
+    && git clone https://github.com.cnpmjs.org/MRtrix3/mrtrix3.git /opt/mrtrix3 \
     && cd /opt/mrtrix3 \
     && ./configure \
     && ./build
@@ -248,13 +268,13 @@ RUN rm /etc/proxychains.conf \
 ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
-    ANTS_VERSION="2.3.4" \
+    ANTS_VERSION="latest-git" \
     MRTRIX3_VERSION="latest-git"
 
 ENV FSL_UPDATE="2021-03-15" \
     AFNI_UPDATE="2021-03-15" \
     FREESURFER_UPDATE="2021-03-15" \
-    ANTS_UPDATE="2021-03-15" \
+    ANTS_UPDATE="2021-03-23" \
     MRTRIX3_UPDATE="2021-03-15"
 
 RUN chmod 755 /radiolabdocker/startup.sh \
