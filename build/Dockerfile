@@ -10,11 +10,6 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" 
     
-ENV FSL_VERSION="6.0.4" \
-    AFNI_VERSION="ubuntu_16_64" \
-    FREESURFER_VERSION="7.1.1" \
-    ANTS_VERSION="2.3.4"
-
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            apt-utils \
@@ -79,22 +74,24 @@ ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
 RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository -y ppa:ubuntugis/ppa \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            ed \
+           gdal-bin \
            gsl-bin \
+           libgdal-dev \
+           libgsl-dev \
            libglib2.0-0 \
-           libglu1-mesa-dev \
            libglw1-mesa \
-           libgomp1 \
            libjpeg62 \
            libnlopt-dev \
            libxm4 \
            netpbm \
+           mpi-default-dev \
            python3 \
            r-base \
            r-base-dev \
-           tcsh \
            xfonts-base \
            xvfb \
     && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
@@ -102,6 +99,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /e
     && rm /tmp/toinstall.deb \
     && apt-get install -f \
     && apt-get clean \
+    && echo 'options(Ncpus = 6L)' > /root/.Rprofile \
     && rm -rf /var/lib/apt/lists/* 
     
 RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
@@ -121,7 +119,8 @@ RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
 	    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
-RUN git clone https://github.com/shadowsocks/simple-obfs.git \
+RUN git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+    && git clone https://github.com/shadowsocks/simple-obfs.git \
     && cd simple-obfs \
     && git submodule update --init --recursive \
     && ./autogen.sh \
@@ -155,7 +154,7 @@ ENV FSLDIR="/opt/fsl" \
 RUN echo "Installing FSL ..." \
     && mkdir /opt/fsl \
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-#    && proxychains4 curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.4-centos7_64.tar.gz \
+#    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.4-centos7_64.tar.gz \
 #     | tar -xz -C /opt/fsl --strip-components 1 \
     && tar -xzvf /tmp/fsl-6.0.4-centos7_64.tar.gz -C /opt/fsl --strip-components 1 \
     && rm /tmp/fsl-6.0.4-centos7_64.tar.gz \
@@ -178,7 +177,7 @@ RUN apt-get update -qq \
            libgtk2.0-0 \
            libcurl4-openssl-dev \
            libxml2-dev \
-	   libv8-dev \
+           libv8-dev \
            libudunits2-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
@@ -232,16 +231,14 @@ RUN echo "Installing ANTs ..." \
 
 RUN apt-get update -qq \
     && apt-get install  -y -q --no-install-recommends \
+        parallel \
         pexec \
-        git \
-        g++ \
         python \
         qt5-default \
         libeigen3-dev \
         zlib1g-dev \
         libqt5opengl5-dev \
         libqt5svg5-dev \
-        libgl1-mesa-dev \
         libfftw3-dev \
         libtiff5-dev \
         libpng-dev \
@@ -250,7 +247,7 @@ RUN apt-get update -qq \
 ENV MRTRIX3PATH="/opt/mrtrix3" \
     PATH="/opt/mrtrix3/bin:$PATH"
 RUN echo "Installing MRtrix3 ..." \
-    && git clone https://github.com.cnpmjs.org/MRtrix3/mrtrix3.git /opt/mrtrix3 \
+    && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
     && cd /opt/mrtrix3 \
     && ./configure \
     && ./build
@@ -270,13 +267,15 @@ ENV FSL_VERSION="6.0.4" \
     AFNI_VERSION="ubuntu_16_64" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="latest-git" \
-    MRTRIX3_VERSION="latest-git"
+    MRTRIX3_VERSION="latest-git" \
+    CMAKE_VERSION="latest-git"
 
 ENV FSL_UPDATE="2021-03-15" \
     AFNI_UPDATE="2021-03-15" \
     FREESURFER_UPDATE="2021-03-15" \
     ANTS_UPDATE="2021-03-23" \
-    MRTRIX3_UPDATE="2021-03-15"
+    MRTRIX3_UPDATE="2021-03-15" \
+    CMAKE_UPDATE="2021-03-23"
 
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT \
