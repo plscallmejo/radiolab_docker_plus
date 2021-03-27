@@ -179,9 +179,11 @@ RUN apt-get update -qq \
            libxml2-dev \
            libv8-dev \
            libudunits2-dev \
+           openmpi-bin \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
 RUN echo "Installing AFNI ..." \
+    && echo 'options(repos = structure(c(CRAN="https://mirrors.ustc.edu.cn/CRAN/")))' >> /root/.Rprofile \
     && mkdir -p /opt/afni \
 #     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz \
 #     | tar -xz -C /opt/afni --strip-components 1 \
@@ -216,18 +218,14 @@ ENV ANTSPATH="/opt/ants/bin" \
 RUN echo "Installing ANTs ..." \
     && mkdir -p /tmp/ants-build/build \
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-    && git config --global http.proxy 'socks5://127.0.0.1:1080' \
-    && git config --global https.proxy 'socks5://127.0.0.1:1080' \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
     && cd /tmp/ants-build/build \
-    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && proxychains4 cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
     && make -j 6 2>&1 \
     && cd ANTS-build \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
-    && rm -r /tmp/ants-build \
-    && git config --global --unset http.proxy \
-    && git config --global --unset https.proxy
+    && rm -r /tmp/ants-build 
 
 RUN apt-get update -qq \
     && apt-get install  -y -q --no-install-recommends \
@@ -268,7 +266,7 @@ ENV FSL_VERSION="6.0.4" \
     FREESURFER_VERSION="7.1.1" \
     ANTS_VERSION="latest-git" \
     MRTRIX3_VERSION="latest-git" \
-    CMAKE_VERSION="latest-git"
+    CMAKE_VERSION="v3.20.0-rc5"
 
 ENV FSL_UPDATE="2021-03-15" \
     AFNI_UPDATE="2021-03-15" \
