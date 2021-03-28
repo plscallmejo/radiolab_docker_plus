@@ -99,7 +99,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /e
     && rm /tmp/toinstall.deb \
     && apt-get install -f \
     && apt-get clean \
-    && echo 'options(Ncpus = 6L)' > /root/.Rprofile \
+    && echo 'options(Ncpus = 24L)' > /root/.Rprofile \
     && rm -rf /var/lib/apt/lists/* 
     
 RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
@@ -209,7 +209,7 @@ RUN mkdir /tmp/cmake \
     && wget https://github.com/Kitware/CMake/releases/download/v3.20.0-rc5/cmake-3.20.0-rc5.tar.gz \
     && tar -zxvf /tmp/cmake/cmake-3.20.0-rc5.tar.gz -C /tmp/cmake --strip-components 1 \
     && ./bootstrap --prefix=/opt/cmake \
-    && make -j 6 \
+    && make -j 24 \
     && make install \
     && ln -s /opt/cmake/bin/cmake /usr/bin/cmake && cd /opt \
     && rm -r /tmp/cmake
@@ -221,7 +221,7 @@ RUN echo "Installing ANTs ..." \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
     && cd /tmp/ants-build/build \
     && proxychains4 cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
-    && make -j 6 2>&1 \
+    && make -j 24 2>&1 \
     && cd ANTS-build \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \

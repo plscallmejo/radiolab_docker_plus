@@ -28,8 +28,8 @@ done
 mkdir -p build/base
 touch build/base/Dockerfile
 if [[ ! -n ${RUNTIME} ]]; then
-    echo -e "${WARNING}: no ${hint}-r${normal} (RUNTIME) option was supplied, so automatically setting to \"${hint}intel${normal}\""
-    RUNTIME="intel"
+    echo -e "${WARNING}: no ${hint}-r${normal} (RUNTIME) option was supplied, so automatically setting to \"${hint}normal${normal}\" Runtime."
+    RUNTIME="normal"
 fi
 echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
 if [[ ${RUNTIME} = "nvidia" ]]; then
@@ -51,7 +51,8 @@ services:
         image: radiolab:latest
         runtime: nvidia
         user: $CURRENT_UID
-        working_dir: $HOME
+        working_dir: /DATA
+        container_name: radiolab_docker
         stdin_open: true
         environment:
             - NVIDIA_VISIBLE_DEVICES=all
@@ -60,12 +61,13 @@ services:
             - USER=$USER
         volumes:
             - $HOME:$HOME
+            - $DATA:/DATA
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
             - /etc/shadow:/etc/shadow:ro
         tty: true' > docker-compose.yml
-elif [[ ${RUNTIME} = "intel" ]]; then
+elif [[ ${RUNTIME} = "normal" ]]; then
 echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
 echo '#ubuntu:16.04
 FROM ubuntu:16.04
@@ -79,13 +81,14 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
-echo '# docker-compose.yml that use intel
+echo '# docker-compose.yml that use normal
 version: "2.3"
 services:
     radiolab_flow:
         image: radiolab:latest
         user: $CURRENT_UID
-        working_dir: $HOME
+        working_dir: /DATA
+        container_name: radiolab_docker
         stdin_open: true
         environment:
             - FSLPARALLEL=1
@@ -93,13 +96,14 @@ services:
             - USER=$USER
         volumes:
             - $HOME:$HOME
+            - $DATA:/DATA
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
             - /etc/shadow:/etc/shadow:ro
         tty: true' > docker-compose.yml
 else
-echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}intel${normal}\" or \"${hint}nvidia${normal}\""
+echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}normal${normal}\" or \"${hint}nvidia${normal}\""
 exit 1
 fi
 
