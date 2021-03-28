@@ -11,15 +11,15 @@ WARNING="${warning}WARNING${normal}"
 PROCEED="${proceed}PROCEEDING${normal}"
 
 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
-if [[ -z {EXIST_DOCKER} ]]; then
+if [[ -z ${EXIST_DOCKER} ]]; then
     echo -e "${ERROR}: \"${hint}radiolab_docker${normal}\" dose not exist. Please run ${hint}create.sh${normal} first."
     exit 1
 else
     RUNNING_DOCKER=`docker ps -a | grep radiolab_docker | awk -F '   ' '{print $5}' | grep Up`
-    if [[ ! -z {RUNNING_DOCKER} ]]; then
-        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is running."
+    if [[ ! -z ${RUNNING_DOCKER} ]]; then
+        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is RUNNING."
     else
-        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not running, bringing the container up online."
+        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not RUNNING, bringing the container up online."
         docker container start radiolab_docker > /dev/null 2>&1
     fi
     echo -e "${PROCEED}: Entering interactive shell."
