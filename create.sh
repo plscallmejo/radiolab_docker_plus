@@ -38,7 +38,7 @@ else
         exit 1
     else
         if [[ -d ${DATA_PATH} ]]; then
-            if [[ -r ${DATA_PATH} && -r ${DATA_PATH} && -w {DATA_PATH} ]]; then
+            if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
                 if [[ ! -z ${EXIST_DOCKER} ]]; then
                     RUNNING_DOCKER=`docker ps -a | grep radiolab_docker | awk -F '   ' '{print $5}' | grep Up`
