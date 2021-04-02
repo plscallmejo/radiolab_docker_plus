@@ -44,10 +44,10 @@ else
                     RUNNING_DOCKER=`docker ps -a | grep radiolab_docker | awk -F '   ' '{print $5}' | grep Up`
                     if [[ ! -z ${RUNNING_DOCKER} ]]; then
                         echo -e "${WARNING}: We found existing \"${hint}radiolab_docker${normal},\" and it's ${hint}RUNNING${normal}!"
-                        echo -e "${WARNING}: This process intent to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}radiolab_docker${normal}\" instence and ${hint}RE-CREATE${normal} it."
+                        echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}radiolab_docker${normal}\" instence and ${hint}RE-CREATE${normal} it."
                     else
                         echo -e "${WARNING}: We found existing \"${hint}radiolab_docker${normal}.\""
-                        echo -e "${WARNING}: This process intent to ${hint}RE-CREATE${normal} it."
+                        echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
                     read -r -p "Comfirm? [Y/N] " input
