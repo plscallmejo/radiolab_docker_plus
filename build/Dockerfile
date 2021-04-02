@@ -250,6 +250,27 @@ RUN echo "Installing MRtrix3 ..." \
     && ./configure \
     && ./build
 
+RUN apt-get update -qq \
+    && apt-get install  -y -q --no-install-recommends \
+        bison \
+        flex \
+        libx11-dev \
+        x11proto-core-dev \
+        libxi6 \
+        libxi-dev \
+        libxmu-dev \
+        libxmu-headers \
+        libjpeg-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN git clone --recursive --branch release-1.9.18 https://github.com/BIC-MNI/minc-toolkit-v2.git /tmp/minc-toolkit-v2 \
+    && cd /tmp/minc-toolkit-v2 \
+    && mkdir build \
+    && cd build \
+    && ccmake .. \
+    && make && make install
+    
+
 ####################
 #### Post Build ####
 ####################
