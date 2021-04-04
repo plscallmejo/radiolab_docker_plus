@@ -99,7 +99,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /e
     && rm /tmp/toinstall.deb \
     && apt-get install -f \
     && apt-get clean \
-    && echo 'options(Ncpus = 24L)' > /root/.Rprofile \
+    && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
     && rm -rf /var/lib/apt/lists/* 
     
 RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
@@ -118,8 +118,8 @@ RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
 	    automake \
 	    git \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
-RUN git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+    && rm -rf /var/lib/apt/lists/* \
+    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
     && git clone https://github.com/shadowsocks/simple-obfs.git \
     && cd simple-obfs \
     && git submodule update --init --recursive \
@@ -128,8 +128,8 @@ RUN git config --global url."https://github.com.cnpmjs.org".insteadOf https://gi
     && make \
     && make install \
     && cd .. \
-    && rm -rf simple-obfs 
-RUN git clone https://github.com/rofl0r/proxychains-ng.git \
+    && rm -rf simple-obfs \
+    && git clone https://github.com/rofl0r/proxychains-ng.git \
     && cd proxychains-ng \
     && ./configure --prefix=/usr --sysconfdir=/etc \
     && make \
@@ -140,8 +140,22 @@ RUN git clone https://github.com/rofl0r/proxychains-ng.git \
 COPY ["content/proxychains.conf", "/etc/proxychains.conf"]
 COPY ["content/shadowsocks.json", "/etc/shadowsocks.json"]
 
-COPY ["content/fsl-6.0.4-centos7_64.tar.gz", "/tmp/"]
-ENV FSLDIR="/opt/fsl" \
+ENV CMAKE_VERSION="3.20.0" \
+    CMAKE_UPDATE="2021-04-03"
+RUN mkdir /tmp/cmake \
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+    && proxychains4 curl -fsSL --retry 5 https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz \
+        | tar -xz -C /tmp/cmake --strip-components 1 \
+    && cd /tmp/cmake \
+    && ./bootstrap --prefix=/opt/cmake \
+    && make -j $(echo "$(nproc)-2" | bc) \
+    && make install \
+    && ln -s /opt/cmake/bin/cmake /usr/bin/cmake && cd .. \
+    && rm -rf cmake 
+
+ENV FSL_VERSION="6.0.4" \
+    FSL_UPDATE="2021-03-15" \
+    FSLDIR="/opt/fsl" \
     PATH="/opt/fsl/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
@@ -154,21 +168,23 @@ ENV FSLDIR="/opt/fsl" \
 RUN echo "Installing FSL ..." \
     && mkdir /opt/fsl \
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-#    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.4-centos7_64.tar.gz \
-#     | tar -xz -C /opt/fsl --strip-components 1 \
-    && tar -xzvf /tmp/fsl-6.0.4-centos7_64.tar.gz -C /opt/fsl --strip-components 1 \
-    && rm /tmp/fsl-6.0.4-centos7_64.tar.gz \
+    && proxychains4 curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
+     | tar -xz -C /opt/fsl --strip-components 1 \
     && echo 'Some packages in this Docker container are non-free' \
     && echo 'If you are considering commercial use of this container, please consult the relevant license:' \
     && echo 'https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' \
     && echo "Installing FSL conda environment ..." \
     && proxychains4 bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
-    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT 
-COPY ["content/fsl_sub", "/opt/fsl/bin/fsl_sub"]
-RUN chmod a+x /opt/fsl/bin/fsl_sub
+    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT \
+    && echo "Get neurolabusc's fsl_sub for a better parallel compute experient ..." \
+    && git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub \
+    && rm /opt/fsl/bin/fsl_sub \
+    && chmod a+x /opt/fsl_sub/fsl_sub \
+    && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
 
-COPY ["content/linux_ubuntu_16_64.tgz", "/tmp/linux_ubuntu_16_64.tgz"]
-ENV PATH="/opt/afni:$PATH" \
+ENV AFNI_VERSION="ubuntu_16_64" \
+    AFNI_UPDATE="2021-03-15" \
+    PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
     QT_X11_NO_MITSHM=1
 RUN apt-get update -qq \
@@ -181,39 +197,18 @@ RUN apt-get update -qq \
            libudunits2-dev \
            openmpi-bin \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
-RUN echo "Installing AFNI ..." \
-    && echo 'options(repos = structure(c(CRAN="https://mirrors.ustc.edu.cn/CRAN/")))' >> /root/.Rprofile \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing AFNI ..." \
     && mkdir -p /opt/afni \
-#     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz \
-#     | tar -xz -C /opt/afni --strip-components 1 \
-    && tar -zxvf /tmp/linux_ubuntu_16_64.tgz -C /opt/afni --strip-components 1 \
-    && rm /tmp/linux_ubuntu_16_64.tgz \
-    && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL 
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+    && proxychains4 curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
+        | tar -xz -C /opt/afni --strip-components 1 \
+    && PATH=$PATH:/opt/afni proxychains4 rPkgsInstall -pkgs ALL \
+    && rm /root/.Rprofile
 
-COPY ["content/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz", "/tmp/"]
-COPY ["content/license.txt", "/tmp/"]
-ENV FREESURFER_HOME="/opt/freesurfer" \
-    PATH="/opt/freesurfer/bin:$PATH"
-RUN echo "Installing FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer \
-#    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
-#     | tar -xz -C /opt/freesurfer --strip-components 1 \
-    && tar -zxvf /tmp/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz -C /opt/freesurfer --strip-components 1 \
-    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" \
-    && mv /tmp/license.txt /opt/freesurfer/ \
-    && rm /tmp/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
-
-RUN mkdir /tmp/cmake \
-    && cd /tmp/cmake \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.20.0-rc5/cmake-3.20.0-rc5.tar.gz \
-    && tar -zxvf /tmp/cmake/cmake-3.20.0-rc5.tar.gz -C /tmp/cmake --strip-components 1 \
-    && ./bootstrap --prefix=/opt/cmake \
-    && make -j 24 \
-    && make install \
-    && ln -s /opt/cmake/bin/cmake /usr/bin/cmake && cd /opt \
-    && rm -r /tmp/cmake
-ENV ANTSPATH="/opt/ants/bin" \
+ENV ANTS_VERSION="latest-git" \
+    ANTS_UPDATE="2021-03-23" \
+    ANTSPATH="/opt/ants/bin" \
     PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
 RUN echo "Installing ANTs ..." \
     && mkdir -p /tmp/ants-build/build \
@@ -221,7 +216,7 @@ RUN echo "Installing ANTs ..." \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
     && cd /tmp/ants-build/build \
     && proxychains4 cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
-    && make -j 24 2>&1 \
+    && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
     && cd ANTS-build \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
@@ -242,7 +237,9 @@ RUN apt-get update -qq \
         libpng-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-ENV MRTRIX3PATH="/opt/mrtrix3" \
+ENV MRTRIX3_VERSION="latest-git" \
+    MRTRIX3_UPDATE="2021-03-15" \
+    MRTRIX3PATH="/opt/mrtrix3" \
     PATH="/opt/mrtrix3/bin:$PATH"
 RUN echo "Installing MRtrix3 ..." \
     && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
@@ -250,26 +247,16 @@ RUN echo "Installing MRtrix3 ..." \
     && ./configure \
     && ./build
 
-RUN apt-get update -qq \
-    && apt-get install  -y -q --no-install-recommends \
-        bison \
-        flex \
-        libx11-dev \
-        x11proto-core-dev \
-        libxi6 \
-        libxi-dev \
-        libxmu-dev \
-        libxmu-headers \
-        libjpeg-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-RUN git clone --recursive --branch release-1.9.18 https://github.com/BIC-MNI/minc-toolkit-v2.git /tmp/minc-toolkit-v2 \
-    && cd /tmp/minc-toolkit-v2 \
-    && mkdir build \
-    && cd build \
-    && ccmake .. \
-    && make && make install
-    
+ENV FREESURFER_VERSION="7.1.1" \
+    FREESURFER_UPDATE="2021-03-15" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    PATH="/opt/freesurfer/bin:$PATH"
+RUN echo "Installing FreeSurfer ..." \
+    && mkdir -p /opt/freesurfer \
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+    && proxychains4 curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
+     | tar -xz -C /opt/freesurfer --strip-components 1 \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" 
 
 ####################
 #### Post Build ####
@@ -277,24 +264,14 @@ RUN git clone --recursive --branch release-1.9.18 https://github.com/BIC-MNI/min
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
-# RUN apt-get update -qq \
-#     && apt-get upgrade -qq \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-ENV FSL_VERSION="6.0.4" \
-    AFNI_VERSION="ubuntu_16_64" \
-    FREESURFER_VERSION="7.1.1" \
-    ANTS_VERSION="latest-git" \
-    MRTRIX3_VERSION="latest-git" \
-    CMAKE_VERSION="v3.20.0-rc5"
-
-ENV FSL_UPDATE="2021-03-15" \
-    AFNI_UPDATE="2021-03-15" \
-    FREESURFER_UPDATE="2021-03-15" \
-    ANTS_UPDATE="2021-03-23" \
-    MRTRIX3_UPDATE="2021-03-15" \
-    CMAKE_UPDATE="2021-03-23"
+####################
+#### Sys Update ####
+####################
+ENV SYS_UPDATE="2021-04-04"
+RUN apt-get update -qq \
+    && apt-get upgrade -qq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT \
@@ -327,7 +304,6 @@ RUN chmod 755 /radiolabdocker/startup.sh \
     \n      "afni", \
     \n      { \
     \n        "version": "latest", \
-    \n        "install_r": "true", \
     \n        "install_r_pkgs": "true" \
     \n      } \
     \n    ] \

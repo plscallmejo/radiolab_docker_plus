@@ -23,7 +23,7 @@ else
         docker container start radiolab_docker > /dev/null 2>&1
     fi
     echo -e "${PROCEED}: Entering interactive shell."
-    docker exec -it radiolab_docker bash
+    docker exec -it radiolab_docker bash -c /radiolabdocker/startup.sh
 fi
 
 
