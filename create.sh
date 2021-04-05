@@ -5,10 +5,12 @@ normal="\033[0m"
 error="\033[41;33m"
 warning="\033[43;31m"
 proceed="\033[42;30m"
+inform="\033[46;30m"
 hint="\033[4;36m"
 ERROR="${error}ERROR${normal}"
 WARNING="${warning}WARNING${normal}"
 PROCEED="${proceed}PROCEEDING${normal}"
+INFORM="${inform}INFORM${normal}"
 
 Usage () {
 echo ""
@@ -53,35 +55,37 @@ else
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
-                    if [[ -z ${FS_LICENSE_OG} ]]; then
-                        echo -e "${WARNING}: No freesufer license was supplied, thus the freesufer will not work properly."
-                    else
-                        FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
-                        if [[ -z ${FS_LICENSE} || -d {FS_LICENSE} ]]; then
-                            echo -e "${WARNING}: Also note, The path \"${hint}${FS_LICENSE}${normal}\" is invalid for a freesufer license file!"
-                            echo -e "${WARNING}: No freesufer license is supplied, thus the freesufer will not work properly."
-                        else
-                            echo -e "${PROCEED}: Freesufer license is supplied."
-                        fi
-                    fi
-                    read -r -p "Comfirm? [Y/N] " input
-                    case $input in
-                        [yY][eE][sS]|[yY])
-                            SEL="Y"
-                            ;;
-                        [nN][oO]|[nN])
-                            SEL="N"
-                            ;;
-                        *)
-                            echo "Invalid input..."
-                            exit 1
-                            ;;
-                    esac
-                    if [[ ${SEL} == "N" ]]; then
-                        exit 1
-                    fi
                 fi
                 echo -e "${PROCEED}: Creating radiolab docker"
+                if [[ -z ${FS_LICENSE_OG} ]]; then
+                    echo -e "${WARNING}: No freesufer license was supplied, thus the freesufer will not work properly."
+                    sed -i -e "/\s\+-.\+\/opt\/freesufer\/license\.txt.\+/{s/#//g;s/\(\s\+-.\+\/opt\/freesufer\/license\.txt.\+\)/#\1/g}" docker-compose.yml
+                else
+                    FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
+                    if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
+                        echo -e "${ERROR}: The path \"${hint}${FS_LICENSE}${normal}\" is invalid for a freesufer license file!"
+                        exit 1
+                    else
+                        echo -e "${INFORM}: Freesufer license is supplied."
+                        sed -i -e "/\s\+-.\+\/opt\/freesufer\/license\.txt.\+/{s/#//g}" docker-compose.yml
+                    fi
+                fi
+                read -r -p "Comfirm? [Y/N] " input
+                case $input in
+                    [yY][eE][sS]|[yY])
+                        SEL="Y"
+                        ;;
+                    [nN][oO]|[nN])
+                        SEL="N"
+                        ;;
+                    *)
+                        echo "Invalid input..."
+                        exit 1
+                        ;;
+                esac
+                if [[ ${SEL} == "N" ]]; then
+                    exit 1
+                fi
                 CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} FS_LICENSE=${FS_LICENSE} docker-compose up -d --force-recreate
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"

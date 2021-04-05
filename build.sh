@@ -105,7 +105,7 @@ services:
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
-            - /opt/freesufer/license:$FS_LICENSE
+            - $FS_LICENSE:/opt/freesufer/license.txt
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
@@ -145,7 +145,7 @@ services:
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
-            - /opt/freesufer/license:$FS_LICENSE
+            - $FS_LICENSE:/opt/freesufer/license.txt
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
