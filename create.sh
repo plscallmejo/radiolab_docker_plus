@@ -30,6 +30,30 @@ echo ""
 DATA_PATH_OG=$1
 FS_LICENSE_OG=$2
 
+if [[ ! -f docker-compose.yml ]]; then
+    echo -e "${ERROR}: Can't find ${hint}docker-compose.yml${normal}."
+    echo "Plases run ./build.sh first and specify the runtime flag"
+    echo "  to build the radiolab_docker."
+    echo "  e.g.  ./build.sh -r nvidia         for nvidia runtime"
+    echo "        ./build.sh -r normal         for normal runtime"
+    echo "        or ./build.sh"
+    echo ""
+    echo "If you have pulled the docker image somewhere else,"
+    echo "  Please import it, and tag it to radiolab_docker:latest"
+    echo "  with the following command:"
+    echo ""
+    echo "    docker tag <pre-built image> radiolab_docker:latest"
+    echo ""
+    echo "  then run:"
+    echo "        ./build.sh -c -r nvidia     for nvidia runtime"
+    echo "        ./build.sh -c -r normal     for normal runtime"
+    echo "        or ./build.sh"
+    echo ""
+    echo "Run ./build.sh -h or ./build.sh --help for more details."
+    echo ""
+    exit 1
+fi
+
 # Set Data_path
 if [[ -z ${DATA_PATH_OG} ]]; then
     echo -e "${ERROR}: Please specify the data path!"
@@ -59,7 +83,7 @@ else
                 echo -e "${PROCEED}: Creating radiolab docker"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesufer license was supplied, thus the freesufer will not work properly."
-                    sed -i -e "/\s\+-.\+\/opt\/freesufer\/license\.txt.\+/{s/#//g;s/\(\s\+-.\+\/opt\/freesufer\/license\.txt.\+\)/#\1/g}" docker-compose.yml
+                    sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
                 else
                     FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
                     if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
@@ -67,7 +91,7 @@ else
                         exit 1
                     else
                         echo -e "${INFORM}: Freesufer license is supplied."
-                        sed -i -e "/\s\+-.\+\/opt\/freesufer\/license\.txt.\+/{s/#//g}" docker-compose.yml
+                        sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
                     fi
                 fi
                 read -r -p "Comfirm? [Y/N] " input

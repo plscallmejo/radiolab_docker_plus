@@ -30,6 +30,7 @@ echo "./run.sh             Enter the interactive shell with \$FSLPARALLEL=\$(ech
 echo "                       which means number of threads for fsl_sub will set to maximum num of cores - 2 (n - 2)"
 echo "./run.sh -p 6        Enter the interactive shell with \$FSLPARALLEL=6,"
 echo "                       which means fsl_sub will run in 6 threads"
+echo ""
 }
 
 for arg in "$@"; do

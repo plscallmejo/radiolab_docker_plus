@@ -23,6 +23,9 @@ echo "                     No Docker image will be built."
 echo "                     For making or upating docker-compose.yml."
 echo "                     e.g. you have pulled the image from somewhere else,"
 echo "                         or you already have the image built, and don't want to re-build the image."
+echo "                     Note, the pre-built image should tag with "radiolab_docker:latest"."
+echo "                       You can use the following command:"
+echo "                         "docker tag \<pre-built image\> radiolab_docker:latest""
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
@@ -32,6 +35,7 @@ echo "                           but won't build the Docker image."
 echo "./build.sh -r normal       will build the Docker image with normal RUNTIME."
 echo "./build.sh -c              will make the docker-compose.yml file with normal RUNTIME only,"
 echo "                           but won't build the Docker image."
+echo ""
 }
 
 for arg in "$@"; do
