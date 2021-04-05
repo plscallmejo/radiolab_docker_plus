@@ -14,7 +14,7 @@ Usage () {
 echo ""
 echo "Create a radiolab_docker."
 echo ""
-echo "Usage: ./create.sh [data_path] [freesufer_lisence]"
+echo "Usage: ./create.sh [data_path] [freesufer_license]"
 echo ""
 echo "Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "Note, the "data_path" should be a DIR,"
@@ -26,7 +26,7 @@ echo ""
 }
 
 DATA_PATH_OG=$1
-FS_LISENCE_OG=$2
+FS_LICENSE_OG=$2
 
 # Set Data_path
 if [[ -z ${DATA_PATH_OG} ]]; then
@@ -53,15 +53,15 @@ else
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
-                    if [[ -z ${FS_LISENCE_OG} ]]; then
-                        echo -e "${WARNING}: No freesufer lisence was supplied, thus the freesufer will not work properly."
+                    if [[ -z ${FS_LICENSE_OG} ]]; then
+                        echo -e "${WARNING}: No freesufer license was supplied, thus the freesufer will not work properly."
                     else
-                        FS_LISENCE=`readlink -e ${FS_LISENCE_OG}`
-                        if [[ -z ${FS_LISENCE} || -d {FS_LISENCE} ]]; then
-                            echo -e "${WARNING}: Also note, The path \"${hint}${FS_LISENCE}${normal}\" is invalid for a freesufer lisence file!"
-                            echo -e "${WARNING}: No freesufer lisence is supplied, thus the freesufer will not work properly."
+                        FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
+                        if [[ -z ${FS_LICENSE} || -d {FS_LICENSE} ]]; then
+                            echo -e "${WARNING}: Also note, The path \"${hint}${FS_LICENSE}${normal}\" is invalid for a freesufer license file!"
+                            echo -e "${WARNING}: No freesufer license is supplied, thus the freesufer will not work properly."
                         else
-                            echo -e "${PROCEED}: Freesufer lisence is supplied."
+                            echo -e "${PROCEED}: Freesufer license is supplied."
                         fi
                     fi
                     read -r -p "Comfirm? [Y/N] " input
@@ -82,7 +82,7 @@ else
                     fi
                 fi
                 echo -e "${PROCEED}: Creating radiolab docker"
-                CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} docker-compose up -d --force-recreate
+                CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} FS_LICENSE=${FS_LICENSE} docker-compose up -d --force-recreate
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
                 Usage

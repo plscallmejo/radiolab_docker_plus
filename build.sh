@@ -17,12 +17,13 @@ echo "Build the basic Dockerfile and docker-docker-compose.yml,"
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./build.sh [options]"
-echo "-r   Specify the RUNTIME, either "normal" or "nvidia" (default: normal)"
-echo "-c   Flag to make the docker-compose.yml file only, no argument is needed."
-echo "     No Docker image will be built."
-echo "     For making or upating docker-compose.yml."
-echo "     e.g. you have pulled the image from somewhere else,"
-echo "          or you already have the image built, and don't want to re-build the image."
+echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia" (default: normal)"
+echo "-c, --make-compose   Flag to make the docker-compose.yml file only, no argument is needed."
+echo "                     No Docker image will be built."
+echo "                     For making or upating docker-compose.yml."
+echo "                     e.g. you have pulled the image from somewhere else,"
+echo "                         or you already have the image built, and don't want to re-build the image."
+echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
 echo "./build.sh -r nvidia       will build the Docker image using nvidia RUNTIME."
@@ -33,8 +34,18 @@ echo "./build.sh -c              will make the docker-compose.yml file with norm
 echo "                           but won't build the Docker image."
 }
 
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--runtime")      set -- "$@" "-p" ;;
+    "--make-compose") set -- "$@" "-c" ;;
+    "--help")         set -- "$@" "-h" ;;
+    *)                set -- "$@" "$arg"
+  esac
+done
+
 # Get runtime option
-while getopts "r:c" opt
+while getopts "r:ch" opt
 do
     case ${opt} in
     r)
@@ -42,6 +53,10 @@ do
         ;;
     c)
         COMPOSE="Y"
+        ;;
+    h)
+        Usage
+        exit 1
         ;;
     \?)
         echo -e "${ERROR}: Invalid option."
@@ -85,12 +100,12 @@ services:
         stdin_open: true
         environment:
             - NVIDIA_VISIBLE_DEVICES=all
-            - FSLPARALLEL=0
             - DISPLAY=$DISPLAY
             - USER=$USER
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
+            - /opt/freesufer/license:$FS_LICENSE
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
@@ -125,12 +140,12 @@ services:
         container_name: radiolab_docker
         stdin_open: true
         environment:
-            - FSLPARALLEL=0
             - DISPLAY=$DISPLAY
             - USER=$USER
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
+            - /opt/freesufer/license:$FS_LICENSE
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
