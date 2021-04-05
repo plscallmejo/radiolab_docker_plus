@@ -22,6 +22,8 @@ else
         echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not RUNNING, bringing the container up online."
         docker container start radiolab_docker > /dev/null 2>&1
     fi
+    echo -e "${PROCEED}: Disable access control of the X server."
+    `xhost +` > /dev/null 2>&1 &
     echo -e "${PROCEED}: Entering interactive shell."
     docker exec -it radiolab_docker bash -c /radiolabdocker/startup.sh
 fi

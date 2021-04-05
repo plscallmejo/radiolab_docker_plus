@@ -14,7 +14,7 @@ Usage () {
 echo ""
 echo "Create a radiolab_docker."
 echo ""
-echo "Usage: ./create.sh [data_path]"
+echo "Usage: ./create.sh [data_path] [freesufer_lisence]"
 echo ""
 echo "Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "Note, the "data_path" should be a DIR,"
@@ -25,15 +25,18 @@ echo "./create.sh /the/path/to/your/data"
 echo ""
 }
 
+DATA_PATH_OG=$1
+FS_LISENCE_OG=$2
+
 # Set Data_path
-if [[ -z $1 ]]; then
+if [[ -z ${DATA_PATH_OG} ]]; then
     echo -e "${ERROR}: Please specify the data path!"
     Usage
     exit 1
 else
-    DATA_PATH=`readlink -e $1`
+    DATA_PATH=`readlink -e ${DATA_PATH_OG}`
     if [[ -z ${DATA_PATH} ]]; then
-        echo -e "${ERROR}: The data path \"${hint}$1${normal}\" is invalid! Please check again!"
+        echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" is invalid! Please check again!"
         Usage
         exit 1
     else
@@ -50,6 +53,17 @@ else
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
+                    if [[ -z ${FS_LISENCE_OG} ]]; then
+                        echo -e "${WARNING}: No freesufer lisence was supplied, thus the freesufer will not work properly."
+                    else
+                        FS_LISENCE=`readlink -e ${FS_LISENCE_OG}`
+                        if [[ -z ${FS_LISENCE} || -d {FS_LISENCE} ]]; then
+                            echo -e "${WARNING}: Also note, The path \"${hint}${FS_LISENCE}${normal}\" is invalid for a freesufer lisence file!"
+                            echo -e "${WARNING}: No freesufer lisence is supplied, thus the freesufer will not work properly."
+                        else
+                            echo -e "${PROCEED}: Freesufer lisence is supplied."
+                        fi
+                    fi
                     read -r -p "Comfirm? [Y/N] " input
                     case $input in
                         [yY][eE][sS]|[yY])
@@ -70,12 +84,12 @@ else
                 echo -e "${PROCEED}: Creating radiolab docker"
                 CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} docker-compose up -d --force-recreate
             else
-                echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}$1${normal}\"! Please check again!"
+                echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
                 Usage
                 exit 1
             fi
         else
-            echo -e "${ERROR}: The data path \"${hint}$1${normal}\" should be a DIR or a file! Please check again!"
+            echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" should be a DIR or a file! Please check again!"
             Usage
             exit 1
         fi

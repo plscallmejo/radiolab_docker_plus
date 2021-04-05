@@ -52,14 +52,14 @@ do
 done
 
 # Setting a basic docker image
-mkdir -p build/base
-touch build/base/Dockerfile
 if [[ ! -n ${RUNTIME} ]]; then
     echo -e "${WARNING}: no ${hint}-r${normal} (RUNTIME) option was supplied, so automatically setting to \"${hint}normal${normal}\" Runtime."
     RUNTIME="normal"
 fi
 if [[ ${RUNTIME} = "nvidia" ]]; then
 if [[ -z ${COMPOSE} ]]; then
+mkdir -p build/base
+touch build/base/Dockerfile
 echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
 echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
 echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
@@ -85,7 +85,7 @@ services:
         stdin_open: true
         environment:
             - NVIDIA_VISIBLE_DEVICES=all
-            - FSLPARALLEL=1
+            - FSLPARALLEL=0
             - DISPLAY=$DISPLAY
             - USER=$USER
         volumes:
@@ -98,6 +98,8 @@ services:
         tty: true' > docker-compose.yml
 elif [[ ${RUNTIME} = "normal" ]]; then
 if [[ -z ${COMPOSE} ]]; then
+mkdir -p build/base
+touch build/base/Dockerfile
 echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
 echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
 echo '#ubuntu:16.04
@@ -123,7 +125,7 @@ services:
         container_name: radiolab_docker
         stdin_open: true
         environment:
-            - FSLPARALLEL=1
+            - FSLPARALLEL=0
             - DISPLAY=$DISPLAY
             - USER=$USER
         volumes:

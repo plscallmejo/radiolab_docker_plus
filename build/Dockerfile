@@ -222,6 +222,21 @@ RUN echo "Installing ANTs ..." \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
     && rm -r /tmp/ants-build 
 
+ENV FREESURFER_VERSION="7.1.1" \
+    FREESURFER_UPDATE="2021-03-15" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    PATH="/opt/freesurfer/bin:$PATH"
+RUN echo "Installing FreeSurfer ..." \
+    && mkdir -p /opt/freesurfer \
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+    && proxychains4 curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
+     | tar -xz -C /opt/freesurfer --strip-components 1 \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" 
+
+ENV MRTRIX3_VERSION="latest-git" \
+    MRTRIX3_UPDATE="2021-03-15" \
+    MRTRIX3PATH="/opt/mrtrix3" \
+    PATH="/opt/mrtrix3/bin:$PATH"
 RUN apt-get update -qq \
     && apt-get install  -y -q --no-install-recommends \
         parallel \
@@ -236,31 +251,33 @@ RUN apt-get update -qq \
         libtiff5-dev \
         libpng-dev \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-ENV MRTRIX3_VERSION="latest-git" \
-    MRTRIX3_UPDATE="2021-03-15" \
-    MRTRIX3PATH="/opt/mrtrix3" \
-    PATH="/opt/mrtrix3/bin:$PATH"
-RUN echo "Installing MRtrix3 ..." \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing MRtrix3 ..." \
     && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
     && cd /opt/mrtrix3 \
     && ./configure \
     && ./build
 
-ENV FREESURFER_VERSION="7.1.1" \
-    FREESURFER_UPDATE="2021-03-15" \
-    FREESURFER_HOME="/opt/freesurfer" \
-    PATH="/opt/freesurfer/bin:$PATH"
-RUN echo "Installing FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer \
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-    && proxychains4 curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
-     | tar -xz -C /opt/freesurfer --strip-components 1 \
-    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" 
-
 ####################
 #### Post Build ####
 ####################
+ENV NEOVIM_VERSION="xenial-ppa-unstable" \
+    NEOVIM_UPDATE="2021-04-05" \
+    NODEJS_VERSION="12" \
+    NODEJS_SUBVERSION="22.0" \
+    NODEJS_UPDATE="2021-04-05"
+RUN add-apt-repository ppa:neovim-ppa/unstable \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /opt/nodejs \
+    && curl -fsSL --retry 5 https://npm.taobao.org/mirrors/node/latest-v${NODEJS_VERSION}.x/node-v${NODEJS_VERSION}.${NODEJS_SUBVERSION}-linux-x64.tar.gz \
+        | tar -xz -C /opt/nodejs --strip-components 1 \
+    && ln -s /opt/nodejs/bin/node /usr/bin/node \
+    && ln -s /opt/nodejs/bin/npm /usr/bin/npm
+
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
