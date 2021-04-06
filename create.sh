@@ -16,7 +16,7 @@ Usage () {
 echo ""
 echo "Create a radiolab_docker."
 echo ""
-echo "Usage: ./create.sh [data_path] [freesufer_license]"
+echo "Usage: ./create.sh [data_path] [freesurfer_license]"
 echo ""
 echo "Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "Note, the "data_path" should be a DIR,"
@@ -82,15 +82,15 @@ else
                 fi
                 echo -e "${PROCEED}: Creating radiolab docker"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
-                    echo -e "${WARNING}: No freesufer license was supplied, thus the freesufer will not work properly."
+                    echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
                     sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
                 else
                     FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
                     if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
-                        echo -e "${ERROR}: The path \"${hint}${FS_LICENSE}${normal}\" is invalid for a freesufer license file!"
+                        echo -e "${ERROR}: The path \"${hint}${FS_LICENSE}${normal}\" is invalid for a freesurfer license file!"
                         exit 1
                     else
-                        echo -e "${INFORM}: Freesufer license is supplied."
+                        echo -e "${INFORM}: Freesurfer license is supplied."
                         sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
                     fi
                 fi

@@ -29,11 +29,12 @@ echo "                         "docker tag \<pre-built image\> radiolab_docker:l
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
-echo "./build.sh -r nvidia       will build the Docker image using nvidia RUNTIME."
-echo "./build.sh -r nvidia -c    will make the docker-compose.yml file with nvidia RUNTIME only,"
+echo "./build.sh -r nvidia       build the Docker image using nvidia runtime."
+echo "./build.sh -r nvidia -c    make the docker-compose.yml file with nvidia runtime only,"
 echo "                           but won't build the Docker image."
-echo "./build.sh -r normal       will build the Docker image with normal RUNTIME."
-echo "./build.sh -c              will make the docker-compose.yml file with normal RUNTIME only,"
+echo "./build.sh -r normal       build the Docker image with normal runtime."
+echo "or ./build.sh"
+echo "./build.sh -c              make the docker-compose.yml file with normal runtime only,"
 echo "                           but won't build the Docker image."
 echo ""
 }
@@ -72,24 +73,8 @@ done
 
 # Setting a basic docker image
 if [[ ! -n ${RUNTIME} ]]; then
-    echo -e "${WARNING}: no ${hint}-r${normal} (RUNTIME) option was supplied, so automatically setting to \"${hint}normal${normal}\" Runtime."
+    echo -e "${WARNING}: no ${hint}-r${normal} (runtime) option was supplied, so automatically setting to \"${hint}normal${normal}\" runtime."
     RUNTIME="normal"
-fi
-if [[ ${RUNTIME} = "nvidia" ]]; then
-if [[ -z ${COMPOSE} ]]; then
-mkdir -p build/base
-touch build/base/Dockerfile
-echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
-FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
-# nvidia-container-runtime
-ENV NV_RUNTIME=TRUE
-ENV BASE="nvidia/cudagl:9.1-runtime-ubuntu16.04"
-ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
-RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list'  > build/base/Dockerfile
 fi
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
 echo '# docker-compose.yml that uses nvidia runtime
@@ -109,18 +94,34 @@ services:
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
-            - $FS_LICENSE:/opt/freesufer/license.txt
+            - $FS_LICENSE:/opt/freesurfer/license.txt
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
             - /etc/group:/etc/group:ro
             - /etc/passwd:/etc/passwd:ro
             - /etc/shadow:/etc/shadow:ro
         tty: true' > docker-compose.yml
+if [[ ${RUNTIME} = "nvidia" ]]; then
+    if [[ -z ${COMPOSE} ]]; then
+        mkdir -p build/base
+        touch build/base/Dockerfile
+        echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
+        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
+echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
+FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
+# nvidia-container-runtime
+ENV NV_RUNTIME=TRUE
+ENV BASE="nvidia/cudagl:9.1-runtime-ubuntu16.04"
+ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
+ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
+    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list'  > build/base/Dockerfile
+    fi
 elif [[ ${RUNTIME} = "normal" ]]; then
-if [[ -z ${COMPOSE} ]]; then
-mkdir -p build/base
-touch build/base/Dockerfile
-echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
+    if [[ -z ${COMPOSE} ]]; then
+        mkdir -p build/base
+        touch build/base/Dockerfile
+        echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
+        echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
 echo '#ubuntu:16.04
 FROM ubuntu:16.04
 # mesa runtime
@@ -132,41 +133,22 @@ RUN apt-get update -qq \
            qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
-fi
-echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
-echo '# docker-compose.yml that use normal
-version: "2.3"
-services:
-    radiolab_flow:
-        image: radiolab:latest
-        user: $CURRENT_UID
-        working_dir: /DATA
-        container_name: radiolab_docker
-        stdin_open: true
-        environment:
-            - DISPLAY=$DISPLAY
-            - USER=$USER
-        volumes:
-            - $HOME:$HOME
-            - $DATA:/DATA
-            - $FS_LICENSE:/opt/freesufer/license.txt
-            - /tmp/.X11-unix:/tmp/.X11-unix:rw
-            - /etc/group:/etc/group:ro
-            - /etc/passwd:/etc/passwd:ro
-            - /etc/shadow:/etc/shadow:ro
-        tty: true' > docker-compose.yml
+    fi
+    echo -e "${PROCEED}: Fixing ${hint}docker-compose.yml${normal} with ${hint}normal${normal} runtime configuration."
+    sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" docker-compose.yml
+    sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" docker-compose.yml
 else
-echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}normal${normal}\" or \"${hint}nvidia${normal}\""
-Usage
-exit 1
+    echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}normal${normal}\" or \"${hint}nvidia${normal}\""
+    Usage
+    exit 1
 fi
 
 if [[ -z ${COMPOSE} ]]; then
-## Build base image
-docker build -t radiolab_base:latest build/base
-echo -e "${PROCEED}: Base image build complete"
+    ## Build base image
+    docker build -t radiolab_base:latest build/base
+    echo -e "${PROCEED}: Base image build complete"
 
-# Build Docker image with proper runtime
-echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-docker build -t radiolab:latest build --build-arg RUNTIME=$RUNTIME
+    # Build Docker image with proper runtime
+    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
+    docker build -t radiolab:latest build --build-arg RUNTIME=$RUNTIME
 fi
