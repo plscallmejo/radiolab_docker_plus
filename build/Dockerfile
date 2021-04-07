@@ -225,7 +225,8 @@ RUN echo "Installing ANTs ..." \
 ENV FREESURFER_VERSION="7.1.1" \
     FREESURFER_UPDATE="2021-03-15" \
     FREESURFER_HOME="/opt/freesurfer" \
-    PATH="/opt/freesurfer/bin:$PATH"
+    PATH="/opt/freesurfer/bin:$PATH" \
+    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH"
 RUN echo "Installing FreeSurfer ..." \
     && mkdir -p /opt/freesurfer \
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
@@ -234,7 +235,7 @@ RUN echo "Installing FreeSurfer ..." \
     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT" 
 
 ENV MRTRIX3_VERSION="latest-git" \
-    MRTRIX3_UPDATE="2021-03-15" \
+    MRTRIX3_UPDATE="2021-04-06" \
     MRTRIX3PATH="/opt/mrtrix3" \
     PATH="/opt/mrtrix3/bin:$PATH"
 RUN apt-get update -qq \
@@ -262,7 +263,7 @@ RUN apt-get update -qq \
 #### Post Build ####
 ####################
 ENV NEOVIM_VERSION="xenial-ppa-unstable" \
-    NEOVIM_UPDATE="2021-04-05" \
+    NEOVIM_UPDATE="2021-04-06" \
     NODEJS_VERSION="12" \
     NODEJS_SUBVERSION="22.0" \
     NODEJS_UPDATE="2021-04-05"
@@ -284,7 +285,7 @@ RUN rm /etc/proxychains.conf \
 ####################
 #### Sys Update ####
 ####################
-ENV SYS_UPDATE="2021-04-04"
+ENV SYS_UPDATE="2021-04-06"
 RUN apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
