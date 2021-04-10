@@ -1,3 +1,4 @@
 docker-compose.yml
 build/content/
 build/base
+build/Dockerfile
