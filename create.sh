@@ -83,7 +83,7 @@ else
                 echo -e "${PROCEED}: Creating radiolab docker"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
-                    sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
+                    sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
                 else
                     FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
                     if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
@@ -91,7 +91,7 @@ else
                         exit 1
                     else
                         echo -e "${INFORM}: Freesurfer license is supplied."
-                        sed  -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
+                        sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
                     fi
                 fi
                 read -r -p "Comfirm? [Y/N] " input

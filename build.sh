@@ -217,5 +217,5 @@ if [[ -z ${COMPOSE} ]]; then
 
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-    docker build -t radiolab:latest build --build-arg RUNTIME=$RUNTIME --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
+    docker build -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
 fi

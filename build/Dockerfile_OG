@@ -21,7 +21,8 @@ FROM radiolab_base:latest
 
 USER root
 
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG SYS_BUILD_DATE \
+    DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" 
@@ -110,6 +111,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /e
            r-base-dev \
            xfonts-base \
            xvfb \
+           man \
     && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
     && dpkg -i /tmp/toinstall.deb \
     && rm /tmp/toinstall.deb \
@@ -167,8 +169,24 @@ RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
 COPY ["content/shadowsocks.json", "/etc/shadowsocks.json"]
 # CN_SP-
 
+ENV NEOVIM_VERSION="xenial-ppa-unstable" \
+    NODEJS_VERSION="12" \
+    NODEJS_SUBVERSION="22.0" \
+    NODEJS_UPDATE="2021-04-05"
+RUN add-apt-repository ppa:neovim-ppa/unstable \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /opt/nodejs \
+    && curl -fsSL --retry 5 https://npm.taobao.org/mirrors/node/latest-v${NODEJS_VERSION}.x/node-v${NODEJS_VERSION}.${NODEJS_SUBVERSION}-linux-x64.tar.gz \
+        | tar -xz -C /opt/nodejs --strip-components 1 \
+    && ln -s /opt/nodejs/bin/node /usr/bin/node \
+    && ln -s /opt/nodejs/bin/npm /usr/bin/npm
+
 ENV CMAKE_VERSION="3.20.0" \
-    CMAKE_UPDATE="2021-04-03"
+    CMAKE_UPDATE="2021-04-10"
 RUN mkdir /tmp/cmake \
 # CN_SP+
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
@@ -219,14 +237,14 @@ RUN echo "Installing FSL ..." \
 # CN_SP-
     bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT \
-    && echo "Get neurolabusc's fsl_sub for a better parallel compute experient ..." \
+    && echo "Getting neurolabusc's fsl_sub for a better parallel compute experient ..." \
     && git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub \
     && rm /opt/fsl/bin/fsl_sub \
     && chmod a+x /opt/fsl_sub/fsl_sub \
     && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
 
 ENV AFNI_VERSION="ubuntu_16_64" \
-    AFNI_UPDATE="2021-03-15" \
+    AFNI_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
     QT_X11_NO_MITSHM=1
@@ -260,7 +278,7 @@ RUN apt-get update -qq \
     && rm /root/.Rprofile
 
 ENV ANTS_VERSION="latest-git" \
-    ANTS_UPDATE="2021-03-23" \
+    ANTS_UPDATE=${SYS_BUILD_DATE} \
     ANTSPATH="/opt/ants/bin" \
     PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
 RUN echo "Installing ANTs ..." \
@@ -300,7 +318,7 @@ RUN echo "Installing FreeSurfer ..." \
     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
 
 ENV MRTRIX3_VERSION="latest-git" \
-    MRTRIX3_UPDATE="2021-04-06" \
+    MRTRIX3_UPDATE=${SYS_BUILD_DATE} \
     MRTRIX3PATH="/opt/mrtrix3" \
     PATH="/opt/mrtrix3/bin:$PATH"
 RUN apt-get update -qq \
@@ -324,36 +342,92 @@ RUN apt-get update -qq \
     && ./configure \
     && ./build
 
+ENV SPM_VERSION="12" \
+    SPM_REVISION="r7771" \
+    OCTAVE_VERSION="6.2.0" \
+    SPM_UPDATE="2021-04-10" \
+    OCTAVE_UPDATE="2021-04-10" \
+    PATH="/opt/spm12/bin:/opt/octave/bin:$PATH"
+RUN echo "Installing Octave ..." \
+    && apt-get update -qq \
+    && apt-get install  -y -q --no-install-recommends \
+        libcurl4-gnutls-dev \
+        epstool \
+        transfig \
+        libfltk1.3-dev \
+        libfontconfig1-dev \
+        libfreetype6-dev \
+        libgl2ps-dev \
+        libglpk-dev \
+        gnuplot-x11 \
+        libgraphicsmagick++1-dev \
+        libhdf5-serial-dev \
+        openjdk-8-jdk \
+        libsndfile1-dev \
+        llvm-dev \
+        lpr \
+        texinfo \
+        libosmesa6-dev \
+        pstoedit \
+        portaudio19-dev \
+        libqrupdate-dev \
+        libqt4-dev \
+        libqt4-opengl-dev \
+        libqscintilla2-dev \
+        libsuitesparse-dev \
+        texlive \
+        libxft-dev \
+        bison \
+        flex \
+        gperf \
+        icoutils \
+        librsvg2-bin \
+        rsync \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /tmp/sundials \
+# CN_SP+
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+# CN_SP-
+    && mkdir -p /tmp/octave \
+    && wget --progress=bar:force -q -O- https://ftpmirror.gnu.org/octave/octave-${OCTAVE_VERSION}.tar.gz \
+     | tar -xz -C /tmp/octave --strip-components 1 \
+    && cd /tmp/octave && mkdir build && cd build \
+    && ../configure --prefix=/opt/octave --with-qt=4 \
+    && make -j $(echo "$(nproc)-2" | bc) \
+    && make install \
+    && cd /tmp && rm -rf /tmp/octave \
+    && ln -s /opt/octave/bin/octave /usr/bin/octave \
+    && mkdir /opt/spm${SPM_VERSION} \
+    && \
+# CN_SP+
+    proxychains4 \
+# CN_SP-
+    curl -fsSL --retry 5 https://github.com/spm/spm${SPM_VERSION}/archive/${SPM_REVISION}.tar.gz \
+     | tar -xz -C /opt/spm${SPM_VERSION} --strip-components 1 \
+    && \
+# CN_SP+
+    proxychains4 \
+# CN_SP-
+    curl -fsSL --retry 5 https://raw.githubusercontent.com/spm/spm-docker/master/octave/spm${SPM_VERSION}_${SPM_REVISION}.patch \
+     | patch -p0 \
+    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave distclean \
+    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave \
+    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave install \
+    && cp /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}-octave /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}
+
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 
 
 ####################
 #### Post Build ####
 ####################
-ENV NEOVIM_VERSION="xenial-ppa-unstable" \
-    NODEJS_VERSION="12" \
-    NODEJS_SUBVERSION="22.0" \
-    NODEJS_UPDATE="2021-04-05"
-RUN add-apt-repository ppa:neovim-ppa/unstable \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-        neovim \
-        man \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir /opt/nodejs \
-    && curl -fsSL --retry 5 https://npm.taobao.org/mirrors/node/latest-v${NODEJS_VERSION}.x/node-v${NODEJS_VERSION}.${NODEJS_SUBVERSION}-linux-x64.tar.gz \
-        | tar -xz -C /opt/nodejs --strip-components 1 \
-    && ln -s /opt/nodejs/bin/node /usr/bin/node \
-    && ln -s /opt/nodejs/bin/npm /usr/bin/npm
-
 RUN rm /etc/proxychains.conf \
     && rm /etc/shadowsocks.json
 
 ####################
 #### Sys Update ####
 ####################
-ARG SYS_BUILD_DATE
 ENV SYS_BUILD_DATE=${SYS_BUILD_DATE}
 RUN apt-get update -qq \
     && apt-get upgrade -qq \
