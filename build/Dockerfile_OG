@@ -48,6 +48,7 @@ RUN apt-get update -qq \
            firefox \
            bc \
            dc \
+           jq \
            file \
            libfontconfig1 \
            libfreetype6 \
@@ -89,7 +90,7 @@ RUN mkdir -p /radiolabdocker \
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list \
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran40/" >> /etc/apt/sources.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository -y ppa:ubuntugis/ppa \
     && apt-get update -qq \
@@ -342,12 +343,9 @@ RUN apt-get update -qq \
     && ./configure \
     && ./build
 
-ENV SPM_VERSION="12" \
-    SPM_REVISION="r7771" \
-    OCTAVE_VERSION="6.2.0" \
-    SPM_UPDATE="2021-04-10" \
+ENV OCTAVE_VERSION="6.2.0" \
     OCTAVE_UPDATE="2021-04-10" \
-    PATH="/opt/spm12/bin:/opt/octave/bin:$PATH"
+    PATH="/opt/octave/bin:$PATH"
 RUN echo "Installing Octave ..." \
     && apt-get update -qq \
     && apt-get install  -y -q --no-install-recommends \
@@ -385,7 +383,6 @@ RUN echo "Installing Octave ..." \
         rsync \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /tmp/sundials \
 # CN_SP+
     && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
 # CN_SP-
@@ -397,8 +394,17 @@ RUN echo "Installing Octave ..." \
     && make -j $(echo "$(nproc)-2" | bc) \
     && make install \
     && cd /tmp && rm -rf /tmp/octave \
-    && ln -s /opt/octave/bin/octave /usr/bin/octave \
+    && ln -s /opt/octave/bin/octave /usr/bin/octave
+
+ENV SPM_VERSION="12" \
+    SPM_REVISION="r7771" \
+    SPM_UPDATE="2021-04-10" \
+    PATH="/opt/spm12/bin:$PATH"
+RUN echo "Installing SPM ... " \
     && mkdir /opt/spm${SPM_VERSION} \
+# CN_SP+
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+# CN_SP-
     && \
 # CN_SP+
     proxychains4 \
@@ -415,6 +421,23 @@ RUN echo "Installing Octave ..." \
     && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave \
     && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave install \
     && cp /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}-octave /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}
+
+ENV DCM2NIIX_VERSION="latest-git" \
+    DCM2NIIX_UPDATE=${SYS_BUILD_DATE} \
+    PATH="/opt/dcm2niix:$PATH"
+RUN echo "Installing dcm2niix ..." \
+# CN_SP+
+    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
+# CN_SP-
+    && mkdir /opt/dcm2niix \
+    && cd /tmp \
+    && \
+# CN_SP+
+    proxychains4 \
+# CN_SP-
+    curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
+    && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
+    && rm /tmp/dcm2niix_lnx.zip
 
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 

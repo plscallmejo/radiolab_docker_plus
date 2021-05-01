@@ -145,6 +145,7 @@ services:
             - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=$DISPLAY
             - USER=$USER
+        network_mode: "host"
         volumes:
             - $HOME:$HOME
             - $DATA:/DATA
