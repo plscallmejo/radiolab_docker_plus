@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# This is a Building script for radiolab_docker
 # Set colors
 normal="\033[0m"
 error="\033[41;33m"
