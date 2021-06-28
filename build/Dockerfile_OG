@@ -29,56 +29,22 @@ ENV LANG="en_US.UTF-8" \
     
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           apt-utils \
-           bzip2 \
-           sudo \
-           wget \
-           curl \
-           aria2 \
-           locales \
-           unzip \
-    	   htop \
-    	   bmon \
-           apt-transport-https \
-           ca-certificates \
-    	   software-properties-common \
-    	   python-software-properties \
-           tmux \
-           vim \
-           firefox \
-           bc \
-           dc \
-           jq \
-           file \
-           libfontconfig1 \
-           libfreetype6 \
-           libgl1-mesa-dev \
-           libgl1-mesa-dri \
-           libglu1-mesa-dev \
-           libgomp1 \
-           libice6 \
-           libxcursor1 \
-           libxft2 \
-           libxinerama1 \
-           libxrandr2 \
-           libxrender1 \
-           libxt6 \
-           libgomp1 \
-           libxmu6 \
-           libxt6 \
-           perl \
-           tcsh \
+            apt-utils \
+            bzip2 \
+            ca-certificates \
+            curl \
+            locales \
+            unzip \
+            gnupg \
+            bc \
+            software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && gsl2_path="$(find / -name 'libgsl.so.19' || printf '')" \
-    && if [ -n "$gsl2_path" ]; then \
-         ln -sfv "$gsl2_path" "$(dirname $gsl2_path)/libgsl.so.0"; \
-    fi \
-    && ldconfig \ 
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && dpkg-reconfigure --frontend=noninteractive locales \
     && update-locale LANG="en_US.UTF-8" \
     && chmod 777 /opt && chmod a+s /opt 
+
 RUN mkdir -p /radiolabdocker \
     && chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker \
     && export RD_ENTRYPOINT="/radiolabdocker/startup.sh" \
@@ -90,363 +56,151 @@ RUN mkdir -p /radiolabdocker \
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran40/" >> /etc/apt/sources.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-    && add-apt-repository -y ppa:ubuntugis/ppa \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           ed \
-           gdal-bin \
-           gsl-bin \
-           libgdal-dev \
-           libgsl-dev \
-           libglib2.0-0 \
-           libglw1-mesa \
-           libjpeg62 \
-           libnlopt-dev \
-           libxm4 \
-           netpbm \
-           mpi-default-dev \
-           python3 \
-           r-base \
-           r-base-dev \
-           xfonts-base \
-           xvfb \
-           man \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
-    && apt-get install -f \
-    && apt-get clean \
-    && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
-    && rm -rf /var/lib/apt/lists/* 
-    
-RUN add-apt-repository ppa:max-c-lv/shadowsocks-libev -y \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-	    shadowsocks-libev \
-	    build-essential \
-	    autoconf \
-	    libtool \
-	    libssl-dev \
-	    libpcre3-dev \
-	    libc-ares-dev \
-	    libev-dev \
-	    asciidoc \
-	    xmlto \
-	    automake \
-	    git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-# CN_SP+
-    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
-# CN_SP-
-    && git clone https://github.com/shadowsocks/simple-obfs.git \
-    && cd simple-obfs \
-    && git submodule update --init --recursive \
-    && ./autogen.sh \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -rf simple-obfs \
-    && git clone https://github.com/rofl0r/proxychains-ng.git \
-    && cd proxychains-ng \
-    && ./configure --prefix=/usr --sysconfdir=/etc \
-    && make \
-    && make install \
-    && make install-config \
-    && cd .. \
-    && echo ' \
-    \n   strict_chain \
-    \n   quiet_mode \
-    \n   remote_dns_subnet 224 \
-    \n   tcp_read_time_out 15000 \
-    \n   tcp_connect_time_out 8000 \
-    \n   [ProxyList] \
-    \n   socks5 	127.0.0.1 1080 ' > /etc/proxychains.conf \
-    && rm -rf proxychains-ng 
-# CN_SP+
-COPY ["content/shadowsocks.json", "/etc/shadowsocks.json"]
-# CN_SP-
-
-ENV NEOVIM_VERSION="xenial-ppa-unstable" \
-    NODEJS_VERSION="12" \
-    NODEJS_SUBVERSION="22.0" \
-    NODEJS_UPDATE="2021-04-05"
-RUN add-apt-repository ppa:neovim-ppa/unstable \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-        neovim \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir /opt/nodejs \
-    && curl -fsSL --retry 5 https://npm.taobao.org/mirrors/node/latest-v${NODEJS_VERSION}.x/node-v${NODEJS_VERSION}.${NODEJS_SUBVERSION}-linux-x64.tar.gz \
-        | tar -xz -C /opt/nodejs --strip-components 1 \
-    && ln -s /opt/nodejs/bin/node /usr/bin/node \
-    && ln -s /opt/nodejs/bin/npm /usr/bin/npm
-
-ENV CMAKE_VERSION="3.20.0" \
-    CMAKE_UPDATE="2021-04-10"
-RUN mkdir /tmp/cmake \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz \
-        | tar -xz -C /tmp/cmake --strip-components 1 \
-    && cd /tmp/cmake \
-    && ./bootstrap --prefix=/opt/cmake \
-    && make -j $(echo "$(nproc)-2" | bc) \
-    && make install \
-    && ln -s /opt/cmake/bin/cmake /usr/bin/cmake && cd .. \
-    && rm -rf cmake
-
-ENV FSL_VERSION="6.0.4" \
-    FSL_UPDATE="2021-03-15" \
-    FSLDIR="/opt/fsl" \
-    PATH="/opt/fsl/bin:$PATH" \
-    FSLOUTPUTTYPE="NIFTI_GZ" \
-    FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl/bin/fsltclsh" \
-    FSLWISH="/opt/fsl/bin/fslwish" \
-    FSLLOCKDIR="" \
-    FSLMACHINELIST="" \
-    FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q"
-RUN echo "Installing FSL ..." \
-    && mkdir /opt/fsl \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
-     | tar -xz -C /opt/fsl --strip-components 1 \
-    && echo 'Some packages in this Docker container are non-free' \
-    && echo 'If you are considering commercial use of this container, please consult the relevant license:' \
-    && echo 'https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' \
-    && echo "Installing FSL conda environment ..." \
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
-    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT \
-    && echo "Getting neurolabusc's fsl_sub for a better parallel compute experient ..." \
-    && git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub \
-    && rm /opt/fsl/bin/fsl_sub \
-    && chmod a+x /opt/fsl_sub/fsl_sub \
-    && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
-
 ENV AFNI_VERSION="ubuntu_16_64" \
     AFNI_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
     QT_X11_NO_MITSHM=1
-RUN apt-get update -qq \
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository -y ppa:ubuntugis/ppa \
+    && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           python-qt4 \
-           libgtk2.0-0 \
-           libcurl4-openssl-dev \
-           libxml2-dev \
-           libv8-dev \
-           libudunits2-dev \
-           openmpi-bin \
+            tcsh \
+            xfonts-base \
+            libssl-dev \
+            python-is-python3 \
+            python3-matplotlib \
+            libgsl0-dev \
+            gsl-bin \
+            netpbm \
+            libjpeg62 \
+            xvfb \
+            xterm \
+            vim \
+            curl \
+            gedit \
+            evince \
+            eog \
+            libglu1-mesa-dev \
+            libglw1-mesa \
+            libxm4 \
+            build-essential \
+            libcurl4-openssl-dev \
+            libxml2-dev  \
+            libgfortran-8-dev \
+            libgomp1 \
+            nautilus \
+            firefox xfonts-100dpi \
+            r-base-dev \
+            libgtk2.0-0 \
+            libv8-dev \
+            libudunits2-dev \
+            libopenmpi-dev \
+            openmpi-bin \
+            libgdal-dev \
+            gdal-bin \
+            libproj-dev \
+            proj-data \
+            proj-bin \
+            libgeos-dev \
+    && apt-get install -f \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
+    && ldconfig \ 
+    && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
     && echo "Installing AFNI ..." \
     && mkdir -p /opt/afni \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
+    && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
         | tar -xz -C /opt/afni --strip-components 1 \
-    && PATH=$PATH:/opt/afni \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    rPkgsInstall -pkgs ALL \
+    && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
     && rm /root/.Rprofile
 
+####################
+#### Freesurfer ####
+####################
+ENV FREESURFER_VERSION="7.1.1" \
+    FREESURFER_UPDATE="2021-03-15" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    PATH="/opt/freesurfer/bin:$PATH" \
+    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH"
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc \
+           libgomp1 \
+           libxmu6 \
+           libxt6 \
+           perl \
+           tcsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing FreeSurfer ..." \
+    && mkdir -p /opt/freesurfer \
+    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
+     | tar -xz -C /opt/freesurfer --strip-components 1 \
+         --exclude='freesurfer/average/mult-comp-cor' \                                                                                                      
+         --exclude='freesurfer/lib/cuda' \
+         --exclude='freesurfer/lib/qt' \
+         --exclude='freesurfer/subjects/V1_average' \
+         --exclude='freesurfer/subjects/bert' \
+         --exclude='freesurfer/subjects/cvs_avg35' \
+         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+         --exclude='freesurfer/subjects/fsaverage3' \
+         --exclude='freesurfer/subjects/fsaverage4' \
+         --exclude='freesurfer/subjects/fsaverage5' \
+         --exclude='freesurfer/subjects/fsaverage6' \
+         --exclude='freesurfer/subjects/fsaverage_sym' \
+         --exclude='freesurfer/trctrain' \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
+
+####################
+####    ANTs    ####
+####################
 ENV ANTS_VERSION="latest-git" \
     ANTS_UPDATE=${SYS_BUILD_DATE} \
     ANTSPATH="/opt/ants/bin" \
     PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
-RUN echo "Installing ANTs ..." \
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            git \
+            gettext \
+            libtool \
+            libtool-bin \
+            autoconf \
+            automake \
+            cmake \
+            g++ \
+            pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing ANTs ..." \
     && mkdir -p /tmp/ants-build/build \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
     && cd /tmp/ants-build/build \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
     && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
     && cd ANTS-build \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
     && rm -r /tmp/ants-build
 
-ENV FREESURFER_VERSION="7.1.1" \
-    FREESURFER_UPDATE="2021-03-15" \
-    FREESURFER_HOME="/opt/freesurfer" \
-    PATH="/opt/freesurfer/bin:$PATH" \
-    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH"
-RUN echo "Installing FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz \
-     | tar -xz -C /opt/freesurfer --strip-components 1 \
-    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
-
-ENV MRTRIX3_VERSION="latest-git" \
-    MRTRIX3_UPDATE=${SYS_BUILD_DATE} \
-    MRTRIX3PATH="/opt/mrtrix3" \
-    PATH="/opt/mrtrix3/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install  -y -q --no-install-recommends \
-        parallel \
-        pexec \
-        python \
-        qt5-default \
-        libeigen3-dev \
-        zlib1g-dev \
-        libqt5opengl5-dev \
-        libqt5svg5-dev \
-        libfftw3-dev \
-        libtiff5-dev \
-        libpng-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Installing MRtrix3 ..." \
-    && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
-    && cd /opt/mrtrix3 \
-    && ./configure \
-    && ./build
-
-ENV OCTAVE_VERSION="6.2.0" \
-    OCTAVE_UPDATE="2021-04-10" \
-    PATH="/opt/octave/bin:$PATH"
-RUN echo "Installing Octave ..." \
-    && apt-get update -qq \
-    && apt-get install  -y -q --no-install-recommends \
-        libcurl4-gnutls-dev \
-        epstool \
-        transfig \
-        libfltk1.3-dev \
-        libfontconfig1-dev \
-        libfreetype6-dev \
-        libgl2ps-dev \
-        libglpk-dev \
-        gnuplot-x11 \
-        libgraphicsmagick++1-dev \
-        libhdf5-serial-dev \
-        openjdk-8-jdk \
-        libsndfile1-dev \
-        llvm-dev \
-        lpr \
-        texinfo \
-        libosmesa6-dev \
-        pstoedit \
-        portaudio19-dev \
-        libqrupdate-dev \
-        libqt4-dev \
-        libqt4-opengl-dev \
-        libqscintilla2-dev \
-        libsuitesparse-dev \
-        texlive \
-        libxft-dev \
-        bison \
-        flex \
-        gperf \
-        icoutils \
-        librsvg2-bin \
-        rsync \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && mkdir -p /tmp/octave \
-    && wget --progress=bar:force -q -O- https://ftpmirror.gnu.org/octave/octave-${OCTAVE_VERSION}.tar.gz \
-     | tar -xz -C /tmp/octave --strip-components 1 \
-    && cd /tmp/octave && mkdir build && cd build \
-    && ../configure --prefix=/opt/octave --with-qt=4 \
-    && make -j $(echo "$(nproc)-2" | bc) \
-    && make install \
-    && cd /tmp && rm -rf /tmp/octave \
-    && ln -s /opt/octave/bin/octave /usr/bin/octave
-
-ENV SPM_VERSION="12" \
-    SPM_REVISION="r7771" \
-    SPM_UPDATE="2021-04-10" \
-    PATH="/opt/spm12/bin:$PATH"
-RUN echo "Installing SPM ... " \
-    && mkdir /opt/spm${SPM_VERSION} \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://github.com/spm/spm${SPM_VERSION}/archive/${SPM_REVISION}.tar.gz \
-     | tar -xz -C /opt/spm${SPM_VERSION} --strip-components 1 \
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fsSL --retry 5 https://raw.githubusercontent.com/spm/spm-docker/master/octave/spm${SPM_VERSION}_${SPM_REVISION}.patch \
-     | patch -p0 \
-    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave distclean \
-    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave \
-    && make -C /opt/spm${SPM_VERSION}/src PLATFORM=octave install \
-    && cp /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}-octave /opt/spm${SPM_VERSION}/bin/spm${SPM_VERSION}
-
+####################
+####  dcm2niix  ####
+####################
 ENV DCM2NIIX_VERSION="latest-git" \
     DCM2NIIX_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/dcm2niix:$PATH"
 RUN echo "Installing dcm2niix ..." \
-# CN_SP+
-    && `ss-local -c /etc/shadowsocks.json > /dev/null 2>&1 &` \
-# CN_SP-
     && mkdir /opt/dcm2niix \
     && cd /tmp \
-    && \
-# CN_SP+
-    proxychains4 \
-# CN_SP-
-    curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
+    && curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
     && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
     && rm /tmp/dcm2niix_lnx.zip
 
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 
-
-####################
-#### Post Build ####
-####################
-RUN rm /etc/proxychains.conf \
-    && rm /etc/shadowsocks.json
 
 ####################
 #### Sys Update ####

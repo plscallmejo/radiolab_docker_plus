@@ -180,11 +180,12 @@ elif [[ ${RUNTIME} = "normal" ]]; then
         touch build/base/Dockerfile
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
         echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
-echo '#ubuntu:16.04
-FROM ubuntu:16.04
+echo '#ubuntu:20.04
+FROM ubuntu:20.04
 # mesa runtime
-ENV NV_RUNTIME=FALSE
-ENV BASE="ubuntu:16.04"
+ARG DEBIAN_FRONTEND=noninteractive
+ENV NV_RUNTIME=FALSE \
+    BASE="ubuntu:20.04"
 # CN_SP+
 RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list
 # CN_SP-
