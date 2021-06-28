@@ -27,6 +27,9 @@ ARG SYS_BUILD_DATE \
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" 
     
+####################
+#### Basic Conf ####
+####################
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             apt-utils \
@@ -56,6 +59,9 @@ RUN mkdir -p /radiolabdocker \
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
+####################
+####    AFNI    ####
+####################
 ENV AFNI_VERSION="ubuntu_16_64" \
     AFNI_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/afni:$PATH" \
@@ -118,44 +124,6 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
     && rm /root/.Rprofile
 
 ####################
-#### Freesurfer ####
-####################
-ENV FREESURFER_VERSION="7.1.1" \
-    FREESURFER_UPDATE="2021-03-15" \
-    FREESURFER_HOME="/opt/freesurfer" \
-    PATH="/opt/freesurfer/bin:$PATH" \
-    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH"
-
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           bc \
-           libgomp1 \
-           libxmu6 \
-           libxt6 \
-           perl \
-           tcsh \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Installing FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer \
-    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
-     | tar -xz -C /opt/freesurfer --strip-components 1 \
-         --exclude='freesurfer/average/mult-comp-cor' \                                                                                                      
-         --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/lib/qt' \
-         --exclude='freesurfer/subjects/V1_average' \
-         --exclude='freesurfer/subjects/bert' \
-         --exclude='freesurfer/subjects/cvs_avg35' \
-         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-         --exclude='freesurfer/subjects/fsaverage3' \
-         --exclude='freesurfer/subjects/fsaverage4' \
-         --exclude='freesurfer/subjects/fsaverage5' \
-         --exclude='freesurfer/subjects/fsaverage6' \
-         --exclude='freesurfer/subjects/fsaverage_sym' \
-         --exclude='freesurfer/trctrain' \
-    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
-
-####################
 ####    ANTs    ####
 ####################
 ENV ANTS_VERSION="latest-git" \
@@ -185,6 +153,43 @@ RUN apt-get update -qq \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
     && rm -r /tmp/ants-build
+
+####################
+#### Freesurfer ####
+####################
+ENV FREESURFER_VERSION="7.1.1" \
+    FREESURFER_UPDATE="2021-03-15" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    PATH="/opt/freesurfer/bin:$PATH" 
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc \
+           libgomp1 \
+           libxmu6 \
+           libxt6 \
+           libqt5x11extras5 \
+           perl \
+           tcsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing FreeSurfer ..." \
+    && mkdir -p /opt/freesurfer \
+    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
+     | tar -xz -C /opt/freesurfer --strip-components 1 \
+         --exclude='freesurfer/average/mult-comp-cor' \                                                                                                      
+         --exclude='freesurfer/lib/cuda' \
+         --exclude='freesurfer/lib/qt' \
+         --exclude='freesurfer/subjects/V1_average' \
+         --exclude='freesurfer/subjects/bert' \
+         --exclude='freesurfer/subjects/cvs_avg35' \
+         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+         --exclude='freesurfer/subjects/fsaverage3' \
+         --exclude='freesurfer/subjects/fsaverage4' \
+         --exclude='freesurfer/subjects/fsaverage5' \
+         --exclude='freesurfer/subjects/fsaverage6' \
+         --exclude='freesurfer/subjects/fsaverage_sym' \
+         --exclude='freesurfer/trctrain' \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
 
 ####################
 ####  dcm2niix  ####

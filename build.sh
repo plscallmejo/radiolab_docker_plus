@@ -187,7 +187,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=FALSE \
     BASE="ubuntu:20.04"
 # CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
 # CN_SP-
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
