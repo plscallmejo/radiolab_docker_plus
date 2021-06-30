@@ -25,7 +25,8 @@ ARG SYS_BUILD_DATE \
     DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8" 
+    LC_ALL="en_US.UTF-8" \
+    LIBGL_ALWAYS_INDIRECT=1
     
 ####################
 #### Basic Conf ####
@@ -41,6 +42,8 @@ RUN apt-get update -qq \
             gnupg \
             bc \
             software-properties-common \
+            mesa-utils \
+            libgl1-mesa-glx \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -143,6 +146,7 @@ RUN apt-get update -qq \
             pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
     && echo "Installing ANTs ..." \
     && mkdir -p /tmp/ants-build/build \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
@@ -157,8 +161,12 @@ RUN apt-get update -qq \
 ####################
 #### Freesurfer ####
 ####################
-ENV FREESURFER_VERSION="7.1.1" \
-    FREESURFER_UPDATE="2021-03-15" \
+ENV OS="Linux" \
+	FREESURFER_VERSION="7.1.1" \
+    FS_OVERRIDE=0 \
+    FIX_VERTEX_AREA="" \
+    FSF_OUTPUT_FORMAT="nii.gz" \
+    FREESURFER_UPDATE=${SYS_BUILD_DATE} \
     FREESURFER_HOME="/opt/freesurfer" \
     PATH="/opt/freesurfer/bin:$PATH" 
 RUN apt-get update -qq \
@@ -176,9 +184,7 @@ RUN apt-get update -qq \
     && mkdir -p /opt/freesurfer \
     && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
      | tar -xz -C /opt/freesurfer --strip-components 1 \
-         --exclude='freesurfer/average/mult-comp-cor' \                                                                                                      
          --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/lib/qt' \
          --exclude='freesurfer/subjects/V1_average' \
          --exclude='freesurfer/subjects/bert' \
          --exclude='freesurfer/subjects/cvs_avg35' \
@@ -188,6 +194,9 @@ RUN apt-get update -qq \
          --exclude='freesurfer/subjects/fsaverage5' \
          --exclude='freesurfer/subjects/fsaverage6' \
          --exclude='freesurfer/subjects/fsaverage_sym' \
+		 --exclude='freesurfer/subjects/lh.EC_average' \
+		 --exclude='freesurfer/subjects/rh.EC_average' \
+		 --exclude='freesurfer/subjects/sample-*.mgz' \
          --exclude='freesurfer/trctrain' \
     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
 
@@ -204,6 +213,9 @@ RUN echo "Installing dcm2niix ..." \
     && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
     && rm /tmp/dcm2niix_lnx.zip
 
+####################
+#### Post Build ####
+####################
 RUN chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 
 

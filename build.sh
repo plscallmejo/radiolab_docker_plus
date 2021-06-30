@@ -162,17 +162,21 @@ if [[ ${RUNTIME} = "nvidia" ]]; then
         touch build/base/Dockerfile
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
         echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-echo '# nvidia/cudagl:9.1-runtime-ubuntu16.04
-FROM nvidia/cudagl:9.1-runtime-ubuntu16.04
+echo '# nvidia/cudagl:11.3.1-runtime-ubuntu20.04
+FROM nvidia/cudagl:11.3.1-runtime-ubuntu20.04
 # nvidia-container-runtime
-ENV NV_RUNTIME=TRUE
-ENV BASE="nvidia/cudagl:9.1-runtime-ubuntu16.04"
-ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
-# CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list
-# CN_SP-'  > build/base/Dockerfile
+ARG DEBIAN_FRONTEND=noninteractive
+ENV NV_RUNTIME=TRUE \
+    BASE="nvidia/cudagl:11.3.1-runtime-ubuntu20.04" \
+    NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
+    NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
+    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           qt5-default \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
     fi
 elif [[ ${RUNTIME} = "normal" ]]; then
     if [[ -z ${COMPOSE} ]]; then
@@ -186,10 +190,8 @@ FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=FALSE \
     BASE="ubuntu:20.04"
-# CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
-# CN_SP-
-RUN apt-get update -qq \
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
+    && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            qt5-default \
     && apt-get clean \
