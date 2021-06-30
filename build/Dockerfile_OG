@@ -21,8 +21,7 @@ FROM radiolab_base:latest
 
 USER root
 
-ARG SYS_BUILD_DATE \
-    DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
@@ -42,8 +41,15 @@ RUN apt-get update -qq \
             gnupg \
             bc \
             software-properties-common \
-            mesa-utils \
-            libgl1-mesa-glx \
+            htop \
+            tmux \
+            xvfb \
+            xterm \
+            vim \
+            curl \
+            gedit \
+            evince \
+            firefox \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -66,7 +72,6 @@ ENTRYPOINT ["/radiolabdocker/startup.sh"]
 ####    AFNI    ####
 ####################
 ENV AFNI_VERSION="ubuntu_16_64" \
-    AFNI_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
     QT_X11_NO_MITSHM=1
@@ -84,13 +89,9 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
             gsl-bin \
             netpbm \
             libjpeg62 \
-            xvfb \
-            xterm \
-            vim \
-            curl \
-            gedit \
-            evince \
             eog \
+            mesa-utils \
+            libgl1-mesa-glx \
             libglu1-mesa-dev \
             libglw1-mesa \
             libxm4 \
@@ -100,7 +101,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
             libgfortran-8-dev \
             libgomp1 \
             nautilus \
-            firefox xfonts-100dpi \
+            xfonts-100dpi \
             r-base-dev \
             libgtk2.0-0 \
             libv8-dev \
@@ -121,7 +122,7 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
     && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
     && echo "Installing AFNI ..." \
     && mkdir -p /opt/afni \
-    && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
+    && curl -fSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
         | tar -xz -C /opt/afni --strip-components 1 \
     && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
     && rm /root/.Rprofile
@@ -130,7 +131,6 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
 ####    ANTs    ####
 ####################
 ENV ANTS_VERSION="latest-git" \
-    ANTS_UPDATE=${SYS_BUILD_DATE} \
     ANTSPATH="/opt/ants/bin" \
     PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
 RUN apt-get update -qq \
@@ -159,7 +159,6 @@ RUN apt-get update -qq \
     && rm -r /tmp/ants-build
 
 ENV FSL_VERSION="6.0.4" \
-    FSL_UPDATE=${SYS_BUILD_DATE} \
     FSLDIR="/opt/fsl" \
     PATH="/opt/fsl/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
@@ -172,7 +171,7 @@ ENV FSL_VERSION="6.0.4" \
     FSLGECUDAQ="cuda.q"
 RUN echo "Installing FSL ..." \
     && mkdir /opt/fsl \
-    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
+    && curl -fSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
      | tar -xz -C /opt/fsl --strip-components 1 \
     && echo "Installing FSL conda environment ..." \
     && bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
@@ -191,7 +190,6 @@ ENV OS="Linux" \
     FS_OVERRIDE=0 \
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
-    FREESURFER_UPDATE=${SYS_BUILD_DATE} \
     FREESURFER_HOME="/opt/freesurfer" \
     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
     PATH="/opt/freesurfer/bin:$PATH" 
@@ -207,7 +205,7 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Installing FreeSurfer ..." \
     && mkdir -p /opt/freesurfer \
-    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
+    && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
      | tar -xz -C /opt/freesurfer --strip-components 1 \
          --exclude='freesurfer/lib/cuda' \
          --exclude='freesurfer/subjects/V1_average' \
@@ -229,7 +227,6 @@ RUN apt-get update -qq \
 ####  dcm2niix  ####
 ####################
 ENV DCM2NIIX_VERSION="latest-git" \
-    DCM2NIIX_UPDATE=${SYS_BUILD_DATE} \
     PATH="/opt/dcm2niix:$PATH"
 RUN echo "Installing dcm2niix ..." \
     && mkdir /opt/dcm2niix \
@@ -247,6 +244,7 @@ RUN chmod 755 /radiolabdocker/startup.sh \
 ####################
 #### Sys Update ####
 ####################
+ARG SYS_BUILD_DATE 
 ENV SYS_BUILD_DATE=${SYS_BUILD_DATE}
 RUN apt-get update -qq \
     && apt-get upgrade -qq \
