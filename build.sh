@@ -161,20 +161,29 @@ if [[ ${RUNTIME} = "nvidia" ]]; then
         mkdir -p build/base
         touch build/base/Dockerfile
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-echo '# nvidia/cudagl:11.3.1-runtime-ubuntu20.04
-FROM nvidia/cudagl:11.3.1-runtime-ubuntu20.04
+        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04${normal} with \"${hint}nvidia runtime${normal}\" support"
+echo '# nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 # nvidia-container-runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=TRUE \
-    BASE="nvidia/cudagl:11.3.1-runtime-ubuntu20.04" \
+    BASE="nvidia/11.3.1-cudnn8-runtime-ubuntu20.04" \
     NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
     NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+    && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
+#    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           qt5-default \
+    		libxext6 \
+    		libx11-6 \
+    		libglvnd0 \
+    		libgl1 \
+    		libglx0 \
+    		libegl1 \
+    		freeglut3-dev \
+			mesa-utils \
+			qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
     fi
@@ -191,9 +200,18 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=FALSE \
     BASE="ubuntu:20.04"
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
+	# OpenGL and glvnd
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           qt5-default \
+    		libxext6 \
+    		libx11-6 \
+    		libglvnd0 \
+    		libgl1 \
+    		libglx0 \
+    		libegl1 \
+    		freeglut3-dev \
+			mesa-utils \
+			qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
     fi
