@@ -27,11 +27,8 @@ echo "                         or you already have the image built, and don't wa
 echo "                     Note, the pre-built image should tag with "radiolab_docker:latest"."
 echo "                       You can use the following command:"
 echo "                         "docker tag \<pre-built image\> radiolab_docker:latest""
-echo "-s, --ss-libev       Use ss-libev through proxychains-ng."
+echo "-s, --cn-sp          Use some cn speacialized setting."
 echo "                     T for TRUE, and F for FALSE. (default: T)"
-echo "                     Note, ss config file should be copied to the build/content folder and"
-echo "                       rename to shadowsocks.json"
-echo "                     Also Note, only simple-obfs plugin is supported"
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
@@ -79,7 +76,7 @@ for arg in "$@"; do
   case "$arg" in
     "--runtime")      set -- "$@" "-p" ;;
     "--make-compose") set -- "$@" "-c" ;;
-    "--ss-libev")     set -- "$@" "-s" ;;
+    "--cn-sp")     set -- "$@" "-s" ;;
     "--help")         set -- "$@" "-h" ;;
     *)                set -- "$@" "$arg"
   esac
@@ -167,23 +164,26 @@ FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 # nvidia-container-runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=TRUE \
+    LIBGL_ALWAYS_INDIRECT=1 \
     BASE="nvidia/11.3.1-cudnn8-runtime-ubuntu20.04" \
     NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
     NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+# CN_SP+
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
-#    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
-    && apt-get update -qq \
+    && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list
+# CN_SP-
+# OpenGL and glvnd
+RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-    		libxext6 \
-    		libx11-6 \
-    		libglvnd0 \
-    		libgl1 \
-    		libglx0 \
-    		libegl1 \
-    		freeglut3-dev \
-			mesa-utils \
-			qt5-default \
+            libxext6 \
+            libx11-6 \
+            libglvnd0 \
+            libgl1 \
+            libglx0 \
+            libegl1 \
+            freeglut3-dev \
+            mesa-utils \
+            qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
     fi
@@ -198,20 +198,23 @@ FROM ubuntu:20.04
 # mesa runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=FALSE \
+    LIBGL_ALWAYS_INDIRECT=0 \
     BASE="ubuntu:20.04"
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-	# OpenGL and glvnd
-    && apt-get update -qq \
+# CN_SP+
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
+# CN_SP-
+# OpenGL and glvnd
+RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-    		libxext6 \
-    		libx11-6 \
-    		libglvnd0 \
-    		libgl1 \
-    		libglx0 \
-    		libegl1 \
-    		freeglut3-dev \
-			mesa-utils \
-			qt5-default \
+            libxext6 \
+            libx11-6 \
+            libglvnd0 \
+            libgl1 \
+            libglx0 \
+            libegl1 \
+            freeglut3-dev \
+            mesa-utils \
+            qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
     fi

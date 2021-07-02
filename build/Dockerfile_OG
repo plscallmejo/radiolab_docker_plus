@@ -13,9 +13,9 @@
 # It had been tuned so that the final docker image
 # can be built inside the special network environment
 # of CN. 
-# (No longer)
 # The # CN_SP tags are used for controlling 
 # the networking during the build procedures
+# (No longer)
 # through ss-libev proxy by proxychains-ng.
 # (No longer)
 # Ubuntu and github mirrors are subsitituded with 
@@ -30,8 +30,7 @@ USER root
 ARG DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8" \
-    LIBGL_ALWAYS_INDIRECT=1
+    LC_ALL="en_US.UTF-8" 
     
 ####################
 #### Basic Conf ####
@@ -56,6 +55,7 @@ RUN apt-get update -qq \
             gedit \
             evince \
             firefox \
+            man \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -74,6 +74,180 @@ RUN mkdir -p /radiolabdocker \
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
+
+
+####################
+####    AFNI    ####
+####################
+ENV AFNI_VERSION="ubuntu_16_64" \
+    PATH="/opt/afni:$PATH" \
+    AFNI_PLUGINPATH="/opt/afni"\
+    QT_X11_NO_MITSHM=1
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository -y ppa:ubuntugis/ppa \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            tcsh \
+            xfonts-base \
+            libssl-dev \
+            python-is-python3 \
+            python3-matplotlib \
+            libgsl0-dev \
+            gsl-bin \
+            netpbm \
+            libjpeg62 \
+            eog \
+            mesa-utils \
+            libgl1-mesa-glx \
+            libglu1-mesa-dev \
+            libglw1-mesa \
+            libxm4 \
+            build-essential \
+            libcurl4-openssl-dev \
+            libxml2-dev  \
+            libgfortran-8-dev \
+            libgomp1 \
+            nautilus \
+            xfonts-100dpi \
+            r-base-dev \
+            libgtk2.0-0 \
+            libv8-dev \
+            libudunits2-dev \
+            libopenmpi-dev \
+            openmpi-bin \
+            libgdal-dev \
+            gdal-bin \
+            libproj-dev \
+            proj-data \
+            proj-bin \
+            libgeos-dev \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
+    && ldconfig \ 
+    && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
+    && echo "Installing AFNI ..." \
+    && mkdir -p /opt/afni \
+    && curl -fSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
+        | tar -xz -C /opt/afni --strip-components 1 \
+    && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
+    && rm /root/.Rprofile
+
+####################
+####    ANTs    ####
+####################
+ENV ANTS_VERSION="latest-git" \
+    ANTSPATH="/opt/ants/bin" \
+    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            git \
+            gettext \
+            libtool \
+            libtool-bin \
+            autoconf \
+            automake \
+            cmake \
+            g++ \
+            pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+#CN_SP+
+    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+#CN_SP-
+    && echo "Installing ANTs ..." \
+    && mkdir -p /tmp/ants-build/build \
+    && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
+    && cd /tmp/ants-build/build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
+    && cd ANTS-build \
+    && make install 2>&1 \
+    && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
+    && rm -r /tmp/ants-build
+
+####################
+####     FSL    ####
+####################
+ENV FSL_VERSION="6.0.4" \
+    FSLDIR="/opt/fsl" \
+    PATH="/opt/fsl/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl/bin/fsltclsh" \
+    FSLWISH="/opt/fsl/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL="" \
+    FSLGECUDAQ="cuda.q"
+RUN echo "Installing FSL ..." \
+    && mkdir /opt/fsl \
+    && curl -fSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
+     | tar -xz -C /opt/fsl --strip-components 1 \
+    && echo "Installing FSL conda environment ..." \
+    && bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
+    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT \
+    && echo "Getting neurolabusc's fsl_sub for a better parallel computing experience ..." \
+    && git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub \
+    && rm /opt/fsl/bin/fsl_sub \
+    && chmod a+x /opt/fsl_sub/fsl_sub \
+    && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
+
+####################
+#### Freesurfer ####
+####################
+ENV OS="Linux" \
+	FREESURFER_VERSION="7.1.1" \
+    FS_OVERRIDE=0 \
+    FIX_VERTEX_AREA="" \
+    FSF_OUTPUT_FORMAT="nii.gz" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
+    PATH="/opt/freesurfer/bin:$PATH" 
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc \
+           libgomp1 \
+           libxmu6 \
+           libxt6 \
+           perl \
+           tcsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "Installing FreeSurfer ..." \
+    && mkdir -p /opt/freesurfer \
+    && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
+     | tar -xz -C /opt/freesurfer --strip-components 1 \
+         --exclude='freesurfer/lib/cuda' \
+         --exclude='freesurfer/subjects/V1_average' \
+         --exclude='freesurfer/subjects/bert' \
+         --exclude='freesurfer/subjects/cvs_avg35' \
+         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+         --exclude='freesurfer/subjects/fsaverage3' \
+         --exclude='freesurfer/subjects/fsaverage4' \
+         --exclude='freesurfer/subjects/fsaverage5' \
+         --exclude='freesurfer/subjects/fsaverage6' \
+         --exclude='freesurfer/subjects/fsaverage_sym' \
+		 --exclude='freesurfer/subjects/lh.EC_average' \
+		 --exclude='freesurfer/subjects/rh.EC_average' \
+		 --exclude='freesurfer/subjects/sample-*.mgz' \
+         --exclude='freesurfer/trctrain' \
+    && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
+
+####################
+####  dcm2niix  ####
+####################
+ENV DCM2NIIX_VERSION="latest-git" \
+    PATH="/opt/dcm2niix:$PATH"
+RUN echo "Installing dcm2niix ..." \
+    && mkdir /opt/dcm2niix \
+    && cd /tmp \
+    && curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
+    && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
+    && rm /tmp/dcm2niix_lnx.zip
+
 ####################
 #### miniconda  ####
 #### numpy      ####
@@ -89,22 +263,34 @@ ENTRYPOINT ["/radiolabdocker/startup.sh"]
 #### pybids     ####
 #### dipy       ####
 #### nilearn    ####
-#### pymvpa     ####
 ####################
 
 ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
 RUN echo "Installing Miniconda ..." \
     && conda_installer="/tmp/miniconda.sh" \
-    && curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
     && bash "$conda_installer" -b -p /opt/miniconda-latest \
+# CN_SP+
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
+    && conda config --set show_channel_urls yes \
+# CN_SP-
     && rm -f "$conda_installer" \
+# CN_SP+
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+# CN_SP-
     && conda update -yq -nbase conda \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
     && conda create -y -q --name radioconda python=3.7 \
+    && if [ ${NV_RUNTIME}=="TRUE" ]; then \
+            TF="tensorflow-gpu" ;\
+        else \
+            TF="tensorflow" ;\
+        fi \ 
     && bash -c "source activate radioconda \
     &&   pip install --no-cache-dir  \
              "numpy" \
@@ -113,187 +299,21 @@ RUN echo "Installing Miniconda ..." \
              "matplotlib" \
              "seaborn" \
              "jupyterlab" \
+             "ipywidgets" \
              "scikit-learn" \
-             "tensorflow" \
-             "tensorflow-gpu" \ 
+             "${TF}" \
              "nipype" \
              "nibabel" \
              "pybids" \
              "dipy" \
-             "vtk==8.1.2" \
+             "vtk" \
              "fury" \
              "nilearn" \
              " \ 
     && rm -rf ~/.cache/pip/* \
+    && rm -rf ~/.condarc \
+    && rm -rf ~/.config/pip/pip.conf \
     && sync
-
-
-# ####################
-# ####    AFNI    ####
-# ####################
-# ENV AFNI_VERSION="ubuntu_16_64" \
-#     PATH="/opt/afni:$PATH" \
-#     AFNI_PLUGINPATH="/opt/afni"\
-#     QT_X11_NO_MITSHM=1
-# RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
-#     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-#     && add-apt-repository -y ppa:ubuntugis/ppa \
-#     && apt-get update -qq \
-#     && apt-get install -y -q --no-install-recommends \
-#             tcsh \
-#             xfonts-base \
-#             libssl-dev \
-#             python-is-python3 \
-#             python3-matplotlib \
-#             libgsl0-dev \
-#             gsl-bin \
-#             netpbm \
-#             libjpeg62 \
-#             eog \
-#             mesa-utils \
-#             libgl1-mesa-glx \
-#             libglu1-mesa-dev \
-#             libglw1-mesa \
-#             libxm4 \
-#             build-essential \
-#             libcurl4-openssl-dev \
-#             libxml2-dev  \
-#             libgfortran-8-dev \
-#             libgomp1 \
-#             nautilus \
-#             xfonts-100dpi \
-#             r-base-dev \
-#             libgtk2.0-0 \
-#             libv8-dev \
-#             libudunits2-dev \
-#             libopenmpi-dev \
-#             openmpi-bin \
-#             libgdal-dev \
-#             gdal-bin \
-#             libproj-dev \
-#             proj-data \
-#             proj-bin \
-#             libgeos-dev \
-#     && apt-get install -f \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
-#     && ldconfig \ 
-#     && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
-#     && echo "Installing AFNI ..." \
-#     && mkdir -p /opt/afni \
-#     && curl -fSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
-#         | tar -xz -C /opt/afni --strip-components 1 \
-#     && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
-#     && rm /root/.Rprofile
-# 
-# ####################
-# ####    ANTs    ####
-# ####################
-# ENV ANTS_VERSION="latest-git" \
-#     ANTSPATH="/opt/ants/bin" \
-#     PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
-# RUN apt-get update -qq \
-#     && apt-get install -y -q --no-install-recommends \
-#             git \
-#             gettext \
-#             libtool \
-#             libtool-bin \
-#             autoconf \
-#             automake \
-#             cmake \
-#             g++ \
-#             pkg-config \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
-#     && echo "Installing ANTs ..." \
-#     && mkdir -p /tmp/ants-build/build \
-#     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
-#     && cd /tmp/ants-build/build \
-#     && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
-#     && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
-#     && cd ANTS-build \
-#     && make install 2>&1 \
-#     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
-#     && rm -r /tmp/ants-build
-# 
-# ENV FSL_VERSION="6.0.4" \
-#     FSLDIR="/opt/fsl" \
-#     PATH="/opt/fsl/bin:$PATH" \
-#     FSLOUTPUTTYPE="NIFTI_GZ" \
-#     FSLMULTIFILEQUIT="TRUE" \
-#     FSLTCLSH="/opt/fsl/bin/fsltclsh" \
-#     FSLWISH="/opt/fsl/bin/fslwish" \
-#     FSLLOCKDIR="" \
-#     FSLMACHINELIST="" \
-#     FSLREMOTECALL="" \
-#     FSLGECUDAQ="cuda.q"
-# RUN echo "Installing FSL ..." \
-#     && mkdir /opt/fsl \
-#     && curl -fSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \
-#      | tar -xz -C /opt/fsl --strip-components 1 \
-#     && echo "Installing FSL conda environment ..." \
-#     && bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl \
-#     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT \
-#     && echo "Getting neurolabusc's fsl_sub for a better parallel computing experience ..." \
-#     && git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub \
-#     && rm /opt/fsl/bin/fsl_sub \
-#     && chmod a+x /opt/fsl_sub/fsl_sub \
-#     && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
-# 
-# ####################
-# #### Freesurfer ####
-# ####################
-# ENV OS="Linux" \
-# 	FREESURFER_VERSION="7.1.1" \
-#     FS_OVERRIDE=0 \
-#     FIX_VERTEX_AREA="" \
-#     FSF_OUTPUT_FORMAT="nii.gz" \
-#     FREESURFER_HOME="/opt/freesurfer" \
-#     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
-#     PATH="/opt/freesurfer/bin:$PATH" 
-# RUN apt-get update -qq \
-#     && apt-get install -y -q --no-install-recommends \
-#            bc \
-#            libgomp1 \
-#            libxmu6 \
-#            libxt6 \
-#            perl \
-#            tcsh \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/* \
-#     && echo "Installing FreeSurfer ..." \
-#     && mkdir -p /opt/freesurfer \
-#     && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
-#      | tar -xz -C /opt/freesurfer --strip-components 1 \
-#          --exclude='freesurfer/lib/cuda' \
-#          --exclude='freesurfer/subjects/V1_average' \
-#          --exclude='freesurfer/subjects/bert' \
-#          --exclude='freesurfer/subjects/cvs_avg35' \
-#          --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-#          --exclude='freesurfer/subjects/fsaverage3' \
-#          --exclude='freesurfer/subjects/fsaverage4' \
-#          --exclude='freesurfer/subjects/fsaverage5' \
-#          --exclude='freesurfer/subjects/fsaverage6' \
-#          --exclude='freesurfer/subjects/fsaverage_sym' \
-# 		 --exclude='freesurfer/subjects/lh.EC_average' \
-# 		 --exclude='freesurfer/subjects/rh.EC_average' \
-# 		 --exclude='freesurfer/subjects/sample-*.mgz' \
-#          --exclude='freesurfer/trctrain' \
-#     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
-# 
-# ####################
-# ####  dcm2niix  ####
-# ####################
-# ENV DCM2NIIX_VERSION="latest-git" \
-#     PATH="/opt/dcm2niix:$PATH"
-# RUN echo "Installing dcm2niix ..." \
-#     && mkdir /opt/dcm2niix \
-#     && cd /tmp \
-#     && curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
-#     && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
-#     && rm /tmp/dcm2niix_lnx.zip
 
 ####################
 #### Post Build ####
