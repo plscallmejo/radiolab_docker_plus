@@ -248,72 +248,72 @@ RUN echo "Installing dcm2niix ..." \
     && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
     && rm /tmp/dcm2niix_lnx.zip
 
-####################
-#### miniconda  ####
-#### numpy      ####
-#### pandas     ####
-#### scipy      ####
-#### matplotlib ####
-#### seaborn    ####
-#### sk-learn   ####
-#### tensorflow ####
-#### pytorch    ####
-#### nipype     ####
-#### nibabel    ####
-#### pybids     ####
-#### dipy       ####
-#### nilearn    ####
-####################
-
-ENV CONDA_DIR="/opt/miniconda-latest" \
-    PATH="/opt/miniconda-latest/bin:$PATH"
-RUN echo "Installing Miniconda ..." \
-    && conda_installer="/tmp/miniconda.sh" \
-    && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && bash "$conda_installer" -b -p /opt/miniconda-latest \
-# CN_SP+
-    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
-    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
-    && conda config --set show_channel_urls yes \
-# CN_SP-
-    && rm -f "$conda_installer" \
-# CN_SP+
-    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
-# CN_SP-
-    && conda update -yq -nbase conda \
-    && conda config --system --prepend channels conda-forge \
-    && conda config --system --set auto_update_conda false \
-    && conda config --system --set show_channel_urls true \
-    && sync && conda clean -y --all && sync \
-    && conda create -y -q --name radioconda python=3.7 \
-    && if [ ${NV_RUNTIME}=="TRUE" ]; then \
-            TF="tensorflow-gpu" ;\
-        else \
-            TF="tensorflow" ;\
-        fi \ 
-    && bash -c "source activate radioconda \
-    &&   pip install --no-cache-dir  \
-             "numpy" \
-             "pandas" \
-             "scipy" \
-             "matplotlib" \
-             "seaborn" \
-             "jupyterlab" \
-             "ipywidgets" \
-             "scikit-learn" \
-             "${TF}" \
-             "nipype" \
-             "nibabel" \
-             "pybids" \
-             "dipy" \
-             "vtk" \
-             "fury" \
-             "nilearn" \
-             " \ 
-    && rm -rf ~/.cache/pip/* \
-    && rm -rf ~/.condarc \
-    && rm -rf ~/.config/pip/pip.conf \
-    && sync
+# ####################
+# #### miniconda  ####
+# #### numpy      ####
+# #### pandas     ####
+# #### scipy      ####
+# #### matplotlib ####
+# #### seaborn    ####
+# #### sk-learn   ####
+# #### tensorflow ####
+# #### pytorch    ####
+# #### nipype     ####
+# #### nibabel    ####
+# #### pybids     ####
+# #### dipy       ####
+# #### nilearn    ####
+# ####################
+# 
+# ENV CONDA_DIR="/opt/miniconda-latest" \
+#     PATH="/opt/miniconda-latest/bin:$PATH"
+# RUN echo "Installing Miniconda ..." \
+#     && conda_installer="/tmp/miniconda.sh" \
+#     && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+#     && bash "$conda_installer" -b -p /opt/miniconda-latest \
+# # CN_SP+
+#     && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
+#     && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
+#     && conda config --set show_channel_urls yes \
+# # CN_SP-
+#     && rm -f "$conda_installer" \
+# # CN_SP+
+#     && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+# # CN_SP-
+#     && conda update -yq -nbase conda \
+#     && conda config --system --prepend channels conda-forge \
+#     && conda config --system --set auto_update_conda false \
+#     && conda config --system --set show_channel_urls true \
+#     && sync && conda clean -y --all && sync \
+#     && conda create -y -q --name radioconda python=3.7 \
+#     && if [ ${NV_RUNTIME}=="TRUE" ]; then \
+#             TF="tensorflow-gpu" ;\
+#         else \
+#             TF="tensorflow" ;\
+#         fi \ 
+#     && bash -c "source activate radioconda \
+#     &&   pip install --no-cache-dir  \
+#              "numpy" \
+#              "pandas" \
+#              "scipy" \
+#              "matplotlib" \
+#              "seaborn" \
+#              "jupyterlab" \
+#              "ipywidgets" \
+#              "scikit-learn" \
+#              "${TF}" \
+#              "nipype" \
+#              "nibabel" \
+#              "pybids" \
+#              "dipy" \
+#              "vtk" \
+#              "fury" \
+#              "nilearn" \
+#              " \ 
+#     && rm -rf ~/.cache/pip/* \
+#     && rm -rf ~/.condarc \
+#     && rm -rf ~/.config/pip/pip.conf \
+#     && sync
 
 ####################
 #### Post Build ####
@@ -330,3 +330,15 @@ RUN apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+####################
+####  Personal  ####
+####################
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+        nodejs \
+        npm \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
