@@ -206,14 +206,6 @@ RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
 # OpenGL and glvnd
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-            libxext6 \
-            libx11-6 \
-            libglvnd0 \
-            libgl1 \
-            libglx0 \
-            libegl1 \
-            freeglut3-dev \
-            mesa-utils \
             qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
