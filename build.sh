@@ -140,6 +140,7 @@ services:
         container_name: radiolab_docker
         stdin_open: true
         environment:
+            - LIBGL_ALWAYS_INDIRECT=0
             - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=$DISPLAY
             - USER=$USER
@@ -164,7 +165,6 @@ FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 # nvidia-container-runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=TRUE \
-    LIBGL_ALWAYS_INDIRECT=1 \
     BASE="nvidia/11.3.1-cudnn8-runtime-ubuntu20.04" \
     NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
     NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
@@ -198,7 +198,6 @@ FROM ubuntu:20.04
 # mesa runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NV_RUNTIME=FALSE \
-    LIBGL_ALWAYS_INDIRECT=0 \
     BASE="ubuntu:20.04"
 # CN_SP+
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
