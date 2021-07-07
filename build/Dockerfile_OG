@@ -293,10 +293,10 @@ RUN echo "Installing Miniconda ..." \
     && conda config --system --set show_channel_urls true \
     && sync && conda clean -y --all && sync \
     && conda create -y -q --name radioconda python=3.7 \
-    && if [ ${NV_RUNTIME} == 'TRUE' ]; then \
-            TF="tensorflow-gpu" ;\
-        elif [ ${NV_RUNTIME} == 'FALSE' ]; then \
-            TF="tensorflow" ;\
+    && if [ ${NV_RUNTIME} -eq 1 ]; then \
+            TF="tensorflow-gpu";\
+        else \
+            TF="tensorflow"; \
         fi \ 
     && bash -c "source activate radioconda \
     &&   pip install --no-cache-dir  \
