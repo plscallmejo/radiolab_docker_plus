@@ -218,12 +218,9 @@ ENV OS="Linux" \
     PATH="/opt/freesurfer/bin:$PATH" 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           bc \
-           libgomp1 \
            libxmu6 \
            libxt6 \
            perl \
-           tcsh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Installing FreeSurfer ..." \
@@ -339,10 +336,10 @@ RUN apt-get update -qq \
 ####  Personal  ####
 ####################
 RUN apt-get update -qq \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y -q --no-install-recommends \
         neovim \
         nodejs \
-        npm \
     && apt-get install -f \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
