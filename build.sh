@@ -14,7 +14,7 @@ PROCEED="${proceed}PROCEEDING${normal}"
 # Usage
 Usage () {
 echo ""
-echo "Build the basic Dockerfile and docker-docker-compose.yml,"
+echo "Build the basic Dockerfile and docker-compose.yml,"
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./build.sh [options]"
