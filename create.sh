@@ -38,7 +38,7 @@ if [[ ! -f docker-compose.yml ]]; then
     echo "        ./build.sh -r normal         for normal runtime"
     echo "        or ./build.sh"
     echo ""
-    echo "If you have pulled the docker image somewhere else,"
+    echo "If you have pulled the radiolab_docker image somewhere else,"
     echo "  Please import it, and tag it to radiolab_docker:latest"
     echo "  with the following command:"
     echo ""

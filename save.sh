@@ -14,15 +14,29 @@ PROCEED="${proceed}PROCEEDING${normal}"
 
 Usage () {
 echo ""
-echo "Save "radiolab_docker" image."
-echo "-p, --path           "
+echo "Save "radiolab_docker" image to a tar.gz archive file."
+echo "Actually, the script can be used for more general"
+echo "purpose to store docker image as *tar.gz."
+echo ""
+echo "Usage: ./save.sh -o [path] -i [image name]"
+echo "-o, --output-path    Specify the output path."
+echo "                       If no file name is given,"
+echo '                       "radiolab_docker-$(date -u '+%Y%m%d').tar.gz" will be'
+echo "                       set as default."
+echo "-i, --image          Specify the image to be store."
+echo "                       If not specify, radiolab:latest will be selected."
+echo "-b, --bar            Show progress bar (needs pv and jq command)."
+echo "                       T for TRUE, and F for FALSE. (default: T)"
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
-echo "./save.sh            Save"
-echo "                       which means number of threads for fsl_sub will set to maximum num of cores - 2 (n - 2)"
-echo "./run.sh -p 6        Enter the interactive shell with \$FSLPARALLEL=6,"
-echo "                       which means fsl_sub will run in 6 threads"
+echo "./save.sh -o /some/path/"
+echo '                     Save radiolab:latest to "/some/path/radiolab_docker-$(date -u '+%Y%m%d').tar.gz"'
+echo "./save.sh -o /some/path/foo.tar.gz"
+echo "                     Save radiolab:latest to "/some/path/foo.tar.gz""
+echo "Or, more general usege,"
+echo "./save.sh -o /some/path/foo.tar.gz -i bar:tag"
+echo "                     Save bar:tag to "/some/path/foo.tar.gz""
 echo ""
 }
 
@@ -62,24 +76,38 @@ do
     esac
 done
 
-if [[ -z ${image} ]]; then
-    image="radiolab:latest"
-    echo -e "${WARNING}: no image name supplied, \"${hint}${image}${normal}\" is automatically selected."
+if [[ -z ${save_path_og} ]]; then
+    echo -e "${ERROR}: Specify the path with an "-o" flag."
+    Usage
+    exit 1
 fi
 
-echo -e "${PROCEED}: check if the ${image} is valid."
+if [[ -z ${image} ]]; then
+    image="radiolab:latest"
+    echo -e "${WARNING}: No image name supplied, \"${hint}${image}${normal}\" is automatically selected."
+fi
+
+echo -e "${PROCEED}: Check if the \"${hint}${image}${normal}\" is valid ... \c"
 check_img="$(docker inspect ${image} 2>&1 > /dev/null)"
 if [[ -z ${check_img} ]]; then
-    echo -e "${INFORM}: image check pass."
+    echo -e "${proceed}Passed${normal}."
 else
-    echo -e "${ERROR}: error when checking the image ${image}, maybe the ${image} dosen't exist, please check again!"
+    echo -e "${error}Failed${normal}."
+    echo -e "${ERROR}: Error when checking the image \"${hint}${image}${normal}\", maybe the image \"${hint}${image}${normal}\" dosen't exist, please check again!"
     Usage
     exit 1
 fi
 
 if [[ -z ${BAR} ]] || [[ ${BAR} == "T" ]]; then
-    size=`docker inspect ${image} | jq '.[].Size'`
-    bar="pv -tpeIrb -s ${size} |"
+    check_pv="$(command -V pv 2> /dev/null)"
+    check_jq="$(command -V jq 2> /dev/null)"
+    if [[ ${check_pv} ]] && [[ ${check_jq} ]]; then
+        size=`docker inspect ${image} | jq '.[].Size'`
+        bar="pv -tpeIrb -s ${size} |"
+    else
+        echo -e "${WARNING}: Either "pv" and "jq" command is not found, the progress bar will not display."
+        bar=""
+    fi
 elif [[ ${BAR} == "F" ]]; then
     bar=""
 else
@@ -108,10 +136,10 @@ else
     else
         if [[ -z ${save_path_filename} ]]; then
             save_path_filename=radiolab_docker-$(date -u '+%Y%m%d').tar.gz
-            echo -e "${WARNING}: no filename supplied, docker image will automatically save as \"${hint}${save_path_dir}/${save_path_filename}${normal}\"."
+            echo -e "${WARNING}: No filename supplied, docker image will automatically save as \"${hint}${save_path_dir}/${save_path_filename}${normal}\"."
         else
             if [[ "${save_path_filename: -7}" != ".tar.gz" ]]; then
-                echo -e "${ERROR}: the output file should be \"${hint}*.tar.gz${normal}\"! Please check again!"
+                echo -e "${ERROR}: The output file should be a \"${hint}*.tar.gz${normal}\" file! Please check again!"
                 Usage
                 exit 1
             fi
@@ -119,6 +147,6 @@ else
     fi
 fi
 
-
-echo -e "${PROCEED}: saving ${image} to ${save_path_dir}/${save_path_filename}"
+echo -e "${PROCEED}: Saving ${image} to \"${hint}${save_path_dir}/${save_path_filename}${normal}\"."
 bash -c "docker save ${image} | ${bar} gzip > ${save_path_dir}/${save_path_filename}"
+
