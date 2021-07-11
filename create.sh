@@ -65,7 +65,7 @@ else
         echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" is invalid! Please check again!"
         Usage
         exit 1
-    else
+else
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`

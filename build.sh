@@ -43,7 +43,7 @@ echo ""
 }
 
 # CN_procy_control
-cn_proxy() {
+cn_sp() {
     file=$1
     active=$2
 
@@ -128,6 +128,13 @@ if [[ -z ${RUNTIME} ]]; then
     echo -e "${WARNING}: no ${hint}-r${normal} (runtime) option was supplied, so automatically setting to \"${hint}normal${normal}\" runtime."
     RUNTIME="normal"
 fi
+
+# Check wether cn_sp has speacified
+if [[ -z ${CNSWITCH} ]]; then
+    CNSWITCH=1
+fi
+
+## Generating docker-compose.yml
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
 echo '# docker-compose.yml that uses nvidia runtime
 version: "2.3"
@@ -154,6 +161,8 @@ services:
             - /etc/passwd:/etc/passwd:ro
             - /etc/shadow:/etc/shadow:ro
         tty: true' > docker-compose.yml
+
+## Generating ./build/base/Dockerfile
 if [[ ${RUNTIME} = "nvidia" ]]; then
     if [[ -z ${COMPOSE} ]]; then
         mkdir -p build/base
@@ -171,8 +180,27 @@ ENV NV_RUNTIME=1 \
 # CN_SP+
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
     && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list
-# CN_SP-
-# OpenGL and glvnd
+# CN_SP-' > build/base/Dockerfile
+    fi
+elif [[ ${RUNTIME} = "normal" ]]; then
+    if [[ -z ${COMPOSE} ]]; then
+        mkdir -p build/base
+        touch build/base/Dockerfile
+        echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
+        echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:20.04${normal}\""
+echo '#ubuntu:20.04
+FROM ubuntu:20.04
+# mesa runtime
+ARG DEBIAN_FRONTEND=noninteractive
+ENV NV_RUNTIME=0 \
+    BASE="ubuntu:20.04"
+# CN_SP+
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
+# CN_SP-' > build/base/Dockerfile
+    fi
+
+# Adding opengl and glvnd
+echo '# OpenGL and glvnd
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             libxext6 \
@@ -185,30 +213,7 @@ RUN apt-get update -qq \
             mesa-utils \
             qt5-default \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
-    fi
-elif [[ ${RUNTIME} = "normal" ]]; then
-    if [[ -z ${COMPOSE} ]]; then
-        mkdir -p build/base
-        touch build/base/Dockerfile
-        echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-        echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
-echo '#ubuntu:20.04
-FROM ubuntu:20.04
-# mesa runtime
-ARG DEBIAN_FRONTEND=noninteractive
-ENV NV_RUNTIME=0 \
-    BASE="ubuntu:20.04"
-# CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
-# CN_SP-
-# OpenGL and glvnd
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-            qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
-    fi
+    && rm -rf /var/lib/apt/lists/*' >> build/base/Dockerfile
     echo -e "${PROCEED}: Fixing ${hint}docker-compose.yml${normal} with ${hint}normal${normal} runtime configuration."
     sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" docker-compose.yml
     sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" docker-compose.yml
@@ -218,16 +223,16 @@ else
     exit 1
 fi
 
-if [[ -z ${CNSWITCH} ]]; then
-    CNSWITCH=1
-fi
 
+# Build the docker images
 if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
     cp build/Dockerfile_OG build/Dockerfile
+
     ## CN_SP
-    cn_proxy build/base/Dockerfile ${CNSWITCH}
-    cn_proxy build/Dockerfile ${CNSWITCH}
+    cn_sp build/base/Dockerfile ${CNSWITCH}
+    cn_sp build/Dockerfile ${CNSWITCH}
+
     ## Build base image
     docker build -t radiolab_base:latest build/base
     echo -e "${PROCEED}: Base image build complete"
