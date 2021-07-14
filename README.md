@@ -9,6 +9,7 @@ Build the basic Dockerfile and docker-docker-compose.yml,
 then build the Docker image from the begining.
 
 
+```
 Usage: ./build.sh [options]
 
 -r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (default: normal)
@@ -51,6 +52,7 @@ or ./build.sh
 ./build.sh -c              make the docker-compose.yml file with normal runtime only,
 
                            but won't build the Docker image.
+```
 
 
 `create.sh`
@@ -58,6 +60,7 @@ or ./build.sh
 Create a radiolab_docker.
 
 
+```
 Usage: ./create.sh [data_path] [freesurfer_license]
 
 
@@ -106,6 +109,7 @@ Examples:
 ./run.sh -p 6        Enter the interactive shell with \$FSLPARALLEL=6,
 
                        which means fsl_sub will run in 6 threads
+```
 
 
 `save.sh`
@@ -116,6 +120,7 @@ Actually, the script can be used for more general
 purpose to store any docker image as \*.tar.gz.
 
 
+```
 Usage: ./save.sh -o [path] -i [image name]
 
 -o, --output-path    Specify the output path.
@@ -152,6 +157,7 @@ Or, more general usege,
 ./save.sh -o /some/path/foo.tar.gz -i bar:tag
 
                      Save bar:tag to "/some/path/foo.tar.gz"
+```
 
 
 `load.sh`
@@ -164,6 +170,7 @@ thus gunzip can decompress the tarball as stdout which further pipe to
 the "docker load" command.
 
 
+```
 Usage: ./load.sh [path/to/image.tar.gz] [OPTIONS]
 
 -b, --bar            Show progress bar (needs pv command).
@@ -183,6 +190,7 @@ Examples:
 
                      Load the docker image from /path/to/tar.gz and
                        disable the progress bar.
+```
 
 
 ## Known Issues
