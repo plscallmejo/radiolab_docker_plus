@@ -12,9 +12,15 @@
 # ####################################################
 # It had been tuned so that the final docker image
 # can be built inside the special network environment
-# of CN. The # CN_SP tags are used for controlling 
+# of CN. 
+# The # CN_SP tags are used for controlling 
 # the networking during the build procedures
+# (No longer)
 # through ss-libev proxy by proxychains-ng.
+# (No longer)
+# Ubuntu and github mirrors are subsitituded with 
+# mirrors.ustc.edu.cn or 
+# https://github.com.cnpmjs.org
 # ####################################################
 
 FROM radiolab_base:latest
@@ -24,8 +30,7 @@ USER root
 ARG DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8" \
-    LIBGL_ALWAYS_INDIRECT=1
+    LC_ALL="en_US.UTF-8" 
     
 ####################
 #### Basic Conf ####
@@ -50,6 +55,11 @@ RUN apt-get update -qq \
             gedit \
             evince \
             firefox \
+            man \
+            htop \
+            bmon \
+            parallel \
+            pexec \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -64,9 +74,14 @@ RUN mkdir -p /radiolabdocker \
          echo '#!/usr/bin/env bash' >> "$RD_ENTRYPOINT" \
     &&   echo 'set -e' >> "$RD_ENTRYPOINT" \
     &&   echo 'export USER="${USER:=`whoami`}"' >> "$RD_ENTRYPOINT"; \
-    fi 
+    fi \
+    && chmod 755 /radiolabdocker/startup.sh \
+    && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 
+
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
+
+
 
 ####################
 ####    AFNI    ####
@@ -81,12 +96,14 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             tcsh \
+            x11-utils \
             xfonts-base \
+            xfonts-100dpi \
             libssl-dev \
             python-is-python3 \
             python3-matplotlib \
-            libgsl0-dev \
             gsl-bin \
+            libgsl0-dev \
             netpbm \
             libjpeg62 \
             eog \
@@ -101,18 +118,19 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
             libgfortran-8-dev \
             libgomp1 \
             nautilus \
-            xfonts-100dpi \
+            xfonts-base \
+            r-base \
             r-base-dev \
             libgtk2.0-0 \
             libv8-dev \
             libudunits2-dev \
-            libopenmpi-dev \
             openmpi-bin \
-            libgdal-dev \
+            libopenmpi-dev \
             gdal-bin \
-            libproj-dev \
+            libgdal-dev \
             proj-data \
             proj-bin \
+            libproj-dev \
             libgeos-dev \
     && apt-get install -f \
     && apt-get clean \
@@ -146,7 +164,9 @@ RUN apt-get update -qq \
             pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+#CN_SP+
     && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+#CN_SP-
     && echo "Installing ANTs ..." \
     && mkdir -p /tmp/ants-build/build \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
@@ -158,6 +178,9 @@ RUN apt-get update -qq \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
     && rm -r /tmp/ants-build
 
+####################
+####     FSL    ####
+####################
 ENV FSL_VERSION="6.0.4" \
     FSLDIR="/opt/fsl" \
     PATH="/opt/fsl/bin:$PATH" \
@@ -195,12 +218,9 @@ ENV OS="Linux" \
     PATH="/opt/freesurfer/bin:$PATH" 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           bc \
-           libgomp1 \
            libxmu6 \
            libxt6 \
            perl \
-           tcsh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Installing FreeSurfer ..." \
@@ -236,10 +256,71 @@ RUN echo "Installing dcm2niix ..." \
     && rm /tmp/dcm2niix_lnx.zip
 
 ####################
-#### Post Build ####
+#### miniconda  ####
+#### numpy      ####
+#### pandas     ####
+#### scipy      ####
+#### matplotlib ####
+#### seaborn    ####
+#### sk-learn   ####
+#### tensorflow ####
+#### pytorch    ####
+#### nipype     ####
+#### nibabel    ####
+#### pybids     ####
+#### dipy       ####
+#### nilearn    ####
 ####################
-RUN chmod 755 /radiolabdocker/startup.sh \
-    && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT 
+
+ENV CONDA_DIR="/opt/miniconda-latest" \
+    PATH="/opt/miniconda-latest/bin:$PATH"
+RUN echo "Installing Miniconda ..." \
+    && conda_installer="/tmp/miniconda.sh" \
+    && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && bash "$conda_installer" -b -p /opt/miniconda-latest \
+# CN_SP+
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
+    && conda config --set show_channel_urls yes \
+# CN_SP-
+    && rm -f "$conda_installer" \
+# CN_SP+
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+# CN_SP-
+    && conda update -yq -nbase conda \
+    && conda config --system --prepend channels conda-forge \
+    && conda config --system --set auto_update_conda false \
+    && conda config --system --set show_channel_urls true \
+    && sync && conda clean -y --all && sync \
+    && conda create -y -q --name radioconda python=3.7 \
+    && if [ ${NV_RUNTIME} -eq 1 ]; then \
+            TF="tensorflow-gpu";\
+        else \
+            TF="tensorflow"; \
+        fi \ 
+    && bash -c "source activate radioconda \
+    &&   pip install --no-cache-dir  \
+             "numpy" \
+             "pandas" \
+             "scipy" \
+             "matplotlib" \
+             "seaborn" \
+             "jupyterlab" \
+             "ipywidgets" \
+             "scikit-learn" \
+             "${TF}" \
+             "nipype" \
+             "nibabel" \
+             "pybids" \
+             "dipy" \
+             "vtk==8.1.2" \
+             "fury" \
+             "nilearn" \
+             " \ 
+    && rm -rf ~/.cache/pip/* \
+    && rm -rf ~/.condarc \
+    && rm -rf ~/.config/pip/pip.conf \
+    && sync
 
 ####################
 #### Sys Update ####
@@ -250,3 +331,15 @@ RUN apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+####################
+####  Personal  ####
+####################
+RUN apt-get update -qq \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+        nodejs \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 

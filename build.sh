@@ -14,12 +14,12 @@ PROCEED="${proceed}PROCEEDING${normal}"
 # Usage
 Usage () {
 echo ""
-echo "Build the basic Dockerfile and docker-docker-compose.yml,"
+echo "Build the basic Dockerfile and docker-compose.yml,"
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./build.sh [options]"
 echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (default: normal)"
-echo "-c, --make-compose   Flag to make the docker-compose.yml file only, no argument is needed."
+:qecho "-c, --make-compose   Flag to make the docker-compose.yml file only, no argument is needed."
 echo "                     No Docker image will be built."
 echo "                     For making or upating docker-compose.yml."
 echo "                     e.g. you have pulled the image from somewhere else,"
@@ -27,11 +27,8 @@ echo "                         or you already have the image built, and don't wa
 echo "                     Note, the pre-built image should tag with "radiolab_docker:latest"."
 echo "                       You can use the following command:"
 echo "                         "docker tag \<pre-built image\> radiolab_docker:latest""
-echo "-s, --ss-libev       Use ss-libev through proxychains-ng."
-echo "                     T for TRUE, and F for FALSE. (default: T)"
-echo "                     Note, ss config file should be copied to the build/content folder and"
-echo "                       rename to shadowsocks.json"
-echo "                     Also Note, only simple-obfs plugin is supported"
+echo "-s, --cn-sp          Use some cn speacialized setting."
+echo "                       T for TRUE, and F for FALSE. (default: T)"
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
@@ -46,7 +43,7 @@ echo ""
 }
 
 # CN_procy_control
-cn_proxy() {
+cn_sp() {
     file=$1
     active=$2
 
@@ -79,7 +76,7 @@ for arg in "$@"; do
   case "$arg" in
     "--runtime")      set -- "$@" "-p" ;;
     "--make-compose") set -- "$@" "-c" ;;
-    "--ss-libev")     set -- "$@" "-s" ;;
+    "--cn-sp")     set -- "$@" "-s" ;;
     "--help")         set -- "$@" "-h" ;;
     *)                set -- "$@" "$arg"
   esac
@@ -131,8 +128,15 @@ if [[ -z ${RUNTIME} ]]; then
     echo -e "${WARNING}: no ${hint}-r${normal} (runtime) option was supplied, so automatically setting to \"${hint}normal${normal}\" runtime."
     RUNTIME="normal"
 fi
+
+# Check wether cn_sp has speacified
+if [[ -z ${CNSWITCH} ]]; then
+    CNSWITCH=1
+fi
+
+## Generating docker-compose.yml
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
-echo '# docker-compose.yml that uses nvidia runtime
+echo '# docker-compose.yml
 version: "2.3"
 services:
     radiolab_flow:
@@ -143,6 +147,7 @@ services:
         container_name: radiolab_docker
         stdin_open: true
         environment:
+            - LIBGL_ALWAYS_INDIRECT=0
             - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=$DISPLAY
             - USER=$USER
@@ -156,47 +161,59 @@ services:
             - /etc/passwd:/etc/passwd:ro
             - /etc/shadow:/etc/shadow:ro
         tty: true' > docker-compose.yml
+
+## Generating ./build/base/Dockerfile
 if [[ ${RUNTIME} = "nvidia" ]]; then
     if [[ -z ${COMPOSE} ]]; then
         mkdir -p build/base
         touch build/base/Dockerfile
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cudagl:9.1-runtime-ubuntu16.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-echo '# nvidia/cudagl:11.3.1-runtime-ubuntu20.04
-FROM nvidia/cudagl:11.3.1-runtime-ubuntu20.04
+        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04${normal} with \"${hint}nvidia runtime${normal}\" support"
+echo '# nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 # nvidia-container-runtime
 ARG DEBIAN_FRONTEND=noninteractive
-ENV NV_RUNTIME=TRUE \
-    BASE="nvidia/cudagl:11.3.1-runtime-ubuntu20.04" \
+ENV NV_RUNTIME=1 \
+    BASE="nvidia/11.3.1-cudnn8-runtime-ubuntu20.04" \
     NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
     NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+# CN_SP+
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://mirrors.aliyun.com/nvidia-cuda/ubuntu1604/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
+    && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list
+# CN_SP-' > build/base/Dockerfile
     fi
 elif [[ ${RUNTIME} = "normal" ]]; then
     if [[ -z ${COMPOSE} ]]; then
         mkdir -p build/base
         touch build/base/Dockerfile
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-        echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:16.04${normal}\""
+        echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:20.04${normal}\""
 echo '#ubuntu:20.04
 FROM ubuntu:20.04
 # mesa runtime
 ARG DEBIAN_FRONTEND=noninteractive
-ENV NV_RUNTIME=FALSE \
+ENV NV_RUNTIME=0 \
     BASE="ubuntu:20.04"
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*' > build/base/Dockerfile
+# CN_SP+
+RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
+# CN_SP-' > build/base/Dockerfile
     fi
+
+# Adding opengl and glvnd
+echo '# OpenGL and glvnd
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            libxext6 \
+            libx11-6 \
+            libglvnd0 \
+            libgl1 \
+            libglx0 \
+            libegl1 \
+            freeglut3-dev \
+            mesa-utils \
+            qt5-default \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*' >> build/base/Dockerfile
     echo -e "${PROCEED}: Fixing ${hint}docker-compose.yml${normal} with ${hint}normal${normal} runtime configuration."
     sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" docker-compose.yml
     sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" docker-compose.yml
@@ -206,16 +223,16 @@ else
     exit 1
 fi
 
-if [[ -z ${CNSWITCH} ]]; then
-    CNSWITCH=1
-fi
 
+# Build the docker images
 if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
     cp build/Dockerfile_OG build/Dockerfile
+
     ## CN_SP
-    cn_proxy build/base/Dockerfile ${CNSWITCH}
-    cn_proxy build/Dockerfile ${CNSWITCH}
+    cn_sp build/base/Dockerfile ${CNSWITCH}
+    cn_sp build/Dockerfile ${CNSWITCH}
+
     ## Build base image
     docker build -t radiolab_base:latest build/base
     echo -e "${PROCEED}: Base image build complete"

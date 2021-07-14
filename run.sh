@@ -12,7 +12,7 @@ INFORM="${inform}INFORM${normal}"
 
 Usage () {
 echo ""
-echo "Build the basic Dockerfile and docker-docker-compose.yml,"
+echo "Run the "${hint}radiolab_docker${normal}""
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./run.sh [options]"

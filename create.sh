@@ -38,7 +38,7 @@ if [[ ! -f docker-compose.yml ]]; then
     echo "        ./build.sh -r normal         for normal runtime"
     echo "        or ./build.sh"
     echo ""
-    echo "If you have pulled the docker image somewhere else,"
+    echo "If you have pulled the radiolab_docker image somewhere else,"
     echo "  Please import it, and tag it to radiolab_docker:latest"
     echo "  with the following command:"
     echo ""
@@ -65,7 +65,7 @@ else
         echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" is invalid! Please check again!"
         Usage
         exit 1
-    else
+else
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
