@@ -4,11 +4,13 @@
 normal="\033[0m"
 error="\033[41;33m"
 proceed="\033[42;30m"
+warning="\033[43;31m"
 inform="\033[46;30m"
 hint="\033[4;36m"
-ERROR="${error}ERROR${normal}"
-PROCEED="${proceed}PROCEEDING${normal}"
 INFORM="${inform}INFORM${normal}"
+ERROR="${error}ERROR${normal}"
+WARNING="${warning}WARNING${normal}"
+PROCEED="${proceed}PROCEEDING${normal}"
 
 Usage () {
 echo ""

@@ -136,7 +136,7 @@ fi
 
 ## Generating docker-compose.yml
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
-echo '# docker-compose.yml that uses nvidia runtime
+echo '# docker-compose.yml
 version: "2.3"
 services:
     radiolab_flow:

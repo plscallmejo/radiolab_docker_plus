@@ -16,7 +16,7 @@ Usage () {
 echo ""
 echo "Save "radiolab_docker" image to a tar.gz archive file."
 echo "Actually, the script can be used for more general"
-echo "purpose to store docker image as *tar.gz."
+echo "purpose to store any docker image as *.tar.gz."
 echo ""
 echo "Usage: ./save.sh -o [path] -i [image name]"
 echo "-o, --output-path    Specify the output path."
