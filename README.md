@@ -1,6 +1,6 @@
 # radiolab_docker
 
-Tools for constructing, managing, and depositing a robust and reproducible neuroimage analysis environment. 
+Tools for constructing, managing, and deploying a robust and reproducible neuroimage analysis environment. 
 
 ## Usage
 `build.sh`
