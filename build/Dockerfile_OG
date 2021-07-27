@@ -45,6 +45,7 @@ RUN apt-get update -qq \
             unzip \
             gnupg \
             bc \
+            dc \
             software-properties-common \
             htop \
             tmux \
@@ -80,8 +81,6 @@ RUN mkdir -p /radiolabdocker \
 
 ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
 ENTRYPOINT ["/radiolabdocker/startup.sh"]
-
-
 
 ####################
 ####    AFNI    ####
@@ -265,7 +264,10 @@ RUN echo "Installing dcm2niix ..." \
 #### sk-learn   ####
 #### tensorflow ####
 #### pytorch    ####
+#### pydicom    ####
 #### nipype     ####
+#### graphviz   ####
+#### pydot      ####
 #### nibabel    ####
 #### pybids     ####
 #### dipy       ####
@@ -309,7 +311,10 @@ RUN echo "Installing Miniconda ..." \
              "ipywidgets" \
              "scikit-learn" \
              "${TF}" \
-             "nipype" \
+             "pydicom" \
+             "nipype[all]" \
+             "graphviz" \
+             "pydot"   \
              "nibabel" \
              "pybids" \
              "dipy" \
