@@ -328,6 +328,15 @@ RUN echo "Installing Miniconda ..." \
     && sync
 
 ####################
+#### Post Setup ####
+####################
+RUN mkdir /opt/bash_config
+COPY scr/bashrc /opt/bash_config/bashrc
+RUN sed -i -e '$c if [ -n "$1" ]; then "$@"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT \
+    && echo '# Activate "radioconda"' >> /opt/bash_config/bashrc \
+    && echo 'source activate radioconda' >> /opt/bash_config/bashrc 
+
+####################
 #### Sys Update ####
 ####################
 ARG SYS_BUILD_DATE 
@@ -337,3 +346,14 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+####################
+####  Personal  ####
+####################
+RUN apt-get update -qq \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+        nodejs \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
