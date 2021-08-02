@@ -51,9 +51,17 @@ cn_sp() {
         active=0
     fi
 
+    for num in `sed -n -e "/^# CN_SP+/=" ${file}`; do
+        line_begin+=( `expr $num + 1` )
+    done
+
+    for num in `sed -n -e "/^# CN_SP-/=" ${file}`; do
+        line_end+=( `expr $num - 1` )
+    done
+
     line_edit=( $( \
-        awk -v line_begin="`sed -n -e "/^# CN_SP+/=" ${file} | sed -e "s/\(.\+\)/\1 + 1/g" | bc`" \
-            -v line_end="`sed -n -e "/^# CN_SP-/=" ${file} | sed -e "s/\(.\+\)/\1 - 1/g" | bc`" \
+        awk -v line_begin="( ${line_begin[@]} )" \
+        -v line_end="( ${line_end[@]} )" \
             'BEGIN {
                 split(line_begin, begin, " ");
                 split(line_end, end, " ");
