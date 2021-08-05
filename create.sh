@@ -117,7 +117,7 @@ else
  		DATA=`echo ${DATA_PATH} | sed "s:/:\\\\\/:g"`
  		FS_LICENSE=`echo ${FS_LICENSE} | sed "s:/:\\\\\/:g"`
 
-		if [ ! -d build/tmp/ ]; then
+		if [[ ! -d build/tmp/ ]]; then
 			mkdir -p build/tmp
 		fi
 		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd

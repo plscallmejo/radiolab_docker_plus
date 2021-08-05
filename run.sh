@@ -84,7 +84,8 @@ else
         docker container start radiolab_docker > /dev/null 2>&1
     fi
 
-    if [ -x xhost ]; then
+    check_xhost="$(command -V xhost 2> /dev/null)"
+    if [[ ! ${check_xhost} ]]; then
 	    echo -e "${PROCEED}: Disable access control of the X server."
 	    `xhost +` > /dev/null 2>&1 &
     else

@@ -56,7 +56,7 @@ cn_sp() {
     done
 
     for num in `sed -n -e "/^# CN_SP-/=" ${file}`; do
-        line_end+=`expr $num - 1` 
+        line_end+=`expr $num - 1`
     done
 
     line_edit=( $( \
@@ -144,7 +144,7 @@ fi
 
 ## Generating docker-compose.yml
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
-if [ ! -d build/tmp/ ]; then
+if [[ ! -d build/tmp/ ]]; then
 	mkdir -p build/tmp
 fi
 echo '# docker-compose.yml
