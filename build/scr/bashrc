@@ -144,4 +144,6 @@ if ! shopt -oq posix; then
 fi
 
 # Set DISPLAY
-export DISPLAY=:0
+if [ -z ${DISPLAY} ]; then
+    export DISPLAY=:0
+fi
