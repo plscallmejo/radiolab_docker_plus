@@ -52,16 +52,16 @@ cn_sp() {
     fi
 
     for num in `sed -n -e "/^# CN_SP+/=" ${file}`; do
-        line_begin+=( `expr $num + 1` )
+        line_begin+=`expr $num + 1`
     done
 
     for num in `sed -n -e "/^# CN_SP-/=" ${file}`; do
-        line_end+=( `expr $num - 1` )
+        line_end+=`expr $num - 1` 
     done
 
     line_edit=( $( \
-        awk -v line_begin="( ${line_begin[@]} )" \
-        -v line_end="( ${line_end[@]} )" \
+        awk -v line_begin=${line_begin[@]} \
+        -v line_end=${line_end[@]} \
             'BEGIN {
                 split(line_begin, begin, " ");
                 split(line_end, end, " ");

@@ -3,10 +3,12 @@
 # Set colors
 normal="\033[0m"
 error="\033[41;33m"
+warning="\033[43;31m"
 proceed="\033[42;30m"
 inform="\033[46;30m"
 hint="\033[4;36m"
 ERROR="${error}ERROR${normal}"
+WARNING="${warning}WARNING${normal}"
 PROCEED="${proceed}PROCEEDING${normal}"
 INFORM="${inform}INFORM${normal}"
 
@@ -81,8 +83,14 @@ else
         echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not RUNNING, bringing the container up online."
         docker container start radiolab_docker > /dev/null 2>&1
     fi
-    echo -e "${PROCEED}: Disable access control of the X server."
-    `xhost +` > /dev/null 2>&1 &
+
+    if [ -x xhost ]; then
+	    echo -e "${PROCEED}: Disable access control of the X server."
+	    `xhost +` > /dev/null 2>&1 &
+    else
+	    echo -e "${WARNING}: \"${hint}xhost${normal}\" command is not found! Please uncheck the access control of X server manually to insure the gui app display."
+    fi
+
     echo -e "${PROCEED}: Entering interactive shell."
     if [[ -z ${FSL_PARA} ]]; then
         echo -e "${INFORM}: Number of threads for fsl_sub will set to maximum num of cores - 2 (n - 2) by default."

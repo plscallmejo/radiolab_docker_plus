@@ -110,7 +110,28 @@ else
                 if [[ ${SEL} == "N" ]]; then
                     exit 1
                 fi
-                CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} FS_LICENSE=${FS_LICENSE} docker-compose up -d --force-recreate
+ 		USER_name=`whoami`
+ 		CURRENT_ID=`id -u`:`id -g`
+                HOME_local=`echo ${HOME} | sed "s:/:\\\\\/:g"`
+ 		HOME_docker=`echo /home/${USER_name} | sed "s:/:\\\\\/:g"`
+ 		DATA=`echo ${DATA_PATH} | sed "s:/:\\\\\/:g"`
+ 		FS_LICENSE=`echo ${FS_LICENSE} | sed "s:/:\\\\\/:g"`
+
+		if [ ! -d build/tmp/ ]; then
+			mkdir -p build/tmp
+		fi
+		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
+		echo "${USER_name}:x:`id -g`" > ./build/tmp/group
+
+		sed -e 's/_HOME_local/'"$HOME_local"'/g' \
+		    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
+		    -e 's/_USER/'"$USER_name"'/g' \
+		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
+		    -e 's/_DATA/'"$DATA"'/g' \
+		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
+		    ./build/scr/docker-compose.yml > ./docker-compose.yml
+
+		docker-compose up -d --force-recreate
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
                 Usage
