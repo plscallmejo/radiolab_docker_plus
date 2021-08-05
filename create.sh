@@ -30,7 +30,7 @@ echo ""
 DATA_PATH_OG=$1
 FS_LICENSE_OG=$2
 
-if [[ ! -f docker-compose.yml ]]; then
+if [[ ! -f build/tmp/docker-compose.yml ]]; then
     echo -e "${ERROR}: Can't find ${hint}docker-compose.yml${normal}."
     echo "Plases run ./build.sh first and specify the runtime flag"
     echo "  to build the radiolab_docker."
@@ -83,7 +83,7 @@ else
                 echo -e "${PROCEED}: Creating radiolab docker"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
-                    sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
+                    sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\_FS_LICENSE.\+\)/#\1/g}" build/tmp/docker-compose.yml
                 else
                     FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
                     if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
@@ -91,7 +91,7 @@ else
                         exit 1
                     else
                         echo -e "${INFORM}: Freesurfer license is supplied."
-                        sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
+                        sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g}" build/tmp/docker-compose.yml
                     fi
                 fi
                 read -r -p "Comfirm? [Y/N] " input
@@ -129,7 +129,7 @@ else
 		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
 		    -e 's/_DATA/'"$DATA"'/g' \
 		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
-		    ./build/scr/docker-compose.yml > ./docker-compose.yml
+		    ./build/tmp/docker-compose.yml > ./docker-compose.yml
 
 		docker-compose up -d --force-recreate
             else

@@ -144,31 +144,34 @@ fi
 
 ## Generating docker-compose.yml
 echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
+if [ ! -d build/tmp/ ]; then
+	mkdir -p build/tmp
+fi
 echo '# docker-compose.yml
 version: "2.3"
 services:
     radiolab_flow:
         image: radiolab:latest
         runtime: nvidia
-        user: $CURRENT_UID
+        user: _CURRENT_ID
         working_dir: /DATA
         container_name: radiolab_docker
         stdin_open: true
         environment:
+            - HOME=_HOME_docker
             - LIBGL_ALWAYS_INDIRECT=0
             - NVIDIA_VISIBLE_DEVICES=all
-            - DISPLAY=$DISPLAY
-            - USER=$USER
+            - DISPLAY=host.docker.internal:0.0
+            - USER=_USER
         network_mode: "host"
         volumes:
-            - $HOME:$HOME
-            - $DATA:/DATA
-            - $FS_LICENSE:/opt/freesurfer/license.txt
+            - _HOME_local:_HOME_docker
+            - _DATA:/DATA
+            - _FS_LICENSE:/opt/freesurfer/license.txt
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
-            - /etc/group:/etc/group:ro
-            - /etc/passwd:/etc/passwd:ro
-            - /etc/shadow:/etc/shadow:ro
-        tty: true' > docker-compose.yml
+            - ./build/tmp/group:/etc/group:ro
+            - ./build/tmp/passwd:/etc/passwd:ro
+        tty: true' > build/tmp/docker-compose.yml
 
 ## Generating ./build/base/Dockerfile
 if [[ ${RUNTIME} = "nvidia" ]]; then
@@ -222,9 +225,10 @@ RUN apt-get update -qq \
             qt5-default \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*' >> build/base/Dockerfile
+
     echo -e "${PROCEED}: Fixing ${hint}docker-compose.yml${normal} with ${hint}normal${normal} runtime configuration."
-    sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" docker-compose.yml
-    sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" docker-compose.yml
+    sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" build/tmp/docker-compose.yml
+    sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" build/tmp/docker-compose.yml
 else
     echo -e "${ERROR}: ${hint}-r${normal} (RUNTIME) option can only be either \"${hint}normal${normal}\" or \"${hint}nvidia${normal}\""
     Usage
