@@ -85,7 +85,7 @@ else
     fi
 
     check_xhost="$(command -V xhost 2> /dev/null)"
-    if [[ ! ${check_xhost} ]]; then
+    if [[ ${check_xhost} ]]; then
 	    echo -e "${PROCEED}: Disable access control of the X server."
 	    `xhost +` > /dev/null 2>&1 &
     else
