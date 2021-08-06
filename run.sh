@@ -96,10 +96,10 @@ else
 	    echo -e "${PROCEED}: Disable access control of the X server."
 	    `xhost +` > /dev/null 2>&1 &
     else
-	    echo -e "${WARNING}: \"${hint}xhost${normal}\" command is not found! Please uncheck the access control of X server manually to insure the gui app display."
+	    echo -e "${WARNING}: \"${hint}xhost${normal}\" command is not found! Please disable the access control of X server manually to insure the gui app display."
     fi
 
-   
+
     if [[ ${OS} != "UNIX" ]]; then
         winptyapply=winpty
     fi
