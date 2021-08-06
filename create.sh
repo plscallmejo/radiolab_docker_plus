@@ -54,6 +54,13 @@ if [[ ! -f build/tmp/docker-compose.yml ]]; then
     exit 1
 fi
 
+# Check os type
+case "$OSTYPE" in
+    linux*)   OS="UNIX" ;;
+    msys*)    OS="WINDOWS" ;;
+    *)        OS="unknown: $OSTYPE" ;;
+esac
+
 # Set Data_path
 if [[ -z ${DATA_PATH_OG} ]]; then
     echo -e "${ERROR}: Please specify the data path!"
@@ -66,13 +73,6 @@ else
         Usage
         exit 1
 else
-    # Check os type
-    case "$OSTYPE" in
-        linux*)   OS="UNIX" ;;
-        msys*)    OS="WINDOWS" ;;
-        *)        OS="unknown: $OSTYPE" ;;
-    esac
-
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`

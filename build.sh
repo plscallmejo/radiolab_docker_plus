@@ -163,7 +163,9 @@ services:
             - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=host.docker.internal:0.0
             - USER=_USER
-        network_mode: "host"
+#        network_mode: "host"
+        ports:
+            - 8888:8888
         volumes:
             - _HOME_local:_HOME_docker
             - _DATA:/DATA
