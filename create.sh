@@ -66,6 +66,13 @@ else
         Usage
         exit 1
 else
+    # Check os type
+    case "$OSTYPE" in
+        linux*)   OS="UNIX" ;;
+        msys*)    OS="WINDOWS" ;;
+        *)        OS="unknown: $OSTYPE" ;;
+    esac
+
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
@@ -130,6 +137,11 @@ else
 		    -e 's/_DATA/'"$DATA"'/g' \
 		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
 		    ./build/tmp/docker-compose.yml > ./docker-compose.yml
+
+        # Fix $DISPLAY binding depends on $OSTYPE
+        if [[ ${OS} == "UNIX" ]]; then
+            sed -i -e 's/host.docker.internal//g' ./docker-compose.yml
+        fi
 
 		docker-compose up -d --force-recreate
             else
