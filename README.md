@@ -12,7 +12,7 @@ It has been tested on Ubuntu 20.04, Manjaro and Window 10 (OS Build 19043.1151).
 * `pv` and `jq` command (optional, for progress bar display)
 
 ## Window 10 (1903 build 18362 or newer (on x64), wsl2 enabled, docker desktop with WSL2 backend)
-* docker desktop for window (2.2.0.4)
+* docker desktop for window (2.2.0.4, or newer)
 * git for windows, or MSYS2 (git bash should be enough; for MSYS2, `git` and `winpty` should be installed)
 * VcXsrv (Uncheck the `native opengl` and check the `Disable access control`)
 
