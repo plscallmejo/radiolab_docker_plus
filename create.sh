@@ -30,7 +30,7 @@ echo ""
 DATA_PATH_OG=$1
 FS_LICENSE_OG=$2
 
-if [[ ! -f docker-compose.yml ]]; then
+if [[ ! -f build/tmp/docker-compose.yml ]]; then
     echo -e "${ERROR}: Can't find ${hint}docker-compose.yml${normal}."
     echo "Plases run ./build.sh first and specify the runtime flag"
     echo "  to build the radiolab_docker."
@@ -53,6 +53,13 @@ if [[ ! -f docker-compose.yml ]]; then
     echo ""
     exit 1
 fi
+
+# Check os type
+case "$OSTYPE" in
+    linux*)   OS="UNIX" ;;
+    msys*)    OS="WINDOWS" ;;
+    *)        OS="unknown: $OSTYPE" ;;
+esac
 
 # Set Data_path
 if [[ -z ${DATA_PATH_OG} ]]; then
@@ -83,7 +90,7 @@ else
                 echo -e "${PROCEED}: Creating radiolab docker"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
-                    sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\$FS_LICENSE.\+\)/#\1/g}" docker-compose.yml
+                    sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\_FS_LICENSE.\+\)/#\1/g}" build/tmp/docker-compose.yml
                 else
                     FS_LICENSE=`readlink -e ${FS_LICENSE_OG}`
                     if [[ -z ${FS_LICENSE} || -d ${FS_LICENSE} ]]; then
@@ -91,7 +98,7 @@ else
                         exit 1
                     else
                         echo -e "${INFORM}: Freesurfer license is supplied."
-                        sed -i -e "/\s\+-\s\$FS_LICENSE.\+/{s/#//g}" docker-compose.yml
+                        sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g}" build/tmp/docker-compose.yml
                     fi
                 fi
                 read -r -p "Comfirm? [Y/N] " input
@@ -110,7 +117,33 @@ else
                 if [[ ${SEL} == "N" ]]; then
                     exit 1
                 fi
-                CURRENT_UID=`id -u`:`id -g` DATA=${DATA_PATH} FS_LICENSE=${FS_LICENSE} docker-compose up -d --force-recreate
+ 		USER_name=`whoami`
+ 		CURRENT_ID=`id -u`:`id -g`
+                HOME_local=`echo ${HOME} | sed "s:/:\\\\\/:g"`
+ 		HOME_docker=`echo /home/${USER_name} | sed "s:/:\\\\\/:g"`
+ 		DATA=`echo ${DATA_PATH} | sed "s:/:\\\\\/:g"`
+ 		FS_LICENSE=`echo ${FS_LICENSE} | sed "s:/:\\\\\/:g"`
+
+		if [[ ! -d build/tmp/ ]]; then
+			mkdir -p build/tmp
+		fi
+		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
+		echo "${USER_name}:x:`id -g`" > ./build/tmp/group
+
+		sed -e 's/_HOME_local/'"$HOME_local"'/g' \
+		    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
+		    -e 's/_USER/'"$USER_name"'/g' \
+		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
+		    -e 's/_DATA/'"$DATA"'/g' \
+		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
+		    ./build/tmp/docker-compose.yml > ./docker-compose.yml
+
+        # Fix $DISPLAY binding depends on $OSTYPE
+        if [[ ${OS} == "UNIX" ]]; then
+            sed -i -e 's/host.docker.internal//g' ./docker-compose.yml
+        fi
+
+		docker-compose up -d --force-recreate
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
                 Usage

@@ -3,10 +3,12 @@
 # Set colors
 normal="\033[0m"
 error="\033[41;33m"
+warning="\033[43;31m"
 proceed="\033[42;30m"
 inform="\033[46;30m"
 hint="\033[4;36m"
 ERROR="${error}ERROR${normal}"
+WARNING="${warning}WARNING${normal}"
 PROCEED="${proceed}PROCEEDING${normal}"
 INFORM="${inform}INFORM${normal}"
 
@@ -61,6 +63,13 @@ do
     esac
 done
 
+# Check os type
+case "$OSTYPE" in
+    linux*)   OS="UNIX" ;;
+    msys*)    OS="WINDOWS" ;;
+    *)        OS="unknown: $OSTYPE" ;;
+esac
+
 if [[ ! -z ${FSL_PARA} ]]; then
     check_fslsub_num=`test -n "${FSL_PARA}" && test -z ${FSL_PARA//[0-9]} && echo 1 || echo 0`
     if [[ ${check_fslsub_num} != "1" ]];then
@@ -81,13 +90,25 @@ else
         echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not RUNNING, bringing the container up online."
         docker container start radiolab_docker > /dev/null 2>&1
     fi
-    echo -e "${PROCEED}: Disable access control of the X server."
-    `xhost +` > /dev/null 2>&1 &
+
+    check_xhost="$(command -V xhost 2> /dev/null)"
+    if [[ ${check_xhost} ]]; then
+	    echo -e "${PROCEED}: Disable access control of the X server."
+	    `xhost +` > /dev/null 2>&1 &
+    else
+	    echo -e "${WARNING}: \"${hint}xhost${normal}\" command is not found! Please disable the access control of X server manually to insure the gui app display."
+    fi
+
+
+    if [[ ${OS} != "UNIX" ]]; then
+        winptyapply=winpty
+    fi
+
     echo -e "${PROCEED}: Entering interactive shell."
     if [[ -z ${FSL_PARA} ]]; then
         echo -e "${INFORM}: Number of threads for fsl_sub will set to maximum num of cores - 2 (n - 2) by default."
         echo -e "${INFORM}: You can set ${hint}\$FSLPARALLEL${normal} inside the shell to control its behavior."
-        docker exec -it radiolab_docker bash -c 'export FSLPARALLEL=$(echo "$(nproc)-2" | bc) && /radiolabdocker/startup.sh'
+        ${winptyapply} docker exec -it radiolab_docker bash -c 'export FSLPARALLEL=$(echo "$(nproc)-2" | bc) && /radiolabdocker/startup.sh'
     else
         if [[ ${FSL_PARA} == 0 ]]; then
             echo -e "${INFORM}: Multi-threads fsl_sub functionality is off."
@@ -97,6 +118,6 @@ else
             echo -e "${INFORM}: Multi-threads fsl_sub functionality is on and sets to ${FSL_PARA}."
         fi
         echo -e "${INFORM}: You can set ${hint}\$FSLPARALLEL${normal} inside the shell to control its behavior."
-        docker exec -it radiolab_docker bash -c "export FSLPARALLEL=${FSL_PARA} && /radiolabdocker/startup.sh"
+        ${winptyapply} docker exec -it radiolab_docker bash -c "export FSLPARALLEL=${FSL_PARA} && /radiolabdocker/startup.sh"
     fi
 fi
