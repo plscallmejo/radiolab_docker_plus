@@ -153,6 +153,7 @@ services:
     radiolab_flow:
         image: radiolab:latest
         runtime: nvidia
+        shm_size: 512M
         user: _CURRENT_ID
         working_dir: /DATA
         container_name: radiolab_docker
@@ -241,7 +242,7 @@ fi
 # Build the docker images
 if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
-    cp build/Dockerfile_OG build/Dockerfile
+    cp build/scr/Dockerfile_OG build/Dockerfile
 
     ## CN_SP
     cn_sp build/base/Dockerfile ${CNSWITCH}
@@ -253,5 +254,5 @@ if [[ -z ${COMPOSE} ]]; then
 
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-    docker build -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
+    docker build --ulimit nofile=122880:122880 -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
 fi
