@@ -1,0 +1,33 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####    ANTs    ####
+####################
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            git \
+            gettext \
+            libtool \
+            libtool-bin \
+            autoconf \
+            automake \
+            cmake \
+            g++ \
+            pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+#CN_SP+
+    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+#CN_SP-
+    && echo "Installing ANTs ..." \
+    && mkdir -p /tmp/ants-build/build \
+    && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
+    && cd /tmp/ants-build/build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
+    && cd ANTS-build \
+    && make install 2>&1 \
+    && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
+    && rm -r /tmp/ants-build

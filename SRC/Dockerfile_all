@@ -1,0 +1,158 @@
+# syntax = docker/dockerfile:experimental
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####    AFNI    ####
+####################
+RUN --mount=type=bind,from=radiolab_afni,target=/tmp/opt/,source=/opt \
+    cp -rf /tmp/opt/* /opt/
+
+RUN --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/site-library \
+     mkdir -p /usr/local/lib/R/site-library/ && cp -rf /tmp/R/* /usr/local/lib/R/site-library/
+
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository -y ppa:ubuntugis/ppa \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            tcsh \
+            x11-utils \
+            xfonts-base \
+            xfonts-100dpi \
+            libssl-dev \
+            python-is-python3 \
+            python3-matplotlib \
+            gsl-bin \
+            libgsl0-dev \
+            netpbm \
+            libjpeg62 \
+            eog \
+            mesa-utils \
+            libgl1-mesa-glx \
+            libglu1-mesa-dev \
+            libglw1-mesa \
+            libxm4 \
+            build-essential \
+            libcurl4-openssl-dev \
+            libxml2-dev  \
+            libgfortran-8-dev \
+            libgomp1 \
+            nautilus \
+            xfonts-base \
+            r-base \
+            r-base-dev \
+            libgtk2.0-0 \
+            libv8-dev \
+            libudunits2-dev \
+            openmpi-bin \
+            libopenmpi-dev \
+            gdal-bin \
+            libgdal-dev \
+            proj-data \
+            proj-bin \
+            libproj-dev \
+            libgeos-dev \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
+    && ldconfig
+
+####################
+####    ANTs    ####
+####################
+RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
+    cp -rf /tmp/opt/* /opt/
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            git \
+            gettext \
+            libtool \
+            libtool-bin \
+            autoconf \
+            automake \
+            cmake \
+            g++ \
+            pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+####################
+####     FSL    ####
+####################
+ENV FSL_VERSION="6.0.5" \
+    FSLDIR="/opt/fsl" \
+    PATH="/opt/fsl/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl/bin/fsltclsh" \
+    FSLWISH="/opt/fsl/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL="" \
+    FSLGECUDAQ="cuda.q"
+
+####################
+#### Freesurfer ####
+####################
+ENV OS="Linux" \
+	FREESURFER_VERSION="7.2.0" \
+    FS_OVERRIDE=0 \
+    FIX_VERTEX_AREA="" \
+    FSF_OUTPUT_FORMAT="nii.gz" \
+    FREESURFER_HOME="/opt/freesurfer" \
+    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
+    PATH="/opt/freesurfer/bin:$PATH"
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           libxmu6 \
+           libxt6 \
+           perl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+####################
+####  dcm2niix  ####
+####################
+ENV DCM2NIIX_VERSION="latest-git" \
+    PATH="/opt/dcm2niix:$PATH"
+
+####################
+#### miniconda  ####
+####################
+ENV CONDA_DIR="/opt/miniconda-latest" \
+    PATH="/opt/miniconda-latest/bin:$PATH"
+
+####################
+#### Post Setup ####
+####################
+RUN mkdir /opt/bash_config
+# COPY scr/bashrc /opt/bash_config/bashrc
+RUN sed -i -e '$c if [ -n "$1" ]; then "$@"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT \
+    && echo '# Activate "radioconda"' >> /opt/bash_config/bashrc \
+    && echo 'source activate radioconda' >> /opt/bash_config/bashrc
+
+####################
+#### Sys Update ####
+####################
+ARG SYS_BUILD_DATE
+ENV SYS_BUILD_DATE=${SYS_BUILD_DATE}
+RUN apt-get update -qq \
+    && apt-get upgrade -qq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+####################
+####  Personal  ####
+####################
+RUN apt-get update -qq \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get install -y -q --no-install-recommends \
+        neovim \
+        nodejs \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*

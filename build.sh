@@ -147,88 +147,27 @@ echo -e "${PROCEED}: Generating ${hint}docker-compose.yml${normal}"
 if [[ ! -d build/tmp/ ]]; then
 	mkdir -p build/tmp
 fi
-echo '# docker-compose.yml
-version: "2.3"
-services:
-    radiolab_flow:
-        image: radiolab:latest
-        runtime: nvidia
-        shm_size: 512M
-        user: _CURRENT_ID
-        working_dir: /DATA
-        container_name: radiolab_docker
-        stdin_open: true
-        environment:
-            - HOME=_HOME_docker
-            - LIBGL_ALWAYS_INDIRECT=0
-            - NVIDIA_VISIBLE_DEVICES=all
-            - DISPLAY=host.docker.internal:0.0
-            - USER=_USER
-#        network_mode: "host"
-        ports:
-            - 8888:8888
-        volumes:
-            - _HOME_local:_HOME_docker
-            - _DATA:/DATA
-            - _FS_LICENSE:/opt/freesurfer/license.txt
-            - /tmp/.X11-unix:/tmp/.X11-unix:rw
-            - ./build/tmp/group:/etc/group:ro
-            - ./build/tmp/passwd:/etc/passwd:ro
-        tty: true' > build/tmp/docker-compose.yml
+cp SRC/docker-compose.yml build/tmp/docker-compose.yml
 
-## Generating ./build/base/Dockerfile
+## Generating ./build/tmp/Dockerfile
 if [[ ${RUNTIME} = "nvidia" ]]; then
     if [[ -z ${COMPOSE} ]]; then
-        mkdir -p build/base
-        touch build/base/Dockerfile
+        mkdir -p build/tmp
+        touch build/tmp/Dockerfile_base
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
-        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-echo '# nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
-FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
-# nvidia-container-runtime
-ARG DEBIAN_FRONTEND=noninteractive
-ENV NV_RUNTIME=1 \
-    BASE="nvidia/11.3.1-cudnn8-runtime-ubuntu20.04" \
-    NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \
-    NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
-# CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list \
-    && echo "deb https://developer.download.nvidia.cn/compute/cuda/repos/ubuntu2004/x86_64/ ./" > /etc/apt/sources.list.d/cuda.list
-# CN_SP-' > build/base/Dockerfile
+        echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04${normal} with \"${hint}nvidia runtime${normal}\" support"
+        cp SRC/Dockerfile_base_nvidia build/tmp/Dockerfile_base_nvidia
     fi
 elif [[ ${RUNTIME} = "normal" ]]; then
     if [[ -z ${COMPOSE} ]]; then
-        mkdir -p build/base
-        touch build/base/Dockerfile
+        mkdir -p build/tmp
+        touch build/tmp/Dockerfile_base
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
         echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:20.04${normal}\""
-echo '#ubuntu:20.04
-FROM ubuntu:20.04
-# mesa runtime
-ARG DEBIAN_FRONTEND=noninteractive
-ENV NV_RUNTIME=0 \
-    BASE="ubuntu:20.04"
-# CN_SP+
-RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
-# CN_SP-' > build/base/Dockerfile
+        cp SRC/Dockerfile_base_normal build/tmp/Dockerfile_base_normal
     fi
 
-# Adding opengl and glvnd
-echo '# OpenGL and glvnd
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-            libxext6 \
-            libx11-6 \
-            libglvnd0 \
-            libgl1 \
-            libglx0 \
-            libegl1 \
-            freeglut3-dev \
-            mesa-utils \
-            qt5-default \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*' >> build/base/Dockerfile
-
+# Fix docker-compose.yml with according to runtime setting
     echo -e "${PROCEED}: Fixing ${hint}docker-compose.yml${normal} with ${hint}normal${normal} runtime configuration."
     sed  -i -e "/\s\+runtime: nvidia/{s/#//g;s/\(\s\+runtime: nvidia\)/#\1/g}" build/tmp/docker-compose.yml
     sed  -i -e "/\s\+-\sNVIDIA_VISIBLE_DEVICES.\+/{s/#//g;s/\(\s\+-\sNVIDIA_VISIBLE_DEVICES.\+\)/#\1/g}" build/tmp/docker-compose.yml
@@ -242,17 +181,27 @@ fi
 # Build the docker images
 if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
-    cp build/scr/Dockerfile_OG build/Dockerfile
+    cp SRC/Dockerfile_OG build/tmp/Dockerfile_OG
+    cp SRC/Dockerfile_afni build/tmp/Dockerfile_afni
+    cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
+    cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
+    cp SRC/Dockerfile_dcm2niix build/tmp/Dockerfile_dcm2niix
+    cp SRC/Dockerfile_miniconda build/tmp/Dockerfile_miniconda
 
     ## CN_SP
-    cn_sp build/base/Dockerfile ${CNSWITCH}
-    cn_sp build/Dockerfile ${CNSWITCH}
+    cn_sp build/tmp/Dockerfile_base ${CNSWITCH}
 
     ## Build base image
-    docker build -t radiolab_base:latest build/base
+    docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
+    docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
+    docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
+    docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
+    docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
+    docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
+    docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
-    # Build Docker image with proper runtime
-    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-    docker build --ulimit nofile=122880:122880 -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
+#    # Build Docker image with proper runtime
+#    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
+#    docker build --ulimit nofile=122880:122880 -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
 fi

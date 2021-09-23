@@ -1,0 +1,77 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+#### miniconda  ####
+####################
+
+####################
+#### numpy      ####
+#### pandas     ####
+#### scipy      ####
+#### matplotlib ####
+#### seaborn    ####
+#### sk-learn   ####
+#### tensorflow ####
+#### pytorch    ####
+#### pydicom    ####
+#### nipype     ####
+#### graphviz   ####
+#### pydot      ####
+#### nibabel    ####
+#### pybids     ####
+#### dipy       ####
+#### nilearn    ####
+####################
+
+RUN echo "Installing Miniconda ..." \
+    && conda_installer="/tmp/miniconda.sh" \
+    && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && bash "$conda_installer" -b -p /opt/miniconda-latest \
+# CN_SP+
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
+    && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
+    && conda config --set show_channel_urls yes \
+# CN_SP-
+    && rm -f "$conda_installer" \
+# CN_SP+
+    && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+# CN_SP-
+    && conda update -yq -nbase conda \
+    && conda config --system --prepend channels conda-forge \
+    && conda config --system --set auto_update_conda false \
+    && conda config --system --set show_channel_urls true \
+    && sync && conda clean -y --all && sync \
+    && conda create -y -q --name radioconda python=3.7 \
+    && if [ ${NV_RUNTIME} -eq 1 ]; then \
+            TF="tensorflow-gpu";\
+        else \
+            TF="tensorflow"; \
+        fi \
+    && bash -c "source activate radioconda \
+    &&   pip install --no-cache-dir  \
+             "numpy" \
+             "pandas" \
+             "scipy" \
+             "matplotlib" \
+             "seaborn" \
+             "jupyterlab" \
+             "ipywidgets" \
+             "scikit-learn" \
+             "${TF}" \
+             "pydicom" \
+             "nipype[all]" \
+             "graphviz" \
+             "pydot"   \
+             "nibabel" \
+             "pybids" \
+             "dipy" \
+             "vtk==8.1.2" \
+             "fury" \
+             "nilearn" \
+             " \
+    && rm -rf ~/.cache/pip/* \
+    && rm -rf ~/.condarc \
+    && rm -rf ~/.config/pip/pip.conf \
+    && sync

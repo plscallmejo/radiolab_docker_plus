@@ -1,4 +1,2 @@
-docker-compose.yml
-build/base
-build/tmp
-build/Dockerfile
+/docker-compose.yml
+/build

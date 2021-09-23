@@ -1,0 +1,13 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####  dcm2niix  ####
+####################
+RUN echo "Installing dcm2niix ..." \
+    && mkdir /opt/dcm2niix \
+    && cd /tmp \
+    && curl -fLO https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip \
+    && unzip dcm2niix_lnx.zip -d /opt/dcm2niix \
+    && rm /tmp/dcm2niix_lnx.zip

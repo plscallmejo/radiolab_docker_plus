@@ -1,0 +1,61 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####    AFNI    ####
+####################
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository -y ppa:ubuntugis/ppa \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+            tcsh \
+            x11-utils \
+            xfonts-base \
+            xfonts-100dpi \
+            libssl-dev \
+            python-is-python3 \
+            python3-matplotlib \
+            gsl-bin \
+            libgsl0-dev \
+            netpbm \
+            libjpeg62 \
+            eog \
+            mesa-utils \
+            libgl1-mesa-glx \
+            libglu1-mesa-dev \
+            libglw1-mesa \
+            libxm4 \
+            build-essential \
+            libcurl4-openssl-dev \
+            libxml2-dev  \
+            libgfortran-8-dev \
+            libgomp1 \
+            nautilus \
+            xfonts-base \
+            r-base \
+            r-base-dev \
+            libgtk2.0-0 \
+            libv8-dev \
+            libudunits2-dev \
+            openmpi-bin \
+            libopenmpi-dev \
+            gdal-bin \
+            libgdal-dev \
+            proj-data \
+            proj-bin \
+            libproj-dev \
+            libgeos-dev \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
+    && ldconfig \
+    && echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
+    && echo "Installing AFNI ..." \
+    && mkdir -p /opt/afni \
+    && curl -fSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz \
+        | tar -xz -C /opt/afni --strip-components 1 \
+    && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
+    && rm /root/.Rprofile

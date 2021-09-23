@@ -1,0 +1,53 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# ####################
+# #### Freesurfer ####
+# ####################
+# ENV OS="Linux" \
+# 	FREESURFER_VERSION="7.2.0" \
+#     FS_OVERRIDE=0 \
+#     FIX_VERTEX_AREA="" \
+#     FSF_OUTPUT_FORMAT="nii.gz" \
+#     FREESURFER_HOME="/opt/freesurfer" \
+#     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
+#     PATH="/opt/freesurfer/bin:$PATH"
+# RUN apt-get update -qq \
+#     && apt-get install -y -q --no-install-recommends \
+#            libxmu6 \
+#            libxt6 \
+#            perl \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && echo "Installing FreeSurfer ..." \
+#     && mkdir -p /opt/freesurfer \
+#     && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
+#      | tar -xz -C /opt/freesurfer --strip-components 1 \
+#          --exclude='freesurfer/lib/cuda' \
+#          --exclude='freesurfer/subjects/V1_average' \
+#          --exclude='freesurfer/subjects/bert' \
+#          --exclude='freesurfer/subjects/cvs_avg35' \
+#          --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+#          --exclude='freesurfer/subjects/fsaverage3' \
+#          --exclude='freesurfer/subjects/fsaverage4' \
+#          --exclude='freesurfer/subjects/fsaverage5' \
+#          --exclude='freesurfer/subjects/fsaverage6' \
+#          --exclude='freesurfer/subjects/fsaverage_sym' \
+# 		 --exclude='freesurfer/subjects/lh.EC_average' \
+# 		 --exclude='freesurfer/subjects/rh.EC_average' \
+# 		 --exclude='freesurfer/subjects/sample-*.mgz' \
+#          --exclude='freesurfer/trctrain' \
+#     && echo "Installing MCR2014(v84) just for FreeSurfer......" \
+#     && mkdir /tmp/MCRv84 \
+#     && cd /tmp/MCRv84 \
+#     && MCR_URL=https://ssd.mathworks.cn/supportfiles/downloads/R2014b/deployment_files/R2014b/installers/glnxa64/MCR_R2014b_glnxa64_installer.zip \
+# #CN_SP+
+#     && sed -i -e "s/com/cn/g" /opt/freesurfer/bin/fs_install_mcr \
+# #CN_SP-
+#     && curl ${MCR_URL} -o install.zip \
+#     && unzip install.zip \
+#     && ./install -mode silent -agreeToLicense yes -destinationFolder /tmp/MCRv84 \
+#     && mv /tmp/MCRv84/v84 ${FREESURFER_HOME}/MCRv84 \
+#     && cd /tmp && rm -rf /tmp/MCRv84 \
+#     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
