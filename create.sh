@@ -14,45 +14,93 @@ INFORM="${inform}INFORM${normal}"
 
 Usage () {
 echo ""
-echo "Create a radiolab_docker."
+echo "Create a radiolab_docker container."
 echo ""
-echo "Usage: ./create.sh [data_path] [freesurfer_license]"
-echo ""
-echo "Specify the "data_path" to be mounted to /DATA in inside the container."
-echo "Note, the "data_path" should be a DIR,"
-echo "      and you are supposed to own the rwx permissions to it."
-echo ""
-echo "EXAMPLES:"
-echo "./create.sh /the/path/to/your/data"
+echo "Usage: ./create.sh -p [data_path] -l [freesurfer_license] -r [runtime]"
+echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (default: normal)"
+echo "-p, --data-path      Specify the "data_path" to be mounted to /DATA in inside the container."
+echo "                         Note, the "data_path" should be a DIR,"
+echo "                         and you are supposed to own the rwx permissions to it."
+echo "-l, --fs-license     Specify the Freesurfer license for a full functional Freesurfer."
 echo ""
 }
 
-DATA_PATH_OG=$1
-FS_LICENSE_OG=$2
+# Read arguments
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--runtime")      set -- "$@" "-r" ;;
+    "--data-path")    set -- "$@" "-p" ;;
+    "--fs-license")   set -- "$@" "-l" ;;
+    "--help")         set -- "$@" "-h" ;;
+    *)                set -- "$@" "$arg"
+  esac
+done
 
-if [[ ! -f build/tmp/docker-compose.yml ]]; then
-    echo -e "${ERROR}: Can't find ${hint}docker-compose.yml${normal}."
-    echo "Plases run ./build.sh first and specify the runtime flag"
-    echo "  to build the radiolab_docker."
-    echo "  e.g.  ./build.sh -r nvidia         for nvidia runtime"
-    echo "        ./build.sh -r normal         for normal runtime"
-    echo "        or ./build.sh"
-    echo ""
-    echo "If you have pulled the radiolab_docker image somewhere else,"
-    echo "  Please import it, and tag it to radiolab_docker:latest"
-    echo "  with the following command:"
-    echo ""
-    echo "    docker tag <pre-built image> radiolab_docker:latest"
-    echo ""
-    echo "  then run:"
-    echo "        ./build.sh -c -r nvidia     for nvidia runtime"
-    echo "        ./build.sh -c -r normal     for normal runtime"
-    echo "        or ./build.sh"
-    echo ""
-    echo "Run ./build.sh -h or ./build.sh --help for more details."
-    echo ""
+# Get runtime option
+while getopts "r:p:l:h" opt
+do
+    case ${opt} in
+    r)
+        RUNTIME=${OPTARG}
+        ;;
+    p)
+        DATA_PATH_OG=${OPTARG}
+        ;;
+    l)
+        FS_LICENSE_OG=${OPTARG}
+        ;;
+    h)
+        Usage
+        exit 1
+        ;;
+    esac
+done
+
+IMAGE_init="radiolab_docker"
+
+if [[ -z ${RUNTIME} ]]; then
+    echo -e "${WARNING}: Runtime has not been specified, default is normal"
+    RUNTIME=normal
+fi
+
+IMAGE=${IMAGE_init}_${RUNTIME}
+
+if [[ -z `echo "normal nvidia" | tr ' ' '\n' | grep -F -w ${RUNTIME}` ]]; then
+    echo -e "${ERROR}: Invalid runtime!"
+    Usage
     exit 1
 fi
+
+NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo $NV_RUNTIME' | sed -e "s/\r//g"`
+if [ ${NV_RUNTIME} -eq 1 ]; then
+    NV_RUNTIME="nvidia"
+elif [ ${NV_RUNTIME} -eq 0 ]; then
+    NV_RUNTIME="normal"
+fi
+
+if [[ ${NV_RUNTIME} != ${RUNTIME} ]]; then
+    echo -e "The runtime you provided is ${hint}${RUNTIME}${normal}, while it shows the ${hint}${IMAGE}${normal} is ${hint}${NV_RUNTIME}${normal} runtime."
+    read -r -p "Comfirm? [Y/N] " input
+    case $input in
+        [yY][eE][sS]|[yY])
+            SEL="Y"
+            ;;
+        [nN][oO]|[nN])
+            SEL="N"
+            ;;
+        *)
+            echo "Invalid input..."
+            exit 1
+            ;;
+    esac
+    if [[ ${SEL} == "N" ]]; then
+        exit 1
+    fi
+fi
+
+./build.sh -c -r ${RUNTIME}
+
 
 # Check os type
 case "$OSTYPE" in
@@ -75,14 +123,14 @@ else
 else
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
-                EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
+                EXIST_DOCKER=`docker ps -a | grep ${IMAGE} | awk '{print $NF}'`
                 if [[ ! -z ${EXIST_DOCKER} ]]; then
-                    RUNNING_DOCKER=`docker ps -a | grep radiolab_docker | awk -F '   ' '{print $5}' | grep Up`
+                    RUNNING_DOCKER=`docker ps -a | grep ${IMAGE} | awk -F '   ' '{print $5}' | grep Up`
                     if [[ ! -z ${RUNNING_DOCKER} ]]; then
-                        echo -e "${WARNING}: We found existing \"${hint}radiolab_docker${normal},\" and it's ${hint}RUNNING${normal}!"
-                        echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}radiolab_docker${normal}\" instence and ${hint}RE-CREATE${normal} it."
+                        echo -e "${WARNING}: We found existing \"${hint}${IMAGE}${normal},\" and it's ${hint}RUNNING${normal}!"
+                        echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}${IMAGE}${normal}\" instence and ${hint}RE-CREATE${normal} it."
                     else
-                        echo -e "${WARNING}: We found existing \"${hint}radiolab_docker${normal}.\""
+                        echo -e "${WARNING}: We found existing \"${hint}${IMAGE}${normal}.\""
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
@@ -130,7 +178,8 @@ else
 		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
 		echo "${USER_name}:x:`id -g`" > ./build/tmp/group
 
-		sed -e 's/_HOME_local/'"$HOME_local"'/g' \
+		sed -e 's/_IMAGE/'"$IMAGE"'/g' \
+		    -e 's/_HOME_local/'"$HOME_local"'/g' \
 		    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
 		    -e 's/_USER/'"$USER_name"'/g' \
 		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \

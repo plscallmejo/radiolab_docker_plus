@@ -19,7 +19,7 @@ echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./build.sh [options]"
 echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (default: normal)"
-:qecho "-c, --make-compose   Flag to make the docker-compose.yml file only, no argument is needed."
+echo "-c, --make-compose   Flag to make the docker-compose.yml file only, no argument is needed."
 echo "                     No Docker image will be built."
 echo "                     For making or upating docker-compose.yml."
 echo "                     e.g. you have pulled the image from somewhere else,"
@@ -82,7 +82,7 @@ cn_sp() {
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--runtime")      set -- "$@" "-p" ;;
+    "--runtime")      set -- "$@" "-r" ;;
     "--make-compose") set -- "$@" "-c" ;;
     "--cn-sp")     set -- "$@" "-s" ;;
     "--help")         set -- "$@" "-h" ;;
@@ -156,7 +156,7 @@ if [[ ${RUNTIME} = "nvidia" ]]; then
         touch build/tmp/Dockerfile_base
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
         echo -e "${PROCEED}: Building base image from \"${hint}nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04${normal} with \"${hint}nvidia runtime${normal}\" support"
-        cp SRC/Dockerfile_base_nvidia build/tmp/Dockerfile_base_nvidia
+        cp SRC/Dockerfile_base_nvidia build/tmp/Dockerfile_base
     fi
 elif [[ ${RUNTIME} = "normal" ]]; then
     if [[ -z ${COMPOSE} ]]; then
@@ -164,7 +164,7 @@ elif [[ ${RUNTIME} = "normal" ]]; then
         touch build/tmp/Dockerfile_base
         echo -e "${PROCEED}: Generating base ${hint}Dockerfile${normal}"
         echo -e "${PROCEED}: Building base image from \"${hint}ubuntu:20.04${normal}\""
-        cp SRC/Dockerfile_base_normal build/tmp/Dockerfile_base_normal
+        cp SRC/Dockerfile_base_normal build/tmp/Dockerfile_base
     fi
 
 # Fix docker-compose.yml with according to runtime setting
@@ -183,10 +183,12 @@ if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
     cp SRC/Dockerfile_OG build/tmp/Dockerfile_OG
     cp SRC/Dockerfile_afni build/tmp/Dockerfile_afni
-    cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
-    cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
-    cp SRC/Dockerfile_dcm2niix build/tmp/Dockerfile_dcm2niix
-    cp SRC/Dockerfile_miniconda build/tmp/Dockerfile_miniconda
+#    cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
+#    cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
+#    cp SRC/Dockerfile_dcm2niix build/tmp/Dockerfile_dcm2niix
+#    cp SRC/Dockerfile_ants build/tmp/Dockerfile_ants
+#    cp SRC/Dockerfile_miniconda build/tmp/Dockerfile_miniconda
+    cp SRC/Dockerfile_all build/tmp/Dockerfile_all
 
     ## CN_SP
     cn_sp build/tmp/Dockerfile_base ${CNSWITCH}
@@ -195,13 +197,13 @@ if [[ -z ${COMPOSE} ]]; then
     docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
     docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
     docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
-    docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
-    docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
-    docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
-    docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
+#    docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
+#    docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
+#    docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
+#    docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
-#    # Build Docker image with proper runtime
-#    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-#    docker build --ulimit nofile=122880:122880 -t radiolab:latest build --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d')
+    # Build Docker image with proper runtime
+    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
+    docker buildx build --ulimit nofile=122880:122880 -t radiolab_docker_${RUNTIME}:latest --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') -f build/tmp/Dockerfile_all .
 fi

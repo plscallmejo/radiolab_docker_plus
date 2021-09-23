@@ -60,71 +60,71 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
     && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
     && ldconfig
 
-####################
-####    ANTs    ####
-####################
-RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
-    cp -rf /tmp/opt/* /opt/
-
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-            git \
-            gettext \
-            libtool \
-            libtool-bin \
-            autoconf \
-            automake \
-            cmake \
-            g++ \
-            pkg-config \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-####################
-####     FSL    ####
-####################
-ENV FSL_VERSION="6.0.5" \
-    FSLDIR="/opt/fsl" \
-    PATH="/opt/fsl/bin:$PATH" \
-    FSLOUTPUTTYPE="NIFTI_GZ" \
-    FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl/bin/fsltclsh" \
-    FSLWISH="/opt/fsl/bin/fslwish" \
-    FSLLOCKDIR="" \
-    FSLMACHINELIST="" \
-    FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q"
-
-####################
-#### Freesurfer ####
-####################
-ENV OS="Linux" \
-	FREESURFER_VERSION="7.2.0" \
-    FS_OVERRIDE=0 \
-    FIX_VERTEX_AREA="" \
-    FSF_OUTPUT_FORMAT="nii.gz" \
-    FREESURFER_HOME="/opt/freesurfer" \
-    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
-    PATH="/opt/freesurfer/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           libxmu6 \
-           libxt6 \
-           perl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-####################
-####  dcm2niix  ####
-####################
-ENV DCM2NIIX_VERSION="latest-git" \
-    PATH="/opt/dcm2niix:$PATH"
-
-####################
-#### miniconda  ####
-####################
-ENV CONDA_DIR="/opt/miniconda-latest" \
-    PATH="/opt/miniconda-latest/bin:$PATH"
+# ####################
+# ####    ANTs    ####
+# ####################
+# RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
+#     cp -rf /tmp/opt/* /opt/
+#
+# RUN apt-get update -qq \
+#     && apt-get install -y -q --no-install-recommends \
+#             git \
+#             gettext \
+#             libtool \
+#             libtool-bin \
+#             autoconf \
+#             automake \
+#             cmake \
+#             g++ \
+#             pkg-config \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+#
+# ####################
+# ####     FSL    ####
+# ####################
+# ENV FSL_VERSION="6.0.5" \
+#     FSLDIR="/opt/fsl" \
+#     PATH="/opt/fsl/bin:$PATH" \
+#     FSLOUTPUTTYPE="NIFTI_GZ" \
+#     FSLMULTIFILEQUIT="TRUE" \
+#     FSLTCLSH="/opt/fsl/bin/fsltclsh" \
+#     FSLWISH="/opt/fsl/bin/fslwish" \
+#     FSLLOCKDIR="" \
+#     FSLMACHINELIST="" \
+#     FSLREMOTECALL="" \
+#     FSLGECUDAQ="cuda.q"
+#
+# ####################
+# #### Freesurfer ####
+# ####################
+# ENV OS="Linux" \
+# 	FREESURFER_VERSION="7.2.0" \
+#     FS_OVERRIDE=0 \
+#     FIX_VERTEX_AREA="" \
+#     FSF_OUTPUT_FORMAT="nii.gz" \
+#     FREESURFER_HOME="/opt/freesurfer" \
+#     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
+#     PATH="/opt/freesurfer/bin:$PATH"
+# RUN apt-get update -qq \
+#     && apt-get install -y -q --no-install-recommends \
+#            libxmu6 \
+#            libxt6 \
+#            perl \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+#
+# ####################
+# ####  dcm2niix  ####
+# ####################
+# ENV DCM2NIIX_VERSION="latest-git" \
+#     PATH="/opt/dcm2niix:$PATH"
+#
+# ####################
+# #### miniconda  ####
+# ####################
+# ENV CONDA_DIR="/opt/miniconda-latest" \
+#     PATH="/opt/miniconda-latest/bin:$PATH"
 
 ####################
 #### Post Setup ####

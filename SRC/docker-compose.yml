@@ -1,8 +1,8 @@
 # docker-compose.yml
 version: "2.3"
 services:
-    radiolab_flow:
-        image: radiolab:latest
+    radiolab_docker:
+        image: _IMAGE
         runtime: nvidia
         shm_size: 512M
         user: _CURRENT_ID

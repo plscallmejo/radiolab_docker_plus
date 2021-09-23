@@ -88,17 +88,19 @@ ENTRYPOINT ["/radiolabdocker/startup.sh"]
 ENV AFNI_VERSION="ubuntu_16_64" \
     PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
-    QT_X11_NO_MITSHM=1 \
+    QT_X11_NO_MITSHM=1
+
 ####################
 ####    ANTs    ####
 ####################
-    ANTS_VERSION="latest-git" \
+ENV ANTS_VERSION="latest-git" \
     ANTSPATH="/opt/ants/bin" \
-    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH" \
+    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
+
 ####################
 ####     FSL    ####
 ####################
-    FSL_VERSION="6.0.5" \
+ENV FSL_VERSION="6.0.5" \
     FSLDIR="/opt/fsl" \
     PATH="/opt/fsl/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
@@ -108,25 +110,28 @@ ENV AFNI_VERSION="ubuntu_16_64" \
     FSLLOCKDIR="" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q" \
+    FSLGECUDAQ="cuda.q"
+
 ####################
 #### Freesurfer ####
 ####################
-    OS="Linux" \
+ENV OS="Linux" \
 	FREESURFER_VERSION="7.2.0" \
     FS_OVERRIDE=0 \
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
     FREESURFER_HOME="/opt/freesurfer" \
     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
-    PATH="/opt/freesurfer/bin:$PATH" \
+    PATH="/opt/freesurfer/bin:$PATH"
+
 ####################
 ####  dcm2niix  ####
 ####################
-    DCM2NIIX_VERSION="latest-git" \
-    PATH="/opt/dcm2niix:$PATH" \
+ENV DCM2NIIX_VERSION="latest-git" \
+    PATH="/opt/dcm2niix:$PATH"
+
 ####################
 #### miniconda  ####
 ####################
-    CONDA_DIR="/opt/miniconda-latest" \
+ENV CONDA_DIR="/opt/miniconda-latest" \
     PATH="/opt/miniconda-latest/bin:$PATH"
