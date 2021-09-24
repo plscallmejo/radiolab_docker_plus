@@ -16,14 +16,14 @@ It has been tested on Ubuntu 20.04, Manjaro and Window 10 (OS Build 19043.1151).
 ## Linux (Ubuntu, Manjaro, etc),
 * docker (19.03, or newer)
 * docker-compose
-* `xhost` command (probably a default in many distribution)
+* `xhost` command (probably a default in many distributions)
 * `pv` and `jq` command (optional, for progress bar display)
 
 # Wait! Windows 11 with build-in GPU and linux gui support in wsl2? Cheer!! No need to endure VcXsrv
 ~~## Window 10 (1903 build 18362 or newer (on x64), wsl2 enabled, docker desktop with WSL2 backend)~~
 ~~* docker desktop for window (2.2.0.4, or newer)~~
 ~~* git for windows, or MSYS2 (git bash should be enough; for MSYS2, `git` and `winpty` should be installed)~~
-~~* VcXsrv (Uncheck the `native opengl` and check the `Disable access control`)~
+~~* VcXsrv (Uncheck the `native opengl` and check the `Disable access control`)~~
 
 # Installation
 Git clone the current repo, cd to radiolab_docker, run the scripts, and have fun!

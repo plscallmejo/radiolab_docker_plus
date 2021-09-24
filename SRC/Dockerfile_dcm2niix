@@ -5,6 +5,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ####################
 ####  dcm2niix  ####
 ####################
+ENV DCM2NIIX_VERSION="latest-git"
 RUN echo "Installing dcm2niix ..." \
     && mkdir /opt/dcm2niix \
     && cd /tmp \
