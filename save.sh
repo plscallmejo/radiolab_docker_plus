@@ -88,7 +88,8 @@ if [[ -z ${image} ]]; then
 fi
 
 image_base_tag=( `echo ${image} | sed -e 's/:/ /g'` )
-image_base=${image[0]}
+image_base=${image_base_tag[0]}
+echo $image_base
 
 echo -e "${PROCEED}: Check if the \"${hint}${image}${normal}\" is valid ... \c"
 check_img="$(docker inspect ${image} 2>&1 > /dev/null)"
