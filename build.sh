@@ -197,23 +197,29 @@ if [[ -z ${COMPOSE} ]]; then
     docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
     docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
     docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
-#    docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
+    #    docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
     docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
     docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
     docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
     docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
+    # Read versioning of the softwares
+    AFNI_VERSION=( $(docker run -it --rm radiolab_afni:latest bash -c 'echo $AFNI_VERSION' | sed -e "s/\r//g") )
+    ANTS_VERSION=( $(docker run -it --rm radiolab:latest bash -c 'echo $ANTS_VERSION' | sed -e "s/\r//g") )
+    FSL_VERSION=( $(docker run -it --rm radiolab_fsl:latest bash -c 'echo $FSL_VERSION' | sed -e "s/\r//g") )
+    FREESURFER_VERSION=( $(docker run -it --rm radiolab_freesurfer:latest bash -c 'echo $FREESURFER_VERSION' | sed -e "s/\r//g") )
+    DCM2NIIX_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c 'echo $DCM2NIIX_VERSION' | sed -e "s/\r//g") )
+
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
-    docker buildx build --ulimit nofile=122880:122880 \
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
-            --build-arg AFNI_VERSION=`docker run -it --rm radiolab_afni:latest bash -c 'echo $AFNI_VERSION' | sed -e "s/\r//g"` \
-    # copy ants from old build, because kitware use sha256 instead of md5 which causing ants build failure
-            --build-arg ANTS_VERSION=`docker run -it --rm radiolab:latest bash -c 'echo $ANTS_VERSION' | sed -e "s/\r//g"` \
-            --build-arg FSL_VERSION=`docker run -it --rm radiolab_fsl:latest bash -c 'echo $FSL_VERSION' | sed -e "s/\r//g"` \
-            --build-arg FREESURFER_VERSION=`docker run -it --rm radiolab_freesurfer:latest bash -c 'echo $FREESURFER_VERSION' | sed -e "s/\r//g"` \
-            --build-arg DCM2NIIX_VERSION=`docker run -it --rm radiolab_dcm2niix:latest bash -c 'echo $DCM2NIIX_VERSION' | sed -e "s/\r//g"` \
+            --build-arg AFNI_VERSION=${AFNI_VERSION[-1]} \
+            --build-arg ANTS_VERSION=${ANTS_VERSION[-1]} \
+            --build-arg FSL_VERSION=${FSL_VERSION[-1]} \
+            --build-arg FREESURFER_VERSION=${FREESURFER_VERSION[-1]} \
+            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION[-1]} \
             -f build/tmp/Dockerfile_all .
 fi

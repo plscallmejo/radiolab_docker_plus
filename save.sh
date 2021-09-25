@@ -21,19 +21,19 @@ echo ""
 echo "Usage: ./save.sh -o [path] -i [image name]"
 echo "-o, --output-path    Specify the output path."
 echo "                       If no file name is given,"
-echo '                       "radiolab_docker-$(date -u '+%Y%m%d').tar.gz" will be'
+echo '                       "radiolab_docker_normal-$(date -u '+%Y%m%d').tar.gz" will be'
 echo "                       set as default."
 echo "-i, --image          Specify the image to be store."
-echo "                       If not specify, radiolab:latest will be selected."
+echo "                       If not specify, radiolab_docker_normal:latest will be selected."
 echo "-b, --bar            Show progress bar (needs pv and jq command)."
 echo "                       T for TRUE, and F for FALSE. (default: T)"
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
 echo "./save.sh -o /some/path/"
-echo '                     Save radiolab:latest to "/some/path/radiolab_docker-$(date -u '+%Y%m%d').tar.gz"'
+echo '                     Save radiolab_docker_normal:latest to "/some/path/radiolab_docker_normal-$(date -u '+%Y%m%d').tar.gz"'
 echo "./save.sh -o /some/path/foo.tar.gz"
-echo "                     Save radiolab:latest to "/some/path/foo.tar.gz""
+echo "                     Save radiolab_docker_normal:latest to "/some/path/foo.tar.gz""
 echo "Or, more general usege,"
 echo "./save.sh -o /some/path/foo.tar.gz -i bar:tag"
 echo "                     Save bar:tag to "/some/path/foo.tar.gz""
@@ -83,9 +83,12 @@ if [[ -z ${save_path_og} ]]; then
 fi
 
 if [[ -z ${image} ]]; then
-    image="radiolab:latest"
+    image="radiolab_docker_normal:latest"
     echo -e "${WARNING}: No image name supplied, \"${hint}${image}${normal}\" is automatically selected."
 fi
+
+image_base_tag=( `echo ${image} | sed -e 's/:/ /g'` )
+image_base=${image[0]}
 
 echo -e "${PROCEED}: Check if the \"${hint}${image}${normal}\" is valid ... \c"
 check_img="$(docker inspect ${image} 2>&1 > /dev/null)"
@@ -135,7 +138,7 @@ else
         exit 1
     else
         if [[ -z ${save_path_filename} ]]; then
-            save_path_filename=radiolab_docker-$(date -u '+%Y%m%d').tar.gz
+            save_path_filename=${image_base}-$(date -u '+%Y%m%d').tar.gz
             echo -e "${WARNING}: No filename supplied, docker image will automatically save as \"${hint}${save_path_dir}/${save_path_filename}${normal}\"."
         else
             if [[ "${save_path_filename: -7}" != ".tar.gz" ]]; then
