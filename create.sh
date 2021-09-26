@@ -73,9 +73,9 @@ if [[ -z `echo "normal nvidia" | tr ' ' '\n' | grep -F -w ${RUNTIME}` ]]; then
 fi
 
 NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo $NV_RUNTIME' | sed -e "s/\r//g"`
-if [ ${NV_RUNTIME} -eq 1 ]; then
+if [[ ${NV_RUNTIME} == "1" ]]; then
     NV_RUNTIME="nvidia"
-elif [ ${NV_RUNTIME} -eq 0 ]; then
+elif [ ${NV_RUNTIME} == "0" ]; then
     NV_RUNTIME="normal"
 fi
 
