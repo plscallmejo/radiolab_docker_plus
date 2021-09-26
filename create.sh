@@ -75,7 +75,7 @@ fi
 NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo $NV_RUNTIME' | sed -e "s/\r//g"`
 if [[ ${NV_RUNTIME} == "1" ]]; then
     NV_RUNTIME="nvidia"
-elif [ ${NV_RUNTIME} == "0" ]; then
+elif [[ ${NV_RUNTIME} == "0" ]]; then
     NV_RUNTIME="normal"
 fi
 
