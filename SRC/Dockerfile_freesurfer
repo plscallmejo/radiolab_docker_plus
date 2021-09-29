@@ -10,20 +10,6 @@ RUN echo "Installing FreeSurfer ..." \
     && mkdir -p /opt/freesurfer \
     && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos8_x86_64-7.1.1.tar.gz \
      | tar -xz -C /opt/freesurfer --strip-components 1 \
-         --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/subjects/V1_average' \
-         --exclude='freesurfer/subjects/bert' \
-         --exclude='freesurfer/subjects/cvs_avg35' \
-         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-         --exclude='freesurfer/subjects/fsaverage3' \
-         --exclude='freesurfer/subjects/fsaverage4' \
-         --exclude='freesurfer/subjects/fsaverage5' \
-         --exclude='freesurfer/subjects/fsaverage6' \
-         --exclude='freesurfer/subjects/fsaverage_sym' \
-		 --exclude='freesurfer/subjects/lh.EC_average' \
-		 --exclude='freesurfer/subjects/rh.EC_average' \
-		 --exclude='freesurfer/subjects/sample-*.mgz' \
-         --exclude='freesurfer/trctrain' \
     && echo "Installing MCR2014(v84) just for FreeSurfer......" \
     && mkdir /tmp/MCRv84 \
     && cd /tmp/MCRv84 \
