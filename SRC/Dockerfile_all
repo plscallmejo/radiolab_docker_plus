@@ -65,7 +65,8 @@ RUN sed -i -e '$c if [ -n "$1" ]; then "$@"; else /usr/bin/env bash --rcfile /op
 ####################
 ARG SYS_BUILD_DATE
 ENV SYS_BUILD_DATE=${SYS_BUILD_DATE}
-RUN apt-get update -qq \
+RUN yes | unminimize \
+    && apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

@@ -35,7 +35,9 @@ ENV LANG="en_US.UTF-8" \
 ####################
 #### Basic Conf ####
 ####################
-RUN apt-get update -qq \
+RUN sed -i 's,^path-exclude=/usr/share/man/,#path-exclude=/usr/share/man/,' \
+        /etc/dpkg/dpkg.cfg.d/excludes \
+    && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             apt-utils \
             bzip2 \
@@ -57,42 +59,19 @@ RUN apt-get update -qq \
             evince \
             firefox \
             man \
+            manpages-posix \
             htop \
             bmon \
             parallel \
             pexec \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
-    && dpkg-reconfigure --frontend=noninteractive locales \
-    && update-locale LANG="en_US.UTF-8" \
-    && chmod 777 /opt && chmod a+s /opt
-
-RUN mkdir -p /radiolabdocker \
-    && chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker \
-    && export RD_ENTRYPOINT="/radiolabdocker/startup.sh" \
-    && if [ ! -f "$RD_ENTRYPOINT" ]; then \
-         echo '#!/usr/bin/env bash' >> "$RD_ENTRYPOINT" \
-    &&   echo 'set -e' >> "$RD_ENTRYPOINT" \
-    &&   echo 'export USER="${USER:=`whoami`}"' >> "$RD_ENTRYPOINT"; \
-    fi \
-    && chmod 755 /radiolabdocker/startup.sh \
-    && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT
-
-ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
-ENTRYPOINT ["/radiolabdocker/startup.sh"]
-
-####################
-####    AFNI    ####
-####################
-ENV PATH="/opt/afni:$PATH" \
-    AFNI_PLUGINPATH="/opt/afni"\
-    QT_X11_NO_MITSHM=1
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+    && echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list \
+#CN_SP+
+    && sed -i 's,cloud.r-project.org,mirrors.ustc.edu.cn/CRAN,g' /etc/apt/sources.list \
+#CN_SP-
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository -y ppa:ubuntugis/ppa \
     && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
+    && apt-get install -f -y -q --no-install-recommends \
             tcsh \
             x11-utils \
             xfonts-base \
@@ -130,19 +109,6 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /et
             proj-bin \
             libproj-dev \
             libgeos-dev \
-    && apt-get install -f \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
-    && ldconfig
-
-####################
-####    ANTs    ####
-####################
-ENV ANTSPATH="/opt/ants/bin" \
-    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
             git \
             gettext \
             libtool \
@@ -152,8 +118,46 @@ RUN apt-get update -qq \
             cmake \
             g++ \
             pkg-config \
+            libncurses5 \
+            libxmu6 \
+            libxt6 \
+            perl \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19 \
+    && ldconfig \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales \
+    && update-locale LANG="en_US.UTF-8" \
+    && chmod 777 /opt && chmod a+s /opt
+
+RUN mkdir -p /radiolabdocker \
+    && chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker \
+    && export RD_ENTRYPOINT="/radiolabdocker/startup.sh" \
+    && if [ ! -f "$RD_ENTRYPOINT" ]; then \
+         echo '#!/usr/bin/env bash' >> "$RD_ENTRYPOINT" \
+    &&   echo 'set -e' >> "$RD_ENTRYPOINT" \
+    &&   echo 'export USER="${USER:=`whoami`}"' >> "$RD_ENTRYPOINT"; \
+    fi \
+    && chmod 755 /radiolabdocker/startup.sh \
+    && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT
+
+ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
+ENTRYPOINT ["/radiolabdocker/startup.sh"]
+
+####################
+####    AFNI    ####
+####################
+ENV PATH="/opt/afni:$PATH" \
+    AFNI_PLUGINPATH="/opt/afni"\
+    QT_X11_NO_MITSHM=1
+
+####################
+####    ANTs    ####
+####################
+ENV ANTSPATH="/opt/ants/bin" \
+    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
 
 ####################
 ####     FSL    ####
@@ -168,11 +172,6 @@ ENV FSLDIR="/opt/fsl" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
     FSLGECUDAQ="cuda.q"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           libncurses5 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 ####################
 #### Freesurfer ####
@@ -184,13 +183,6 @@ ENV OS="Linux" \
     FREESURFER_HOME="/opt/freesurfer" \
     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
     PATH="/opt/freesurfer/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           libxmu6 \
-           libxt6 \
-           perl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 ####################
 ####  dcm2niix  ####
