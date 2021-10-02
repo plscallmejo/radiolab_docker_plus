@@ -3,47 +3,43 @@ FROM radiolab_og
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
+ARG AFNI_VERSION \
+    FSL_VERSION \
+    FREESURFER_VERSION \
+    DCM2NIIX_VERSION
+ENV AFNI_VERSION=${AFNI_VERSION} \
+    FSL_VERSION=${FSL_VERSION} \
+    FREESURFER_VERSION=${FREESURFER_VERSION} \
+    DCM2NIIX_VERSION=${DCM2NIIX_VERSION}}
+
 ####################
 ####    AFNI    ####
 ####################
-ARG AFNI_VERSION
-ENV AFNI_VERSION=${AFNI_VERSION}
 RUN --mount=type=bind,from=radiolab_afni,target=/tmp/opt/,source=/opt \
-     cp -rf /tmp/opt/* /opt/ \
-    --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/site-library \
+     cp -rf /tmp/opt/* /opt/
+RUN --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/site-library \
      mkdir -p /usr/local/lib/R/site-library/ && cp -rf /tmp/R/* /usr/local/lib/R/site-library/
-
 # ####################
 # ####    ANTs    ####
 # ####################
 # copy ants from old build, because kitware use sha256 instead of md5 which causing ants build failure
 RUN --mount=type=bind,from=radiolab,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/ants /opt/
-
 # ####################
 # ####     FSL    ####
 # ####################
-ARG FSL_VERSION
-ENV FSL_VERSION=${FSL_VERSION}
 RUN --mount=type=bind,from=radiolab_fsl,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/* /opt/
-
 # ####################
 # #### Freesurfer ####
 # ####################
-ARG FREESURFER_VERSION
-ENV FREESURFER_VERSION=${FREESURFER_VERSION}
 RUN --mount=type=bind,from=radiolab_freesurfer,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/* /opt/
-
 # ####################
 # ####  dcm2niix  ####
 # ####################
-ARG DCM2NIIX_VERSION
-ENV DCM2NIIX_VERSION=${DCM2NIIX_VERSION}}
 RUN --mount=type=bind,from=radiolab_dcm2niix,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/* /opt/
-
 # ####################
 # #### miniconda  ####
 # ####################
