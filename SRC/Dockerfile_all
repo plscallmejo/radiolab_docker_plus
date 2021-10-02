@@ -1,9 +1,8 @@
 # syntax = docker/dockerfile:experimental
 FROM radiolab_og
 
-ARG DEBIAN_FRONTEND="noninteractive"
-
-ARG AFNI_VERSION \
+ARG DEBIAN_FRONTEND="noninteractive" \
+    AFNI_VERSION \
     FSL_VERSION \
     FREESURFER_VERSION \
     DCM2NIIX_VERSION
