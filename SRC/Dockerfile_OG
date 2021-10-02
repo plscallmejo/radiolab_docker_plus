@@ -30,14 +30,14 @@ USER root
 ARG DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8"
+    LC_ALL="en_US.UTF-8" \
+    RD_ENTRYPOINT="/radiolabdocker/startup.sh"
+ENTRYPOINT ["/radiolabdocker/startup.sh"]
 
 ####################
 #### Basic Conf ####
 ####################
-RUN sed -i 's,^path-exclude=/usr/share/man/,#path-exclude=/usr/share/man/,' \
-        /etc/dpkg/dpkg.cfg.d/excludes \
-    && apt-get update -qq \
+RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             apt-utils \
             bzip2 \
@@ -130,9 +130,11 @@ RUN sed -i 's,^path-exclude=/usr/share/man/,#path-exclude=/usr/share/man/,' \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && dpkg-reconfigure --frontend=noninteractive locales \
     && update-locale LANG="en_US.UTF-8" \
-    && chmod 777 /opt && chmod a+s /opt
-
-RUN mkdir -p /radiolabdocker \
+    && chmod 777 /opt && chmod a+s /opt \
+####################
+#### Entry Point####
+####################
+    && mkdir -p /radiolabdocker \
     && chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker \
     && export RD_ENTRYPOINT="/radiolabdocker/startup.sh" \
     && if [ ! -f "$RD_ENTRYPOINT" ]; then \
@@ -143,27 +145,25 @@ RUN mkdir -p /radiolabdocker \
     && chmod 755 /radiolabdocker/startup.sh \
     && echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT
 
-ENV RD_ENTRYPOINT="/radiolabdocker/startup.sh"
-ENTRYPOINT ["/radiolabdocker/startup.sh"]
-
 ####################
 ####    AFNI    ####
 ####################
-ENV PATH="/opt/afni:$PATH" \
+ENV PATH="/opt/miniconda-latest/bin:\
+    /opt/dcm2niix:/opt/freesurfer/bin:\
+    /opt/fsl/bin:/opt/ants/bin:\
+    /opt/ants/Scripts:\
+    opt/afni:\
+    $PATH" \
     AFNI_PLUGINPATH="/opt/afni"\
-    QT_X11_NO_MITSHM=1
-
+    QT_X11_NO_MITSHM=1 \
 ####################
 ####    ANTs    ####
 ####################
-ENV ANTSPATH="/opt/ants/bin" \
-    PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"
-
+    ANTSPATH="/opt/ants/bin" \
 ####################
 ####     FSL    ####
 ####################
-ENV FSLDIR="/opt/fsl" \
-    PATH="/opt/fsl/bin:$PATH" \
+    FSLDIR="/opt/fsl" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
     FSLTCLSH="/opt/fsl/bin/fsltclsh" \
@@ -171,26 +171,23 @@ ENV FSLDIR="/opt/fsl" \
     FSLLOCKDIR="" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q"
-
+    FSLGECUDAQ="cuda.q" \
 ####################
 #### Freesurfer ####
 ####################
-ENV OS="Linux" \
+    OS="Linux" \
     FS_OVERRIDE=0 \
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
     FREESURFER_HOME="/opt/freesurfer" \
     LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
-    PATH="/opt/freesurfer/bin:$PATH"
-
 ####################
 ####  dcm2niix  ####
 ####################
-ENV PATH="/opt/dcm2niix:$PATH"
-
+#### NO SETTING ####
+####################
+#
 ####################
 #### miniconda  ####
 ####################
-ENV CONDA_DIR="/opt/miniconda-latest" \
-    PATH="/opt/miniconda-latest/bin:$PATH"
+    CONDA_DIR="/opt/miniconda-latest" \

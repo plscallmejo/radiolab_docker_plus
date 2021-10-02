@@ -8,7 +8,8 @@ ENV NV_RUNTIME=0 \
 RUN sed -i "s/archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
 # CN_SP-
 # OpenGL and glvnd
-RUN apt-get update -qq \
+RUN yes | unminimize \
+    && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
             libxext6 \
             libx11-6 \
