@@ -25,6 +25,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 #### nilearn    ####
 ####################
 
+ENV PATH="/opt/miniconda-latest/bin:$PATH" \
 RUN echo "Installing Miniconda ..." \
     && conda_installer="/tmp/miniconda.sh" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
