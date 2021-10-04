@@ -5,7 +5,8 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ####################
 #### Freesurfer ####
 ####################
-ENV	FREESURFER_VERSION="7.2.0"
+ENV	FREESURFER_VERSION="7.2.0" \
+    FREESURFER_HOME="/opt/freesurfer"
 RUN echo "Installing FreeSurfer ..." \
     && mkdir -p /opt/freesurfer \
     && curl -fSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${FREESURFER_VERSION}/freesurfer-linux-centos8_x86_64-${FREESURFER_VERSION}.tar.gz \

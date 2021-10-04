@@ -108,7 +108,7 @@ if [[ -z ${BAR} ]] || [[ ${BAR} == "T" ]]; then
         size=`docker inspect ${image} | jq '.[].Size'`
         bar="pv -tpeIrb -s ${size} |"
     else
-        echo -e "${WARNING}: Either "pv" and "jq" command is not found, the progress bar will not display."
+        echo -e "${WARNING}: Neither "pv" or "jq" command is not found, the progress bar will not display."
         bar=""
     fi
 elif [[ ${BAR} == "F" ]]; then
