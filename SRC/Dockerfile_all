@@ -70,7 +70,7 @@ RUN --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/s
 ####    ANTs    ####
 ####################
 # copy ants from old build, because kitware use sha256 instead of md5 which causing ants build failure
-RUN --mount=type=bind,from=radiolab,target=/tmp/opt/,source=/opt \
+RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/ants /opt/
 ####################
 ####     FSL    ####
