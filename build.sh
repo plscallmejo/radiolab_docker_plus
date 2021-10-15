@@ -183,7 +183,7 @@ if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
     cp SRC/Dockerfile_OG build/tmp/Dockerfile_OG
     cp SRC/Dockerfile_afni build/tmp/Dockerfile_afni
-#    cp SRC/Dockerfile_ants build/tmp/Dockerfile_ants
+    cp SRC/Dockerfile_ants build/tmp/Dockerfile_ants
     cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
     cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
     cp SRC/Dockerfile_dcm2niix build/tmp/Dockerfile_dcm2niix
@@ -197,7 +197,7 @@ if [[ -z ${COMPOSE} ]]; then
     docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
     docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
     docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
-    #    docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
+    docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
     docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
     docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
     docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
