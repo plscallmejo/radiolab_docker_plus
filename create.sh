@@ -21,6 +21,8 @@ echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (de
 echo "-p, --data-path      Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "                         Note, the "data_path" should be a DIR,"
 echo "                         and you are supposed to own the rwx permissions to it."
+echo "-n, --name           Specify the service name of the container. (default: radiolab_docker)"
+echo "-b, --binding-port   Specify the local port for jupyter-notebook. (default: 8888)"
 echo "-l, --fs-license     Specify the Freesurfer license for a full functional Freesurfer."
 echo ""
 }
@@ -32,13 +34,15 @@ for arg in "$@"; do
     "--runtime")      set -- "$@" "-r" ;;
     "--data-path")    set -- "$@" "-p" ;;
     "--fs-license")   set -- "$@" "-l" ;;
+    "--name")         set -- "$@" "-n" ;;
+    "--binding-port") set -- "$@" "-b" ;;
     "--help")         set -- "$@" "-h" ;;
     *)                set -- "$@" "$arg"
   esac
 done
 
 # Get runtime option
-while getopts "r:p:l:h" opt
+while getopts "r:p:l:n:b:h" opt
 do
     case ${opt} in
     r)
@@ -50,6 +54,12 @@ do
     l)
         FS_LICENSE_OG=${OPTARG}
         ;;
+    n)
+        RADIOLABDOCKER_NAME=${OPTARG}
+        ;;
+    b)
+        PORT=${OPTARG}
+        ;;
     h)
         Usage
         exit 1
@@ -58,6 +68,14 @@ do
 done
 
 IMAGE_init="radiolab_docker"
+
+if [[ -z ${RADIOLABDOCKER_NAME} ]]; then
+    RADIOLABDOCKER_NAME="radiolab_docker"
+fi
+
+if [[ -z ${PORT} ]]; then
+    PORT="8888"
+fi
 
 if [[ -z ${RUNTIME} ]]; then
     echo -e "${WARNING}: Runtime has not been specified, default is normal"
@@ -123,19 +141,19 @@ else
 else
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
-                EXIST_DOCKER=`docker ps -a | grep ${IMAGE} | awk '{print $NF}'`
-                if [[ ! -z ${EXIST_DOCKER} ]]; then
-                    RUNNING_DOCKER=`docker ps -a | grep ${IMAGE} | awk -F '   ' '{print $5}' | grep Up`
-                    if [[ ! -z ${RUNNING_DOCKER} ]]; then
-                        echo -e "${WARNING}: We found existing \"${hint}${IMAGE}${normal},\" and it's ${hint}RUNNING${normal}!"
-                        echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}${IMAGE}${normal}\" instence and ${hint}RE-CREATE${normal} it."
+                EXIST_COMPOSE=`docker ps -a | awk -F '   ' '{print $5" "$7}' | grep ${RADIOLABDOCKER_NAME} | awk '{print $NF}'`
+                if [[ ! -z ${EXIST_COMPOSE} ]]; then
+                    RUNNING_COMPOSE=`docker ps -a | awk -F '   ' '{print $5"   "$7}' | grep ${RADIOLABDOCKER_NAME} | grep Up`
+                    if [[ ! -z ${RUNNING_COMPOSE} ]]; then
+                        echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal},\" and it's ${hint}RUNNING${normal}!"
+                        echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}${RADIOLABDOCKER_NAME}${normal}\" instence and ${hint}RE-CREATE${normal} it."
                     else
-                        echo -e "${WARNING}: We found existing \"${hint}${IMAGE}${normal}.\""
+                        echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal}.\""
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
                     echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
                 fi
-                echo -e "${PROCEED}: Creating radiolab docker"
+                echo -e "${PROCEED}: Creating ${RADIOLABDOCKER_NAME}"
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
                     sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\_FS_LICENSE.\+\)/#\1/g}" build/tmp/docker-compose.yml
@@ -175,24 +193,30 @@ else
 		if [[ ! -d build/tmp/ ]]; then
 			mkdir -p build/tmp
 		fi
+		if [[ ! -d build/tmp/${RADIOLABDOCKER_NAME} ]]; then
+			mkdir -p build/tmp/${RADIOLABDOCKER_NAME}
+		fi
+
 		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
 		echo "${USER_name}:x:`id -g`" > ./build/tmp/group
 
-		sed -e 's/_IMAGE/'"$IMAGE"'/g' \
+		sed -e 's/_RADIOLAB_DOCKER/'"$RADIOLABDOCKER_NAME"'/g' \
+            -e 's/_IMAGE/'"$IMAGE"'/g' \
 		    -e 's/_HOME_local/'"$HOME_local"'/g' \
 		    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
 		    -e 's/_USER/'"$USER_name"'/g' \
 		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
+		    -e 's/_PORT/'"$PORT"'/g' \
 		    -e 's/_DATA/'"$DATA"'/g' \
 		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
-		    ./build/tmp/docker-compose.yml > ./docker-compose.yml
+		    ./build/tmp/docker-compose.yml > build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
 
         # Fix $DISPLAY binding depends on $OSTYPE
         if [[ ${OS} == "UNIX" ]]; then
-            sed -i -e 's/host.docker.internal//g' ./docker-compose.yml
+            sed -i -e 's/host.docker.internal//g' build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
         fi
 
-		docker-compose up -d --force-recreate
+		docker-compose -f build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml up -d --force-recreate
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
                 Usage

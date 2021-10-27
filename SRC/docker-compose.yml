@@ -1,13 +1,13 @@
 # docker-compose.yml
 version: "2.3"
 services:
-    radiolab_docker:
+    _RADIOLAB_DOCKER:
         image: _IMAGE
+        container_name: _RADIOLAB_DOCKER
         runtime: nvidia
         shm_size: 512M
         user: _CURRENT_ID
         working_dir: /DATA
-        container_name: radiolab_docker
         stdin_open: true
         environment:
             - HOME=_HOME_docker
@@ -17,12 +17,12 @@ services:
             - USER=_USER
 #        network_mode: "host"
         ports:
-            - 8888:8888
+            - _PORT:8888
         volumes:
             - _HOME_local:_HOME_docker
             - _DATA:/DATA
             - _FS_LICENSE:/opt/freesurfer/license.txt
             - /tmp/.X11-unix:/tmp/.X11-unix:rw
-            - ./build/tmp/group:/etc/group:ro
-            - ./build/tmp/passwd:/etc/passwd:ro
+            - ../group:/etc/group:ro
+            - ../passwd:/etc/passwd:ro
         tty: true

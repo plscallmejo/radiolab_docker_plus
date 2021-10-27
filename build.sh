@@ -205,21 +205,21 @@ if [[ -z ${COMPOSE} ]]; then
     echo -e "${PROCEED}: Base image build complete"
 
     # Read versioning of the softwares
-    AFNI_VERSION=( $(docker run -it --rm radiolab_afni:latest bash -c 'echo $AFNI_VERSION' | sed -e "s/\r//g") )
-    ANTS_VERSION=( $(docker run -it --rm radiolab_ants:latest bash -c 'echo $ANTS_VERSION' | sed -e "s/\r//g") )
+    AFNI_VERSION=( $(docker run -it --rm radiolab_afni:latest bash -c "afni -version") )
+    ANTS_VERSION=( $(docker run -it --rm radiolab_ants:latest bash -c "antsRegistration --version") )
     FSL_VERSION=( $(docker run -it --rm radiolab_fsl:latest bash -c 'echo $FSL_VERSION' | sed -e "s/\r//g") )
-    FREESURFER_VERSION=( $(docker run -it --rm radiolab_freesurfer:latest bash -c 'echo $FREESURFER_VERSION' | sed -e "s/\r//g") )
-    DCM2NIIX_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c 'echo $DCM2NIIX_VERSION' | sed -e "s/\r//g") )
+    FREESURFER_VERSION=( $(docker run -it --rm radiolab_freesurfer:latest bash -c "freesurfer") )
+    DCM2NIIX_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "dcm2niix -v") )
 
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
-            --build-arg AFNI_VERSION=${AFNI_VERSION[-1]} \
-            --build-arg ANTS_VERSION=${ANTS_VERSION[-1]} \
+            --build-arg AFNI_VERSION=${AFNI_VERSION} \
+            --build-arg ANTS_VERSION=${ANTS_VERSION} \
             --build-arg FSL_VERSION=${FSL_VERSION[-1]} \
             --build-arg FREESURFER_VERSION=${FREESURFER_VERSION[-1]} \
-            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION[-1]} \
+            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION} \
             -f build/tmp/Dockerfile_all .
 fi
