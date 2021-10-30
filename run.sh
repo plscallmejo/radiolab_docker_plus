@@ -14,7 +14,7 @@ INFORM="${inform}INFORM${normal}"
 
 Usage () {
 echo ""
-echo "Run the "${hint}radiolab_docker${normal}""
+echo "Run "${hint}radiolab_docker${normal}" container."
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./run.sh [options]"
@@ -25,6 +25,7 @@ echo "                       Or any num < maximum of cores"
 echo "                       Note, left it unflag to a default setting"
 echo "                          number of threads for fsl_sub will set to "
 echo "                          maximum num of cores - 2 (n - 2)"
+echo "-n, --container-name   Specify the container name. (default: radiolab_dock)"
 echo "-h, --help           Show this message."
 echo ""
 echo "Examples:"
@@ -38,18 +39,22 @@ echo ""
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--fsl-parallel") set -- "$@" "-p" ;;
-    "--help") set -- "$@" "-h" ;;
-    *)        set -- "$@" "$arg"
+    "--fsl-parallel")   set -- "$@" "-p" ;;
+    "--container-name") set -- "$@" "-n" ;;
+    "--help")           set -- "$@" "-h" ;;
+    *)                  set -- "$@" "$arg"
   esac
 done
 
 # Get fsl parallelism
-while getopts "p:h" opt
+while getopts "p:n:h" opt
 do
     case ${opt} in
     p)
         FSL_PARA=${OPTARG}
+        ;;
+    n)
+        CONTAINER=${OPTARG}
         ;;
     h)
         Usage
@@ -70,6 +75,10 @@ case "$OSTYPE" in
     *)        OS="unknown: $OSTYPE" ;;
 esac
 
+if [[ -z ${CONTAINER} ]]; then
+    CONTAINER="radiolab_docker"
+fi
+
 if [[ ! -z ${FSL_PARA} ]]; then
     check_fslsub_num=`test -n "${FSL_PARA}" && test -z ${FSL_PARA//[0-9]} && echo 1 || echo 0`
     if [[ ${check_fslsub_num} != "1" ]];then
@@ -78,17 +87,17 @@ if [[ ! -z ${FSL_PARA} ]]; then
     fi
 fi
 
-EXIST_DOCKER=`docker ps -a | grep radiolab_docker | awk '{print $NF}'`
+EXIST_DOCKER=`docker ps -a | grep ${CONTAINER} | awk '{print $NF}'`
 if [[ -z ${EXIST_DOCKER} ]]; then
-    echo -e "${ERROR}: \"${hint}radiolab_docker${normal}\" dose not exist. Please run ${hint}create.sh${normal} first."
+    echo -e "${ERROR}: \"${hint}${CONTAINER}${normal}\" dose not exist. Please run ${hint}create.sh${normal} first."
     exit 1
 else
-    RUNNING_DOCKER=`docker ps -a | grep radiolab_docker | awk -F '   ' '{print $5}' | grep Up`
+    RUNNING_DOCKER=`docker ps -a | grep ${CONTAINER} | awk -F '   ' '{print $5}' | grep Up`
     if [[ ! -z ${RUNNING_DOCKER} ]]; then
-        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is RUNNING."
+        echo -e "${PROCEED}: \"${hint}${CONTAINER}${normal}\" is RUNNING."
     else
-        echo -e "${PROCEED}: \"${hint}radiolab_docker${normal}\" is not RUNNING, bringing the container up online."
-        docker container start radiolab_docker > /dev/null 2>&1
+        echo -e "${PROCEED}: \"${hint}${CONTAINER}${normal}\" is not RUNNING, bringing the container up online."
+        docker container start ${CONTAINER} > /dev/null 2>&1
     fi
 
     check_xhost="$(command -V xhost 2> /dev/null)"
@@ -108,7 +117,7 @@ else
     if [[ -z ${FSL_PARA} ]]; then
         echo -e "${INFORM}: Number of threads for fsl_sub will set to maximum num of cores - 2 (n - 2) by default."
         echo -e "${INFORM}: You can set ${hint}\$FSLPARALLEL${normal} inside the shell to control its behavior."
-        ${winptyapply} docker exec -it radiolab_docker bash -c 'export FSLPARALLEL=$(echo "$(nproc)-2" | bc) && /radiolabdocker/startup.sh'
+        ${winptyapply} docker exec -it ${CONTAINER} bash -c 'export FSLPARALLEL=$(echo "$(nproc)-2" | bc) && source /radiolabdocker/startup.sh'
     else
         if [[ ${FSL_PARA} == 0 ]]; then
             echo -e "${INFORM}: Multi-threads fsl_sub functionality is off."
@@ -118,6 +127,6 @@ else
             echo -e "${INFORM}: Multi-threads fsl_sub functionality is on and sets to ${FSL_PARA}."
         fi
         echo -e "${INFORM}: You can set ${hint}\$FSLPARALLEL${normal} inside the shell to control its behavior."
-        ${winptyapply} docker exec -it radiolab_docker bash -c "export FSLPARALLEL=${FSL_PARA} && /radiolabdocker/startup.sh"
+        ${winptyapply} docker exec -it ${CONTAINER} bash -c "export FSLPARALLEL=${FSL_PARA} && source /radiolabdocker/startup.sh"
     fi
 fi

@@ -18,3 +18,4 @@ RUN echo "Installing FSL conda environment ..." \
     && rm /opt/fsl/bin/fsl_sub \
     && chmod a+x /opt/fsl_sub/fsl_sub \
     && ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub
+ENV PATH="/opt/fsl/bin:$PATH"

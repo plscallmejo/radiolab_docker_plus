@@ -21,6 +21,8 @@ ARG DEBIAN_FRONTEND="noninteractive"
 #### pydot      ####
 #### nibabel    ####
 #### pybids     ####
+#### qsiprep    ####
+#### amico      ####
 #### dipy       ####
 #### nilearn    ####
 ####################
@@ -67,6 +69,8 @@ RUN echo "Installing Miniconda ..." \
              "pydot"   \
              "nibabel" \
              "pybids" \
+             "git+https://github.com/PennLINC/qsiprep.git" \
+             "dmri-amico" \
              "dipy" \
              "vtk==8.1.2" \
              "fury" \

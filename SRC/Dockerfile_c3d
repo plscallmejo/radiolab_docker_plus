@@ -1,0 +1,15 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####  Convert3D ####
+####################
+ENV	C3D_VERSION="nightly" \
+    C3D_HOME="/opt/c3d" \
+    ITKSNAP_HOME="/opt/c3d"
+RUN echo "Installing Convert3D ..." \
+    && mkdir -p /opt/c3d \
+    && curl -fSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/Nightly/c3d-nightly-Linux-x86_64.tar.gz/download \
+     | tar -xz -C /opt/c3d --strip-components 1
+ENV PATH="/opt/c3d/bin:$PATH"

@@ -19,3 +19,4 @@ RUN echo "Installing ANTs ..." \
     && make install 2>&1 \
     && cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/ && cd /opt \
     && rm -r /tmp/ants-build
+ENV PATH="/opt/ants/bin:/opt/ants/Scripts:$PATH"

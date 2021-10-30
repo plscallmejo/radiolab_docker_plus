@@ -187,6 +187,7 @@ if [[ -z ${COMPOSE} ]]; then
     cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
     cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
     cp SRC/Dockerfile_dcm2niix build/tmp/Dockerfile_dcm2niix
+    cp SRC/Dockerfile_c3d build/tmp/Dockerfile_c3d
     cp SRC/Dockerfile_miniconda build/tmp/Dockerfile_miniconda
     cp SRC/Dockerfile_all build/tmp/Dockerfile_all
 
@@ -201,6 +202,7 @@ if [[ -z ${COMPOSE} ]]; then
     docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
     docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
     docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
+    docker build --ulimit nofile=122880:122880 -t radiolab_c3d:latest -f build/tmp/Dockerfile_c3d .
     docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
@@ -210,6 +212,7 @@ if [[ -z ${COMPOSE} ]]; then
     FSL_VERSION=( $(docker run -it --rm radiolab_fsl:latest bash -c 'echo $FSL_VERSION' | sed -e "s/\r//g") )
     FREESURFER_VERSION=( $(docker run -it --rm radiolab_freesurfer:latest bash -c "freesurfer") )
     DCM2NIIX_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "dcm2niix -v") )
+    C3D_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "c3d -version") )
 
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
@@ -221,5 +224,6 @@ if [[ -z ${COMPOSE} ]]; then
             --build-arg FSL_VERSION=${FSL_VERSION[-1]} \
             --build-arg FREESURFER_VERSION=${FREESURFER_VERSION[-1]} \
             --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION} \
+            --build-arg C3D_VERSION=${C3D_VERSION} \
             -f build/tmp/Dockerfile_all .
 fi

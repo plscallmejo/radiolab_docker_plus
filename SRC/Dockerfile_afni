@@ -13,3 +13,4 @@ RUN echo "options(Ncpus = $(echo "$(nproc)-2" | bc)L)" > /root/.Rprofile \
         | tar -xz -C /opt/afni --strip-components 1 \
     && PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL \
     && rm /root/.Rprofile
+ENV PATH="/opt/afni:$PATH"

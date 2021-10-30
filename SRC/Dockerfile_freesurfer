@@ -24,3 +24,4 @@ RUN echo "Installing FreeSurfer ..." \
     && mv /tmp/MCRv84/v84 ${FREESURFER_HOME}/MCRv84 \
     && cd /tmp && rm -rf /tmp/MCRv84 \
     && sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
+ENV PATH="/opt/freesurfer/bin:$PATH"
