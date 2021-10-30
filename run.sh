@@ -87,13 +87,13 @@ if [[ ! -z ${FSL_PARA} ]]; then
     fi
 fi
 
-EXIST_DOCKER=`docker ps -a | grep ${CONTAINER} | awk '{print $NF}'`
-if [[ -z ${EXIST_DOCKER} ]]; then
+EXIST_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF}'` )
+if [[ ! ${EXIST_DOCKER[@]:1} =~ ${CONTAINER} ]]; then
     echo -e "${ERROR}: \"${hint}${CONTAINER}${normal}\" dose not exist. Please run ${hint}create.sh${normal} first."
     exit 1
 else
-    RUNNING_DOCKER=`docker ps -a | grep ${CONTAINER} | awk -F '   ' '{print $5}' | grep Up`
-    if [[ ! -z ${RUNNING_DOCKER} ]]; then
+    RUNNING_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF":"$5}' | awk '{print $1}'` )
+    if [[ ${RUNNING_DOCKER[*]:1} =~ ${CONTAINER}:Up ]]; then
         echo -e "${PROCEED}: \"${hint}${CONTAINER}${normal}\" is RUNNING."
     else
         echo -e "${PROCEED}: \"${hint}${CONTAINER}${normal}\" is not RUNNING, bringing the container up online."

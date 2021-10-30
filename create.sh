@@ -141,9 +141,10 @@ else
 else
         if [[ -d ${DATA_PATH} ]]; then
             if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
-                EXIST_COMPOSE=`docker ps -a | awk -F '   ' '{print $5" "$7}' | grep ${RADIOLABDOCKER_NAME} | awk '{print $NF}'`
-                if [[ ! -z ${EXIST_COMPOSE} ]]; then
-                    RUNNING_COMPOSE=`docker ps -a | awk -F '   ' '{print $5"   "$7}' | grep ${RADIOLABDOCKER_NAME} | grep Up`
+                EXIST_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF}'` )
+                if [[ ! ${EXIST_DOCKER[@]:1} =~ ${RADIOLABDOCKER_NAME} ]]; then
+                    RUNNING_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF":"$5}' | awk '{print $1}'` )
+                    if [[ ${RUNNING_DOCKER[*]:1} =~ ${RADIOLABDOCKER_NAME}:Up ]]; then
                     if [[ ! -z ${RUNNING_COMPOSE} ]]; then
                         echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal},\" and it's ${hint}RUNNING${normal}!"
                         echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}${RADIOLABDOCKER_NAME}${normal}\" instence and ${hint}RE-CREATE${normal} it."
