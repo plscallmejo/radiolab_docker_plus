@@ -21,8 +21,9 @@ echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (de
 echo "-p, --data-path      Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "                         Note, the "data_path" should be a DIR,"
 echo "                         and you are supposed to own the rwx permissions to it."
+echo "-c, --custom         Run customized "radiolab_docker" image."
 echo "-n, --name           Specify the service name of the container. (default: radiolab_docker)"
-echo "-b, --binding-port   Specify the local port for jupyter-notebook. (default: 8888)"
+echo "-b, --jupyter-binding-port   Specify the local port for jupyter-notebook. (default: 8888)"
 echo "-l, --fs-license     Specify the Freesurfer license for a full functional Freesurfer."
 echo ""
 }
@@ -31,18 +32,19 @@ echo ""
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--runtime")      set -- "$@" "-r" ;;
-    "--data-path")    set -- "$@" "-p" ;;
-    "--fs-license")   set -- "$@" "-l" ;;
-    "--name")         set -- "$@" "-n" ;;
-    "--binding-port") set -- "$@" "-b" ;;
-    "--help")         set -- "$@" "-h" ;;
-    *)                set -- "$@" "$arg"
+    "--runtime")              set -- "$@" "-r" ;;
+    "--data-path")            set -- "$@" "-p" ;;
+    "--fs-license")           set -- "$@" "-l" ;;
+    "--custom")               set -- "$@" "-c" ;;
+    "--name")                 set -- "$@" "-n" ;;
+    "--jupyter-binding-port") set -- "$@" "-b" ;;
+    "--help")                 set -- "$@" "-h" ;;
+    *)                        set -- "$@" "$arg"
   esac
 done
 
 # Get runtime option
-while getopts "r:p:l:n:b:h" opt
+while getopts "r:p:l:cn:b:h" opt
 do
     case ${opt} in
     r)
@@ -53,6 +55,9 @@ do
         ;;
     l)
         FS_LICENSE_OG=${OPTARG}
+        ;;
+    c)
+        CUSTOM=_custom
         ;;
     n)
         RADIOLABDOCKER_NAME=${OPTARG}
@@ -67,7 +72,7 @@ do
     esac
 done
 
-IMAGE_init="radiolab_docker"
+IMAGE_init="radiolab_docker${CUSTOM}"
 
 if [[ -z ${RADIOLABDOCKER_NAME} ]]; then
     RADIOLABDOCKER_NAME="radiolab_docker"
@@ -138,10 +143,9 @@ else
         echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" is invalid! Please check again!"
         Usage
         exit 1
-    elif [[ -d ${DATA_PATH} ]]; then
-        if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
-            EXIST_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF}'` )
-            if [[ ! ${EXIST_DOCKER[@]:1} =~ ${RADIOLABDOCKER_NAME} ]]; then
+    else
+        if [[ -d ${DATA_PATH} ]]; then
+            if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
                 RUNNING_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF":"$5}' | awk '{print $1}'` )
                 if [[ ${RUNNING_DOCKER[*]:1} =~ ${RADIOLABDOCKER_NAME}:Up ]]; then
                     if [[ ! -z ${RUNNING_COMPOSE} ]]; then
@@ -151,10 +155,10 @@ else
                         echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal}.\""
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
-                echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
+                echo -e "${WARNING}: Also, note the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
                 fi
 
-                echo -e "${PROCEED}: Creating ${RADIOLABDOCKER_NAME}"
+                echo -e "${PROCEED}: Creating ${hint}${RADIOLABDOCKER_NAME}${normal} witn ${hint}${IMAGE}${normal}."
 
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
@@ -224,15 +228,16 @@ else
                 fi
 
                 docker-compose -f build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml up -d --force-recreate
+
+            else
+                echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
+                Usage
+                exit 1
+            fi
         else
-            echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
+            echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" should be a DIR or a file! Please check again!"
             Usage
             exit 1
         fi
-    else
-        echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" should be a DIR or a file! Please check again!"
-        Usage
-        exit 1
-    fi
     fi
 fi

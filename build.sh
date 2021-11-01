@@ -195,15 +195,15 @@ if [[ -z ${COMPOSE} ]]; then
     cn_sp build/tmp/Dockerfile_base ${CNSWITCH}
 
     ## Build base image
-    docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
-    docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
-    docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
-    docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
-    docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
-    docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
-    docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
-    docker build --ulimit nofile=122880:122880 -t radiolab_c3d:latest -f build/tmp/Dockerfile_c3d .
-    docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_c3d:latest -f build/tmp/Dockerfile_c3d .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
     # Read versioning of the softwares
@@ -226,4 +226,16 @@ if [[ -z ${COMPOSE} ]]; then
             --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION} \
             --build-arg C3D_VERSION=${C3D_VERSION} \
             -f build/tmp/Dockerfile_all .
+
+#    cp SRC/Dockerfile_personal build/tmp/Dockerfile_personal
+#
+#    docker tag radiolab_docker_${RUNTIME}:latest \
+#               radiolab_docker_custom:latest
+#
+#    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
+#            -t radiolab_docker_custom_${RUNTIME}:latest \
+#            -f build/tmp/Dockerfile_custom .
+#
+#    docker image rm radiolab_docker_custom_${RUNTIME}
+
 fi
