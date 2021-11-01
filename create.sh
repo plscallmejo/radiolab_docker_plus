@@ -138,13 +138,12 @@ else
         echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" is invalid! Please check again!"
         Usage
         exit 1
-else
-        if [[ -d ${DATA_PATH} ]]; then
-            if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
-                EXIST_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF}'` )
-                if [[ ! ${EXIST_DOCKER[@]:1} =~ ${RADIOLABDOCKER_NAME} ]]; then
-                    RUNNING_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF":"$5}' | awk '{print $1}'` )
-                    if [[ ${RUNNING_DOCKER[*]:1} =~ ${RADIOLABDOCKER_NAME}:Up ]]; then
+    elif [[ -d ${DATA_PATH} ]]; then
+        if [[ -r ${DATA_PATH} && -w ${DATA_PATH} && -x ${DATA_PATH} ]]; then
+            EXIST_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF}'` )
+            if [[ ! ${EXIST_DOCKER[@]:1} =~ ${RADIOLABDOCKER_NAME} ]]; then
+                RUNNING_DOCKER=( `docker ps -a | awk -F '   ' '{print $NF":"$5}' | awk '{print $1}'` )
+                if [[ ${RUNNING_DOCKER[*]:1} =~ ${RADIOLABDOCKER_NAME}:Up ]]; then
                     if [[ ! -z ${RUNNING_COMPOSE} ]]; then
                         echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal},\" and it's ${hint}RUNNING${normal}!"
                         echo -e "${WARNING}: This process intents to ${hint}STOP ALL THE RUNNING PROCESSES${normal} in the current \"${hint}${RADIOLABDOCKER_NAME}${normal}\" instence and ${hint}RE-CREATE${normal} it."
@@ -152,9 +151,11 @@ else
                         echo -e "${WARNING}: We found existing \"${hint}${RADIOLABDOCKER_NAME}${normal}.\""
                         echo -e "${WARNING}: This process intents to ${hint}RE-CREATE${normal} it."
                     fi
-                    echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
+                echo -e "${WARNING}: Also note, the \"${hint}/DATA${normal}\" (container) will redirect to \"${hint}${DATA_PATH}${normal}\" (host). "
                 fi
+
                 echo -e "${PROCEED}: Creating ${RADIOLABDOCKER_NAME}"
+
                 if [[ -z ${FS_LICENSE_OG} ]]; then
                     echo -e "${WARNING}: No freesurfer license was supplied, thus the freesurfer will not work properly."
                     sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g;s/\(\s\+-\s\_FS_LICENSE.\+\)/#\1/g}" build/tmp/docker-compose.yml
@@ -168,7 +169,9 @@ else
                         sed -i -e "/\s\+-\s\_FS_LICENSE.\+/{s/#//g}" build/tmp/docker-compose.yml
                     fi
                 fi
+
                 read -r -p "Comfirm? [Y/N] " input
+
                 case $input in
                     [yY][eE][sS]|[yY])
                         SEL="Y"
@@ -181,52 +184,55 @@ else
                         exit 1
                         ;;
                 esac
+
                 if [[ ${SEL} == "N" ]]; then
                     exit 1
                 fi
- 		USER_name=`whoami`
- 		CURRENT_ID=`id -u`:`id -g`
-                HOME_local=`echo ${HOME} | sed "s:/:\\\\\/:g"`
- 		HOME_docker=`echo /home/${USER_name} | sed "s:/:\\\\\/:g"`
- 		DATA=`echo ${DATA_PATH} | sed "s:/:\\\\\/:g"`
- 		FS_LICENSE=`echo ${FS_LICENSE} | sed "s:/:\\\\\/:g"`
 
-		if [[ ! -d build/tmp/ ]]; then
-			mkdir -p build/tmp
-		fi
-		if [[ ! -d build/tmp/${RADIOLABDOCKER_NAME} ]]; then
-			mkdir -p build/tmp/${RADIOLABDOCKER_NAME}
-		fi
+                USER_name=`whoami`
+                CURRENT_ID=`id -u`:`id -g`
+                        HOME_local=`echo ${HOME} | sed "s:/:\\\\\/:g"`
+                HOME_docker=`echo /home/${USER_name} | sed "s:/:\\\\\/:g"`
+                DATA=`echo ${DATA_PATH} | sed "s:/:\\\\\/:g"`
+                FS_LICENSE=`echo ${FS_LICENSE} | sed "s:/:\\\\\/:g"`
 
-		echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
-		echo "${USER_name}:x:`id -g`" > ./build/tmp/group
+                if [[ ! -d build/tmp/ ]]; then
+                    mkdir -p build/tmp
+                fi
 
-		sed -e 's/_RADIOLAB_DOCKER/'"$RADIOLABDOCKER_NAME"'/g' \
-            -e 's/_IMAGE/'"$IMAGE"'/g' \
-		    -e 's/_HOME_local/'"$HOME_local"'/g' \
-		    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
-		    -e 's/_USER/'"$USER_name"'/g' \
-		    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
-		    -e 's/_PORT/'"$PORT"'/g' \
-		    -e 's/_DATA/'"$DATA"'/g' \
-		    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
-		    ./build/tmp/docker-compose.yml > build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
+                if [[ ! -d build/tmp/${RADIOLABDOCKER_NAME} ]]; then
+                    mkdir -p build/tmp/${RADIOLABDOCKER_NAME}
+                fi
 
-        # Fix $DISPLAY binding depends on $OSTYPE
-        if [[ ${OS} == "UNIX" ]]; then
-            sed -i -e 's/host.docker.internal//g' build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
-        fi
+                echo "${USER_name}:x:${CURRENT_ID}:${USER_name}:${HOME_docker}:/bin/bash" > ./build/tmp/passwd
+                echo "${USER_name}:x:`id -g`" > ./build/tmp/group
 
-		docker-compose -f build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml up -d --force-recreate
-            else
-                echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
-                Usage
-                exit 1
-            fi
+                sed -e 's/_RADIOLAB_DOCKER/'"$RADIOLABDOCKER_NAME"'/g' \
+                    -e 's/_IMAGE/'"$IMAGE"'/g' \
+                    -e 's/_HOME_local/'"$HOME_local"'/g' \
+                    -e 's/_HOME_docker/'"$HOME_docker"'/g' \
+                    -e 's/_USER/'"$USER_name"'/g' \
+                    -e 's/_CURRENT_ID/'"$CURRENT_ID"'/g' \
+                    -e 's/_PORT/'"$PORT"'/g' \
+                    -e 's/_DATA/'"$DATA"'/g' \
+                    -e 's/_FS_LICENSE/'"$FS_LICENSE"'/g' \
+                    ./build/tmp/docker-compose.yml > build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
+
+                # Fix $DISPLAY binding depends on $OSTYPE
+                if [[ ${OS} == "UNIX" ]]; then
+                    sed -i -e 's/host.docker.internal//g' build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
+                fi
+
+                docker-compose -f build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml up -d --force-recreate
         else
-            echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" should be a DIR or a file! Please check again!"
+            echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
             Usage
             exit 1
         fi
+    else
+        echo -e "${ERROR}: The data path \"${hint}${DATA_PATH_OG}${normal}\" should be a DIR or a file! Please check again!"
+        Usage
+        exit 1
+    fi
     fi
 fi
