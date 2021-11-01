@@ -6,10 +6,12 @@ normal="\033[0m"
 error="\033[41;33m"
 warning="\033[43;31m"
 proceed="\033[42;30m"
+inform="\033[46;30m"
 hint="\033[4;36m"
 ERROR="${error}ERROR${normal}"
 WARNING="${warning}WARNING${normal}"
 PROCEED="${proceed}PROCEEDING${normal}"
+INFORM="${inform}INFORM${normal}"
 
 # Usage
 Usage () {
@@ -215,7 +217,7 @@ if [[ -z ${COMPOSE} ]]; then
     C3D_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "c3d -version") )
 
     # Build Docker image with proper runtime
-    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base"
+    echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base."
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
@@ -227,15 +229,54 @@ if [[ -z ${COMPOSE} ]]; then
             --build-arg C3D_VERSION=${C3D_VERSION} \
             -f build/tmp/Dockerfile_all .
 
-#    cp SRC/Dockerfile_personal build/tmp/Dockerfile_personal
-#
-#    docker tag radiolab_docker_${RUNTIME}:latest \
-#               radiolab_docker_custom:latest
-#
-#    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
-#            -t radiolab_docker_custom_${RUNTIME}:latest \
-#            -f build/tmp/Dockerfile_custom .
-#
-#    docker image rm radiolab_docker_custom_${RUNTIME}
+    if [[ ${CUSTOM} == "_custom" ]]; then
+        echo -e "${PROCEED}: Build \"${hint}custom${normal}\" image from radiolab_docker_${RUNTIME}."
+        cp SRC/Dockerfile_custom build/tmp/Dockerfile_custom
+
+        docker tag radiolab_docker_${RUNTIME}:latest \
+                   radiolab_docker_custom:latest
+
+        DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
+                -t radiolab_docker_custom_${RUNTIME}:latest \
+                -f build/tmp/Dockerfile_custom .
+
+        docker image rm radiolab_docker_custom_${RUNTIME}
+    fi
+
+    echo -e "${INFORM}: Initiate Radiolabconda environment in BASH?"
+    read -r -p "[Y/N] " input
+
+    case $input in
+        [yY][eE][sS]|[yY])
+            SEL="Y"
+            ;;
+        [nN][oO]|[nN])
+            SEL="N"
+            ;;
+        *)
+            echo "Invalid input..."
+            exit 1
+            ;;
+    esac
+
+init_radioconda=\
+"# >>> Radiolabconda initialize >>>\n\
+if [[ -x /radiolabdocker/startup.sh ]]; then\n\
+    source /radiolabdocker/startup.sh\n\
+fi\n\
+# <<< Radiolabconda initialize <<<"
+
+            if [[ ${SEL} == "N" ]]; then
+                exit 1
+            else
+                if [[ -x ~/.bashrc ]] && \
+                   [[ ! -z $(grep '# >>> Radiolabconda initialize >>>' ~/.bashrc) ]] && \
+                   [[ ! -z $(grep '# <<< Radiolabconda initialize <<<' ~/.bashrc) ]]; then
+                    sed "$(sed -n '/# >>> Radiolabconda initialize >>>/=' ~/.bashrc), \
+                         $(sed -n '/# <<< Radiolabconda initialize <<</=' ~/.bashrc)c "${init_radioconda}"" ~/.bashrc
+                else
+                    echo "\n${init_radioconda}" >> ~/.bashrc
+                fi
+            fi
 
 fi
