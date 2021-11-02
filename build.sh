@@ -240,7 +240,7 @@ if [[ -z ${COMPOSE} ]]; then
                 -t radiolab_docker_custom_${RUNTIME}:latest \
                 -f build/tmp/Dockerfile_custom .
 
-        docker image rm radiolab_docker_custom_${RUNTIME}
+        docker image rm radiolab_docker_custom
     fi
 
     echo -e "${INFORM}: Initiate Radiolabconda environment in BASH?"
