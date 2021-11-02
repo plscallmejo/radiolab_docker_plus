@@ -126,23 +126,23 @@ Or, more general usege,
 `load.sh`
 
 ```
-echo "Load docker image."
-echo "Note that the image should store as "tar.gz","
-echo 'and generate using "docker save [image]:[tag] | gzip > [image].tar.gz",'
-echo "thus gunzip can decompress the tarball as stdout which further pipe to"
-echo "the "docker load" command."
-echo ""
-echo "Usage: ./load.sh [path/to/image.tar.gz] [OPTIONS]"
-echo "-b, --bar            Show progress bar (needs pv command)."
-echo "                       T for TRUE, and F for FALSE. (default: T)"
-echo "-h, --help           Show this message."
-echo ""
-echo "Examples:"
-echo "./load.sh /path/to/tar.gz"
-echo "                     Load the docker image from /path/to/tar.gz."
-echo "./load.sh -b F /path/to/tar.gz"
-echo "                     Load the docker image from /path/to/tar.gz and"
-echo "                       disable the progress bar."
+Load docker image.
+Note that the image should store as "tar.gz",
+and generate using "docker save [image]:[tag] | gzip > [image].tar.gz",'
+thus gunzip can decompress the tarball as stdout which further pipe to
+the "docker load" command.
+
+Usage: ./load.sh [path/to/image.tar.gz] [OPTIONS]
+-b, --bar            Show progress bar (needs pv command).
+                       T for TRUE, and F for FALSE. (default: T)
+-h, --help           Show this message.
+
+Examples:
+./load.sh /path/to/tar.gz
+                     Load the docker image from /path/to/tar.gz.
+./load.sh -b F /path/to/tar.gz
+                     Load the docker image from /path/to/tar.gz and
+                       disable the progress bar.
 ```
 
 
