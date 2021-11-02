@@ -14,7 +14,7 @@ INFORM="${inform}INFORM${normal}"
 
 Usage () {
 echo ""
-echo "Run "${hint}radiolab_docker${normal}" container."
+echo "Run "radiolab_docker" container."
 echo "then build the Docker image from the begining."
 echo ""
 echo "Usage: ./run.sh [options]"
@@ -89,5 +89,5 @@ else
     fi
 
     echo -e "${PROCEED}: Entering interactive shell."
-    ${winptyapply} docker attach ${CONTAINER}
+    ${winptyapply} docker exec -it ${CONTAINER} bash -c "source /radiolabdocker/startup.sh"
 fi
