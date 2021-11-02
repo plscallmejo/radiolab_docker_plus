@@ -269,7 +269,7 @@ fi\n\
             if [[ ${SEL} == "N" ]]; then
                 exit 1
             else
-                if [[ -x ~/.bashrc ]] && \
+                if [[ -f ~/.bashrc ]] && \
                    [[ ! -z $(grep '# >>> Radiolabconda initialize >>>' ~/.bashrc) ]] && \
                    [[ ! -z $(grep '# <<< Radiolabconda initialize <<<' ~/.bashrc) ]]; then
                     sed "$(sed -n '/# >>> Radiolabconda initialize >>>/=' ~/.bashrc), \
