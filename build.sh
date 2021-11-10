@@ -221,12 +221,12 @@ if [[ -z ${COMPOSE} ]]; then
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
-            --build-arg AFNI_VERSION=${AFNI_VERSION[@]} \
-            --build-arg ANTS_VERSION=${ANTS_VERSION[@]} \
-            --build-arg FSL_VERSION=${FSL_VERSION[@]} \
-            --build-arg FREESURFER_VERSION=${FREESURFER_VERSION[@]} \
-            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION[@]} \
-            --build-arg C3D_VERSION=${C3D_VERSION[@]} \
+            --build-arg AFNI_VERSION=${AFNI_VERSION} \
+            --build-arg ANTS_VERSION=${ANTS_VERSION} \
+            --build-arg FSL_VERSION=${FSL_VERSION} \
+            --build-arg FREESURFER_VERSION=${FREESURFER_VERSION} \
+            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION} \
+            --build-arg C3D_VERSION=${C3D_VERSION} \
             -f build/tmp/Dockerfile_all .
 
     if [[ ${CUSTOM} == "_custom" ]]; then
