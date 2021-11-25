@@ -275,7 +275,7 @@ fi\n\
                     sed "$(sed -n '/# >>> Radiolabconda initialize >>>/=' ~/.bashrc), \
                          $(sed -n '/# <<< Radiolabconda initialize <<</=' ~/.bashrc)c "${init_radioconda}"" ~/.bashrc
                 else
-                    echo "\n${init_radioconda}" >> ~/.bashrc
+                    echo -e "\n${init_radioconda}" >> ~/.bashrc
                 fi
             fi
 
