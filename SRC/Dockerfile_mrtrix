@@ -1,0 +1,13 @@
+FROM radiolab_og
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+####################
+####   MRtrix   ####
+####################
+RUN echo "Installing MRtrix3 ..." \
+    && git clone https://github.com/MRtrix3/mrtrix3.git /opt/mrtrix3 \
+    && cd /opt/mrtrix3 \
+    && ./configure \
+    && ./build
+ENV PATH="/opt/mrtrix3/bin:$PATH"

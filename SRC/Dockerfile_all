@@ -14,7 +14,7 @@ ENV AFNI_VERSION=${AFNI_VERSION} \
     FREESURFER_VERSION=${FREESURFER_VERSION} \
     DCM2NIIX_VERSION=${DCM2NIIX_VERSION}} \
     C3D_VERSION=${C3D_VERSION} \
-    PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/bin:/opt/fsl/bin:/opt/ants/bin:/opt/ants/Scripts:/opt/afni:$PATH" \
+    PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/bin:/opt/fsl/bin:/opt/ants/bin:/opt/ants/Scripts:/opt/dsi-studio:/opt/mrtrix3/bin:/opt/afni:$PATH" \
 ####################
 ####    AFNI    ####
 ####################
@@ -75,9 +75,18 @@ RUN --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/s
 ####################
 ####    ANTs    ####
 ####################
-# copy ants from old build, because kitware use sha256 instead of md5 which causing ants build failure
 RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/ants /opt/
+####################
+####  MRtrix3   ####
+####################
+RUN --mount=type=bind,from=radiolab_mrtrix,target=/tmp/opt/,source=/opt \
+    cp -rf /tmp/opt/mrtrix3 /opt/
+####################
+#### DSI Studio ####
+####################
+RUN --mount=type=bind,from=radiolab_dsistudio,target=/tmp/opt/,source=/opt \
+    cp -rf /tmp/opt/dsi-studio /opt/
 ####################
 ####     FSL    ####
 ####################

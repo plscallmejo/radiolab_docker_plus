@@ -70,6 +70,7 @@ RUN echo "Installing Miniconda ..." \
              "nibabel" \
              "pybids" \
              "git+https://github.com/PennLINC/qsiprep.git" \
+             "sentry-sdk" \
              "dmri-amico" \
              "dipy" \
              "vtk==8.1.2" \

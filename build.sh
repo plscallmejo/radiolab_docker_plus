@@ -185,6 +185,8 @@ if [[ -z ${COMPOSE} ]]; then
     ## Copy default Dockerfile
     cp SRC/Dockerfile_OG build/tmp/Dockerfile_OG
     cp SRC/Dockerfile_afni build/tmp/Dockerfile_afni
+    cp SRC/Dockerfile_mrtrix build/tmp/Dockerfile_mrtrix
+    cp SRC/Dockerfile_dsistudio build/tmp/Dockerfile_dsistudio
     cp SRC/Dockerfile_ants build/tmp/Dockerfile_ants
     cp SRC/Dockerfile_fsl build/tmp/Dockerfile_fsl
     cp SRC/Dockerfile_freesurfer build/tmp/Dockerfile_freesurfer
@@ -200,6 +202,8 @@ if [[ -z ${COMPOSE} ]]; then
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_mrtrix:latest -f build/tmp/Dockerfile_mrtrix .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_dsistudio:latest -f build/tmp/Dockerfile_dsistudio .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
