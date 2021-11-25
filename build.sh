@@ -272,8 +272,8 @@ fi\n\
                 if [[ -f ~/.bashrc ]] && \
                    [[ ! -z $(grep '# >>> Radiolabconda initialize >>>' ~/.bashrc) ]] && \
                    [[ ! -z $(grep '# <<< Radiolabconda initialize <<<' ~/.bashrc) ]]; then
-                    sed "$(sed -n '/# >>> Radiolabconda initialize >>>/=' ~/.bashrc), \
-                         $(sed -n '/# <<< Radiolabconda initialize <<</=' ~/.bashrc)c "${init_radioconda}"" ~/.bashrc
+                    sed -i "$(sed -n '/# >>> Radiolabconda initialize >>>/=' ~/.bashrc),\
+                            $(sed -n '/# <<< Radiolabconda initialize <<</=' ~/.bashrc)c ${init_radioconda}" ~/.bashrc
                 else
                     echo -e "\n${init_radioconda}" >> ~/.bashrc
                 fi
