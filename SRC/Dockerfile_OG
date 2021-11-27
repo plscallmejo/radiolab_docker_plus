@@ -126,6 +126,8 @@ RUN apt-get update -qq \
             libeigen3-dev \
             zlib1g-dev \
             libqt5opengl5-dev \
+            libqt5charts5 \
+            libqt5charts5-dev \
             libqt5svg5-dev \
             libgl1-mesa-dev \
             libfftw3-dev \

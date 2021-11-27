@@ -9,12 +9,7 @@ ARG DEBIAN_FRONTEND="noninteractive" \
     FSL_VERSION \
     FREESURFER_VERSION \
     DCM2NIIX_VERSION
-ENV AFNI_VERSION=${AFNI_VERSION} \
-    FSL_VERSION=${FSL_VERSION} \
-    FREESURFER_VERSION=${FREESURFER_VERSION} \
-    DCM2NIIX_VERSION=${DCM2NIIX_VERSION}} \
-    C3D_VERSION=${C3D_VERSION} \
-    PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/bin:/opt/fsl/bin:/opt/ants/bin:/opt/ants/Scripts:/opt/dsi-studio:/opt/mrtrix3/bin:/opt/afni:$PATH" \
+ENV PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/bin:/opt/fsl/bin:/opt/ants/bin:/opt/ants/Scripts:/opt/dsi-studio:/opt/mrtrix3/bin:/opt/afni:$PATH" \
 ####################
 ####    AFNI    ####
 ####################
@@ -44,7 +39,6 @@ ENV AFNI_VERSION=${AFNI_VERSION} \
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
     FREESURFER_HOME="/opt/freesurfer" \
-    LD_LIBRARY_PATH="/opt/freesurfer/lib/qt/lib:$LD_LIBRARY_PATH" \
 ####################
 ####  dcm2niix  ####
 ####################
@@ -87,6 +81,7 @@ RUN --mount=type=bind,from=radiolab_mrtrix,target=/tmp/opt/,source=/opt \
 ####################
 RUN --mount=type=bind,from=radiolab_dsistudio,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/dsi-studio /opt/
+RUN chmod -R 755 /opt/dsi-studio
 ####################
 ####     FSL    ####
 ####################

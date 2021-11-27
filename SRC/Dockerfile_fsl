@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ####################
 ####     FSL    ####
 ####################
-ENV FSL_VERSION="6.0.5"
+ENV FSL_VERSION="6.0.5.1"
 RUN echo "Installing FSL ..." \
     && mkdir /opt/fsl \
     && curl -fSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz \

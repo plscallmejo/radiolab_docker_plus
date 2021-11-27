@@ -212,25 +212,11 @@ if [[ -z ${COMPOSE} ]]; then
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
-    # Read versioning of the softwares
-    AFNI_VERSION=( $(docker run -it --rm radiolab_afni:latest bash -c "afni -version") )
-    ANTS_VERSION=( $(docker run -it --rm radiolab_ants:latest bash -c "antsRegistration --version") )
-    FSL_VERSION=( $(docker run -it --rm radiolab_fsl:latest bash -c 'echo $FSL_VERSION' | sed -e "s/\r//g") )
-    FREESURFER_VERSION=( $(docker run -it --rm radiolab_freesurfer:latest bash -c "freesurfer") )
-    DCM2NIIX_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "dcm2niix -v") )
-    C3D_VERSION=( $(docker run -it --rm radiolab_dcm2niix:latest bash -c "c3d -version") )
-
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base."
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
-            --build-arg AFNI_VERSION=${AFNI_VERSION} \
-            --build-arg ANTS_VERSION=${ANTS_VERSION} \
-            --build-arg FSL_VERSION=${FSL_VERSION} \
-            --build-arg FREESURFER_VERSION=${FREESURFER_VERSION} \
-            --build-arg DCM2NIIX_VERSION=${DCM2NIIX_VERSION} \
-            --build-arg C3D_VERSION=${C3D_VERSION} \
             -f build/tmp/Dockerfile_all .
 
     if [[ ${CUSTOM} == "_custom" ]]; then

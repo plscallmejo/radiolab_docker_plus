@@ -69,6 +69,7 @@ RUN echo "Installing Miniconda ..." \
              "pydot"   \
              "nibabel" \
              "pybids" \
+             "bids-validator" \
              "git+https://github.com/PennLINC/qsiprep.git" \
              "sentry-sdk" \
              "dmri-amico" \

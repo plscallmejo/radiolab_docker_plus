@@ -12,8 +12,10 @@ RUN echo "Installing ANTs ..." \
 #CN_SP-
     && mkdir -p /tmp/ants-build/build \
     && git clone https://github.com/ANTsX/ANTs /tmp/ants-build/ANTs \
+    && cd /tmp/ants-build/ANTs \
+    && git checkout 221dad77384987350bfa5b8a3e17ea08dde2fb15 . \
     && cd /tmp/ants-build/build \
-    && cmake -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
+    && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/ants ../ANTs 2>&1 \
     && make -j $(echo "$(nproc)-2" | bc) 2>&1 \
     && cd ANTS-build \
     && make install 2>&1 \

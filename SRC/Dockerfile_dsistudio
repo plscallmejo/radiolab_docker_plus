@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ####################
 ####  dcm2niix  ####
 ####################
-RUN echo "Installing DSI studio ..." \
+RUN echo "Installing DSI-studio ..." \
     && cd /tmp \
     && curl -fLO https://github.com/frankyeh/DSI-Studio/releases/download/2021.10.05/dsi_studio_ubuntu_2004.zip \
     && unzip dsi_studio_ubuntu_2004.zip -d /opt/ \
