@@ -95,7 +95,7 @@ if [[ -z `echo "normal nvidia" | tr ' ' '\n' | grep -F -w ${RUNTIME}` ]]; then
     exit 1
 fi
 
-NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo $NV_RUNTIME' | sed -e "s/\r//g"`
+NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo RUNTIME $NV_RUNTIME' | grep RUNTIME | awk '{print $2}' | sed -e "s/\r//g"`
 if [[ ${NV_RUNTIME} == "1" ]]; then
     NV_RUNTIME="nvidia"
 elif [[ ${NV_RUNTIME} == "0" ]]; then

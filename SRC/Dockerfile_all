@@ -20,6 +20,10 @@ ENV PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/b
 ####################
     ANTSPATH="/opt/ants/bin" \
 ####################
+#### 3T_MRtrix  ####
+####################
+    SS3T_HOME="/opt/3Tissue/bin" \
+####################
 ####     FSL    ####
 ####################
     FSLDIR="/opt/fsl" \
@@ -70,17 +74,17 @@ RUN --mount=type=bind,from=radiolab_afni,target=/tmp/R,source=/usr/local/lib/R/s
 ####    ANTs    ####
 ####################
 RUN --mount=type=bind,from=radiolab_ants,target=/tmp/opt/,source=/opt \
-    cp -rf /tmp/opt/ants /opt/
+    cp -rf /tmp/opt/* /opt/
 ####################
 ####  MRtrix3   ####
 ####################
 RUN --mount=type=bind,from=radiolab_mrtrix,target=/tmp/opt/,source=/opt \
-    cp -rf /tmp/opt/mrtrix3 /opt/
+    cp -rf /tmp/opt/* /opt/
 ####################
 #### DSI Studio ####
 ####################
 RUN --mount=type=bind,from=radiolab_dsistudio,target=/tmp/opt/,source=/opt \
-    cp -rf /tmp/opt/dsi-studio /opt/
+    cp -rf /tmp/opt/* /opt/
 RUN chmod -R 755 /opt/dsi-studio
 ####################
 ####     FSL    ####
@@ -92,6 +96,7 @@ RUN --mount=type=bind,from=radiolab_fsl,target=/tmp/opt/,source=/opt \
 ####################
 RUN --mount=type=bind,from=radiolab_freesurfer,target=/tmp/opt/,source=/opt \
     cp -rf /tmp/opt/* /opt/
+RUN sed -i '$isource "/opt/freesurfer/SetUpFreeSurfer.sh"' "$RD_ENTRYPOINT"
 ####################
 ####  dcm2niix  ####
 ####################
@@ -127,15 +132,3 @@ RUN apt-get update -qq \
     && apt-get upgrade -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# ####################
-# ####  Personal  ####
-# ####################
-# RUN apt-get update -qq \
-#     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
-#     && apt-get install -y -q --no-install-recommends \
-#         neovim \
-#         nodejs \
-#     && apt-get install -f \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
