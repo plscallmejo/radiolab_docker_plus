@@ -11,6 +11,8 @@ RUN apt-get update -qq \
         neovim \
         nodejs \
         universal-ctags \
+        jags \
+        glpk-utils \
     && apt-get install -f \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
