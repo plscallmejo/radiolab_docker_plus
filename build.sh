@@ -86,14 +86,15 @@ for arg in "$@"; do
   case "$arg" in
     "--runtime")      set -- "$@" "-r" ;;
     "--make-compose") set -- "$@" "-c" ;;
-    "--cn-sp")     set -- "$@" "-s" ;;
+    "--cn-sp")        set -- "$@" "-s" ;;
+    "--personal")     set -- "$@" "-p" ;;
     "--help")         set -- "$@" "-h" ;;
     *)                set -- "$@" "$arg"
   esac
 done
 
 # Get runtime option
-while getopts "r:s:ch" opt
+while getopts "r:s:pch" opt
 do
     case ${opt} in
     r)
@@ -101,6 +102,9 @@ do
         ;;
     c)
         COMPOSE="Y"
+        ;;
+    p)
+        CUSTOM="_custom"
         ;;
     s)
         CNOPT=${OPTARG}
