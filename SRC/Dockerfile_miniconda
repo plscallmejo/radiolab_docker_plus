@@ -57,6 +57,7 @@ RUN echo "Installing Miniconda ..." \
              "numpy" \
              "pandas" \
              "scipy" \
+             "pandoc" \
              "matplotlib" \
              "seaborn" \
              "jupyterlab" \
@@ -72,6 +73,8 @@ RUN echo "Installing Miniconda ..." \
              "bids-validator" \
              "git+https://github.com/PennLINC/qsiprep.git" \
              "sentry-sdk" \
+             "cvxpy" \
+             "dcm2bids" \
              "dmri-amico" \
              "dipy" \
              "vtk==8.1.2" \
