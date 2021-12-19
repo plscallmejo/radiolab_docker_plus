@@ -32,15 +32,18 @@ RUN echo "Installing Miniconda ..." \
     && conda_installer="/tmp/miniconda.sh" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh \
     && bash "$conda_installer" -b -p /opt/miniconda-latest \
-# CN_SP+
+#CN_SP+
     && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ \
     && conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ \
     && conda config --set show_channel_urls yes \
-# CN_SP-
+#CN_SP-
     && rm -f "$conda_installer" \
-# CN_SP+
+#CN_SP+
     && pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
-# CN_SP-
+#CN_SP-
+#CN_SP+
+    && git config --global url."https://github.com.cnpmjs.org".insteadOf https://github.com \
+#CN_SP-
     && conda update -yq -nbase conda \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
