@@ -66,6 +66,7 @@ RUN echo "Installing Miniconda ..." \
              "jupyterlab" \
              "ipywidgets" \
              "scikit-learn" \
+             "scikit-image==0.16.2" \
              "${TF}" \
              "pydicom" \
              "nipype[all]" \
