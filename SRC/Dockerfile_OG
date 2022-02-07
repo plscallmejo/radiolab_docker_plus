@@ -27,7 +27,8 @@ FROM radiolab_base:latest
 
 USER root
 
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \

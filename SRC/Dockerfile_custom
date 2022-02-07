@@ -1,7 +1,8 @@
 # syntax = docker/dockerfile:experimental
 FROM radiolab_docker_custom
 
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY
 ####################
 ####  Personal  ####
 ####################

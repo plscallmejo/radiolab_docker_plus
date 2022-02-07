@@ -1,6 +1,7 @@
 FROM radiolab_og
 
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY
 
 ####################
 ####  dcm2niix  ####

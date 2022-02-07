@@ -1,7 +1,8 @@
 #ubuntu:20.04
 FROM ubuntu:20.04
 # mesa runtime
-ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY
 ENV NV_RUNTIME=0 \
     BASE="ubuntu:20.04"
 # CN_SP+

@@ -1,7 +1,8 @@
 # nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04
 FROM nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04
 # nvidia-container-runtime
-ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY
 ENV NV_RUNTIME=1 \
     BASE="nvidia/11.4.2-cudnn8-runtime-ubuntu20.04" \
     NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all} \

@@ -86,6 +86,7 @@ for arg in "$@"; do
   case "$arg" in
     "--runtime")      set -- "$@" "-r" ;;
     "--make-compose") set -- "$@" "-c" ;;
+    "--proxy")        set -- "$@" "-y" ;;
     "--cn-sp")        set -- "$@" "-s" ;;
     "--personal")     set -- "$@" "-p" ;;
     "--help")         set -- "$@" "-h" ;;
@@ -94,7 +95,7 @@ for arg in "$@"; do
 done
 
 # Get runtime option
-while getopts "r:s:pch" opt
+while getopts "r:s:y:pch" opt
 do
     case ${opt} in
     r)
@@ -105,6 +106,9 @@ do
         ;;
     p)
         CUSTOM="_custom"
+        ;;
+    y)
+        PROXY=${OPTARG}
         ;;
     s)
         CNOPT=${OPTARG}
@@ -203,17 +207,17 @@ if [[ -z ${COMPOSE} ]]; then
     cn_sp build/tmp/Dockerfile_base ${CNSWITCH}
 
     ## Build base image
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_base:latest -f build/tmp/Dockerfile_base .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_mrtrix:latest -f build/tmp/Dockerfile_mrtrix .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_dsistudio:latest -f build/tmp/Dockerfile_dsistudio .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_c3d:latest -f build/tmp/Dockerfile_c3d .
-    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_base:latest -f build/tmp/Dockerfile_base .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_og:latest -f build/tmp/Dockerfile_OG .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_afni:latest -f build/tmp/Dockerfile_afni .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_mrtrix:latest -f build/tmp/Dockerfile_mrtrix .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_dsistudio:latest -f build/tmp/Dockerfile_dsistudio .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_ants:latest -f build/tmp/Dockerfile_ants .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_dcm2niix:latest -f build/tmp/Dockerfile_dcm2niix .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_c3d:latest -f build/tmp/Dockerfile_c3d .
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
     echo -e "${PROCEED}: Base image build complete"
 
     # Build Docker image with proper runtime
@@ -221,6 +225,7 @@ if [[ -z ${COMPOSE} ]]; then
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 \
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
+            --build-arg ALL_PROXY=${PROXY} \
             -f build/tmp/Dockerfile_all .
 
     if [[ ${CUSTOM} == "_custom" ]]; then

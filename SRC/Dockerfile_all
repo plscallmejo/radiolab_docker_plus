@@ -5,6 +5,7 @@ FROM radiolab_og
 ####    ENVs    ####
 ####################
 ARG DEBIAN_FRONTEND="noninteractive" \
+    ALL_PROXY \
     AFNI_VERSION \
     FSL_VERSION \
     FREESURFER_VERSION \
