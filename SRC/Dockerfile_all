@@ -44,6 +44,9 @@ ENV PATH="/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/b
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
     FREESURFER_HOME="/opt/freesurfer" \
+    TCL_LIBRARY="/opt/freesurfer/lib/tktools/tcl8.4" \
+    TK_LIBRARY="/opt/freesurfer/lib/tktools/tk8.4" \
+    TIX_LIBRARY="/opt/freesurfer/lib/tktools/tix8.1" \
 ####################
 ####  dcm2niix  ####
 ####################
