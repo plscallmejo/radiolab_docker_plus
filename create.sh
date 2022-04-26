@@ -17,7 +17,6 @@ echo ""
 echo "Create a radiolab_docker container."
 echo ""
 echo "Usage: ./create.sh -p [data_path] -l [freesurfer_license] -r [runtime]"
-echo "-r, --runtime        Specify the RUNTIME, either "normal" or "nvidia". (default: normal)"
 echo "-p, --data-path      Specify the "data_path" to be mounted to /DATA in inside the container."
 echo "                         Note, the "data_path" should be a DIR,"
 echo "                         and you are supposed to own the rwx permissions to it."
@@ -32,7 +31,6 @@ echo ""
 for arg in "$@"; do
   shift
   case "$arg" in
-    "--runtime")              set -- "$@" "-r" ;;
     "--data-path")            set -- "$@" "-p" ;;
     "--fs-license")           set -- "$@" "-l" ;;
     "--custom")               set -- "$@" "-c" ;;
@@ -44,12 +42,9 @@ for arg in "$@"; do
 done
 
 # Get runtime option
-while getopts "r:p:l:cn:b:h" opt
+while getopts "p:l:cn:b:h" opt
 do
     case ${opt} in
-    r)
-        RUNTIME=${OPTARG}
-        ;;
     p)
         DATA_PATH_OG=${OPTARG}
         ;;
@@ -89,41 +84,7 @@ fi
 
 IMAGE=${IMAGE_init}_${RUNTIME}
 
-if [[ -z `echo "normal nvidia" | tr ' ' '\n' | grep -F -w ${RUNTIME}` ]]; then
-    echo -e "${ERROR}: Invalid runtime!"
-    Usage
-    exit 1
-fi
-
-NV_RUNTIME=`docker run -it --rm ${IMAGE}:latest bash -c 'echo RUNTIME $NV_RUNTIME' | grep RUNTIME | awk '{print $2}' | sed -e "s/\r//g"`
-if [[ ${NV_RUNTIME} == "1" ]]; then
-    NV_RUNTIME="nvidia"
-elif [[ ${NV_RUNTIME} == "0" ]]; then
-    NV_RUNTIME="normal"
-fi
-
-if [[ ${NV_RUNTIME} != ${RUNTIME} ]]; then
-    echo -e "The runtime you provided is ${hint}${RUNTIME}${normal}, while it shows the ${hint}${IMAGE}${normal} is ${hint}${NV_RUNTIME}${normal} runtime."
-    read -r -p "Comfirm? [Y/N] " input
-    case $input in
-        [yY][eE][sS]|[yY])
-            SEL="Y"
-            ;;
-        [nN][oO]|[nN])
-            SEL="N"
-            ;;
-        *)
-            echo "Invalid input..."
-            exit 1
-            ;;
-    esac
-    if [[ ${SEL} == "N" ]]; then
-        exit 1
-    fi
-fi
-
-./build.sh -c -r ${RUNTIME}
-
+./build.sh -c
 
 # Check os type
 case "$OSTYPE" in

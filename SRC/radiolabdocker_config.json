@@ -1,0 +1,526 @@
+{
+    "origin" : {
+        "img" : {
+            "base" : "ubuntu:20.04",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "BASE" : "ubuntu:20.04"
+        },
+        "commands" : [
+            "sed -i -e 's%http://archive.ubuntu.com/ubuntu%mirror://mirrors.ubuntu.com/mirrors.txt%' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
+            "yes | unminimize",
+            "APT_PKG"],
+        "apt" : [
+            ["libxext6",
+             "libx11-6",
+             "libglvnd0",
+             "libgl1",
+             "libglx0",
+             "libegl1",
+             "libjpeg-dev",
+             "freeglut3-dev",
+             "mesa-utils",
+             "qt5-default",
+             "apt-utils",
+             "bzip2",
+             "ca-certificates",
+             "curl",
+             "locales",
+             "unzip",
+             "gnupg",
+             "bc",
+             "dc",
+             "man",
+             "manpages-posix",
+             "dirmngr",
+             "htop",
+             "tmux",
+             "xvfb",
+             "xterm",
+             "vim",
+             "curl",
+             "gedit",
+             "evince",
+             "firefox",
+             "htop",
+             "bmon",
+             "parallel",
+             "pexec",
+             "tcsh",
+             "software-properties-common"]
+            ]
+    },
+
+    "base" : {
+        "img" : {
+            "base" : "radiolab_origin",
+            "tag" : "latest"
+        },
+        "user" : "root",
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "LANG": "en_US.UTF-8",
+            "LC_ALL": "en_US.UTF-8",
+            "RD_ENTRYPOINT": "/radiolabdocker/startup.sh"
+        },
+        "entry" : "[\"/radiolabdocker/startup.sh\"]",
+        "commands" : [
+            "echo \"deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/\" >> /etc/apt/sources.list",
+            "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80/ --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9",
+            "add-apt-repository -y ppa:ubuntugis/ppa",
+            "APT_PKG",
+            "ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19",
+            "ldconfig",
+            "rm -rf /var/lib/apt/lists/*",
+            "sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen",
+            "dpkg-reconfigure --frontend=noninteractive locales",
+            "update-locale LANG=\"en_US.UTF-8\"",
+            "chmod 777 /opt && chmod a+s /opt",
+            "mkdir -p /radiolabdocker",
+            "chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker",
+            "export RD_ENTRYPOINT=\"/radiolabdocker/startup.sh\"",
+            "if [ ! -f \"$RD_ENTRYPOINT\" ]; then",
+            "*    echo '#!/usr/bin/env bash' >> \"$RD_ENTRYPOINT\"",
+            "*    echo 'set -e' >> \"$RD_ENTRYPOINT\"",
+            "*    echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
+            "*fi",
+            "chmod 755 /radiolabdocker/startup.sh",
+            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT"
+        ],
+        "apt" : [
+            ["x11-utils",
+             "xfonts-base",
+             "xfonts-100dpi",
+             "libssl-dev",
+             "python-is-python3",
+             "python3-matplotlib",
+             "gsl-bin",
+             "libgsl0-dev",
+             "netpbm",
+             "libjpeg62",
+             "eog",
+             "libgl1-mesa-glx",
+             "libglu1-mesa-dev",
+             "libglw1-mesa",
+             "libxm4",
+             "build-essential",
+             "libcurl4-openssl-dev",
+             "libxml2-dev ",
+             "libgfortran-8-dev",
+             "libgomp1",
+             "nautilus",
+             "xfonts-base",
+             "r-base",
+             "r-base-dev",
+             "libcairo2-dev",
+             "libgtk2.0-0",
+             "libv8-dev",
+             "libudunits2-dev",
+             "openmpi-bin",
+             "libopenmpi-dev",
+             "gdal-bin",
+             "libgdal-dev",
+             "proj-data",
+             "proj-bin",
+             "libproj-dev",
+             "libgeos-dev",
+             "git",
+             "gettext",
+             "libtool",
+             "libtool-bin",
+             "autoconf",
+             "automake",
+             "cmake",
+             "g++",
+             "pkg-config",
+             "libncurses5",
+             "libxmu6",
+             "libxt6",
+             "perl",
+             "libeigen3-dev",
+             "zlib1g-dev",
+             "libqt5opengl5-dev",
+             "libqt5charts5",
+             "libqt5charts5-dev",
+             "libqt5svg5-dev",
+             "libgl1-mesa-dev",
+             "libfftw3-dev",
+             "libtiff5-dev",
+             "libpng-dev"]
+        ]
+    },
+
+    "afni" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "AFNI_VERSION": "ubuntu_16_64",
+            "PATH": "/opt/afni:$PATH"
+        },
+        "commands" : [
+            "echo \"options(Ncpus = $(echo \"$(nproc)-2\" | bc)L)\" > /root/.Rprofile",
+            "TAR_PKG",
+            "PATH=$PATH:/opt/afni rPkgsInstall -pkgs ALL",
+            "rm /root/.Rprofile"
+        ],
+        "tar" : [
+            {
+            "src" : "https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz",
+            "dist" : "/opt/afni"}
+        ]
+    },
+
+    "ants" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "ANTS_VERSION": "latest-git",
+             "PATH": "/opt/ants/bin:/opt/ants/Scripts:$PATH"
+        },
+        "commands" : [
+            "GIT_MAKE",
+            "cd /opt",
+            "cp -r /tmp/ants-build/ANTs/Scripts /opt/ants/",
+            "rm -r /tmp/ants-build"
+        ],
+        "git_make" : [{
+            "remote_src" : "https://github.com/ANTsX/ANTs",
+            "local_src" : "/tmp/ants-build/ANTs",
+            "cmake" : "-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${dist} ../ANTs 2>&1",
+            "make" : "-j $(echo \"$(nproc)-2\" | bc) 2>&1",
+            "installation": "/tmp/ants-build/build/ANTS-build",
+            "build" :"/tmp/ants-build/build",
+            "dist" : "/opt/ants"
+        }]
+    },
+
+    "mrtrix" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "MRTRIX_VERSION": "latest-git",
+            "3TISSUE_VERSION": "latest-git",
+            "PATH": "/opt/mrtrix3/bin:/opt/3Tissue/bin:$PATH"
+        },
+        "commands" : [
+            "GIT_BUILD",
+            "GIT_BUILD"
+        ],
+        "git_build" : [
+            {
+            "remote_src" : "https://github.com/3Tissue/MRtrix3Tissue.git",
+            "local_src" : "/opt/3Tissue"},
+            {
+            "remote_src" : "https://github.com/MRtrix3/mrtrix3.git",
+            "local_src" : "/opt/mrtrix3"}
+      ]
+    },
+
+    "c3d_dcm2niix_dsi" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "C3D_VERSION": "latest-git",
+            "C3D_HOME": "latest-git",
+            "ITKSNAP_HOME" : "/opt/c3d",
+            "DCM2NIIX_VERSION" : "latest-git",
+            "DSISTUDIO_VERSION" : "2021.12.03",
+            "PATH": "/opt/c3d/bin:/opt/dcm2niix:/opt/dsi-studio:$PATH"
+        },
+        "commands" : [
+            "TAR_PKG",
+            "ZIP_PKG",
+            "ZIP_PKG"
+        ],
+        "tar" : [
+            {
+            "src" : "https://sourceforge.net/projects/c3d/files/c3d/Nightly/c3d-nightly-Linux-x86_64.tar.gz/download",
+            "dist" : "/opt/c3d"}
+        ],
+        "zip" : [
+            {
+            "src" : "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip",
+            "dist" : "/opt/dcm2niix"},
+            {
+            "src" : "https://github.com/frankyeh/DSI-Studio/releases/download/${DSISTUDIO_VERSION}/dsi_studio_ubuntu_2004.zip",
+            "dist" : "/opt"}
+      ]
+    },
+
+    "fsl" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "FSL_VERSION" : "6.0.5.1",
+            "PATH": "/opt/fsl/bin:$PATH"
+        },
+        "commands" : [
+            "TAR_PKG",
+            "bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl",
+            "sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT",
+            "echo \"Getting neurolabusc's fsl_sub for a better parallel computing experience ...\"",
+            "git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub",
+            "rm /opt/fsl/bin/fsl_sub",
+            "chmod a+x /opt/fsl_sub/fsl_sub",
+            "ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub"
+        ],
+        "tar" : [
+            {
+            "src" : "https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz",
+            "dist" : "/opt/fsl"}
+        ]
+    },
+
+    "freesurfer" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "FREESURFER_VERSION" : "7.2.0",
+            "FREESURFER_HOME" : "/opt/freesurfer",
+            "PATH": "/opt/freesurfer/bin:$PATH"
+        },
+        "commands" : [
+            "TAR_PKG",
+            "ZIP_PKG",
+            "/tmp/MCRv84/install -mode silent -agreeToLicense yes -destinationFolder ${FREESURFER_HOME}/MCRv84",
+            "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\""
+        ],
+        "tar" : [
+            {
+            "src" : "https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${FREESURFER_VERSION}/freesurfer-linux-ubuntu18_amd64-${FREESURFER_VERSION}.tar.gz",
+            "dist" : "/opt/freesurfer"}
+        ],
+        "zip" : [
+            {
+            "src" : "https://ssd.mathworks.cn/supportfiles/downloads/R2014b/deployment_files/R2014b/installers/glnxa64/MCR_R2014b_glnxa64_installer.zip",
+            "dist" : "/tmp/MCRv84"
+            }
+        ]
+    },
+
+    "miniconda" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "MINICONDA_VERSION" : "latest",
+            "PATH": "/opt/miniconda-latest/bin:$PATH"
+        },
+        "commands" : [
+            "conda_installer=\"/tmp/miniconda.sh\"",
+            "curl -fsSL --retry 5 -o \"$conda_installer\" https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh",
+            "bash \"$conda_installer\" -b -p /opt/miniconda-latest",
+            "rm -f \"$conda_installer\"",
+            "conda update -yq -nbase conda",
+            "conda config --system --prepend channels conda-forge",
+            "conda config --system --set auto_update_conda false",
+            "conda config --system --set show_channel_urls true",
+            "sync && conda clean -y --all && sync",
+            "ALL_PROXY=\"\" conda create -y -q --name radioconda python=3.7",
+            "bash -c \"source activate radioconda",
+            "ALL_PROXY=\"\" pip install pysocks\"",
+            "CONDA_PKG",
+            "PIP_PKG",
+            "sync && conda clean --all -y",
+            "rm -rf ~/.cache/pip/*",
+            "rm -rf ~/.condarc",
+            "rm -rf ~/.config/pip/pip.conf",
+            "sync"
+        ],
+        "conda" : [
+            [
+             "pyqt",
+             "numpy",
+             "pandas",
+             "scipy",
+             "pandoc",
+             "matplotlib",
+             "seaborn",
+             "ipython",
+             "jupyterlab",
+             "ipywidgets",
+             "scikit-learn"]
+        ],
+        "pip" : [
+            [
+             "git+https://github.com/PennLINC/qsiprep.git",
+             "scikit-image==0.16.2",
+             "pydicom",
+             "nipype[all]",
+             "graphviz",
+             "pydot"  ,
+             "nibabel",
+             "pybids",
+             "bids-validator",
+             "sentry-sdk",
+             "cvxpy",
+             "dcm2bids",
+             "dmri-amico",
+             "dipy",
+             "vtk==8.1.2",
+             "fury",
+             "nilearn"]
+        ]
+    },
+
+    "all" : {
+        "img" : {
+            "base" : "radiolab_base",
+            "tag" : "latest"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "SYS_BUILD_DATE" : "",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "SYS_BUILD_DATE" : "${SYS_BUILD_DATE}",
+            "PATH" : "/opt/miniconda-latest/bin:/opt/c3d/bin:/opt/dcm2niix:/opt/freesurfer/bin:/opt/fsl/bin:/opt/ants/bin:/opt/ants/Scripts:/opt/dsi-studio:/opt/mrtrix3/bin:/opt/afni:$PATH",
+            "AFNI_PLUGINPATH" : "/opt/afni",
+            "QT_X11_NO_MITSHM" : "1",
+            "ANTSPATH" : "/opt/ants/bin",
+            "SS3T_HOME" : "/opt/3Tissue/bin",
+            "FSLDIR" : "/opt/fsl",
+            "FSLOUTPUTTYPE" : "NIFTI_GZ",
+            "FSLMULTIFILEQUIT" : "TRUE",
+            "FSLTCLSH" : "/opt/fsl/bin/fsltclsh",
+            "FSLWISH" : "/opt/fsl/bin/fslwish",
+            "FSLLOCKDIR" : "",
+            "FSLMACHINELIST" : "",
+            "FSLREMOTECALL" : "",
+            "FSLGECUDAQ" : "cuda.q",
+            "OS" : "Linux",
+            "FS_OVERRIDE" : "0",
+            "FIX_VERTEX_AREA" : "",
+            "FSF_OUTPUT_FORMAT" : "nii.gz",
+            "FREESURFER_HOME" : "/opt/freesurfer",
+            "TCL_LIBRARY" : "/opt/freesurfer/lib/tktools/tcl8.4",
+            "TK_LIBRARY" : "/opt/freesurfer/lib/tktools/tk8.4",
+            "TIX_LIBRARY" : "/opt/freesurfer/lib/tktools/tix8.1",
+            "C3D_HOME" : "/opt/c3d",
+            "CONDA_DIR" : "/opt/miniconda-latest"
+        },
+        "bind_copy" : [
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY",
+            "BIND_COPY"
+        ],
+        "copy" : [
+            "COPY"
+        ],
+        "commands" : [
+            "apt-get update -qq",
+            "apt-get upgrade -qq",
+            "apt-get clean",
+            "rm -rf /var/lib/apt/lists/*",
+            "chmod -R 755 /opt/dsi-studio",
+            "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
+            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT",
+            "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",
+            "echo 'source activate radioconda' >> /opt/bash_config/bashrc",
+            "mkdir /opt/bash_config"
+        ],
+        "bind_file" : [
+            {
+            "image" : "radiolab_afni",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_afni",
+            "tag" : "latest",
+            "target" : "/tmp/R",
+            "dist" : "/usr/local/lib/R/site-library"},
+            {
+            "image" : "radiolab_ants",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_mrtrix",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_c3d_dcm2niix_dsi",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_fsl",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_freesurfer",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"},
+            {
+            "image" : "radiolab_miniconda",
+            "tag" : "latest",
+            "target" : "/tmp/opt",
+            "dist" : "/opt"}
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bashrc",
+            "dist" : "/opt/bash_config/bashrc"
+            }
+        ]
+    }
+}

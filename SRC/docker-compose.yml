@@ -4,7 +4,6 @@ services:
     _RADIOLAB_DOCKER:
         image: _IMAGE
         container_name: _RADIOLAB_DOCKER
-        runtime: nvidia
         shm_size: 512M
         user: _CURRENT_ID
         working_dir: /DATA
@@ -12,7 +11,6 @@ services:
         environment:
             - HOME=_HOME_docker
             - LIBGL_ALWAYS_INDIRECT=0
-            - NVIDIA_VISIBLE_DEVICES=all
             - DISPLAY=host.docker.internal:0.0
             - USER=_USER
 #        network_mode: "host"
