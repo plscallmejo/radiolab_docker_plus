@@ -120,7 +120,8 @@ if [[ -z ${COMPOSE} ]]; then
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_fsl:latest -f build/tmp/Dockerfile_fsl .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_freesurfer:latest -f build/tmp/Dockerfile_freesurfer .
     DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_miniconda:latest -f build/tmp/Dockerfile_miniconda .
-    echo -e "${PROCEED}: Base image build complete"
+    DOCKER_BUILDKIT=1 docker build --ulimit nofile=122880:122880 --build-arg ALL_PROXY=${PROXY} -t radiolab_xpra:latest -f build/Dockerfiles/Dockerfile_xpra .
+docker run -it --name xpra-1 -p:8080:8080    echo -e "${PROCEED}: Base image build complete"
 
     # Build Docker image with proper runtime
     echo -e "${PROCEED}: Build \"${hint}radiolab${normal}\" image from base."

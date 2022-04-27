@@ -1,8 +1,8 @@
 {
-    "origin" : {
+    "xpra" : {
         "img" : {
-            "base" : "ubuntu:20.04",
-            "tag" : "latest"
+            "base" : "ubuntu",
+            "tag" : "20.04"
         },
         "args" : {
             "DEBIAN_FRONTEND" : "noninteractive",
@@ -13,9 +13,50 @@
         },
         "commands" : [
             "sed -i -e 's%http://archive.ubuntu.com/ubuntu%mirror://mirrors.ubuntu.com/mirrors.txt%' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
+            "apt-get update -qq",
+            "apt-get install -y",
+            "*    wget gnupg xvfb x11-xserver-utils python3-pyinotify mesa-utils",
+            "echo \"deb [arch=amd64] https://xpra.org/ focal main\" > /etc/apt/sources.list.d/xpra.list",
+            "wget -q https://xpra.org/gpg.asc -O- | apt-key add -",
+            "apt-get update -qq",
+            "apt-get install -y",
+            "*    xpra",
+            "mkdir -p /run/user/0/xpra",
+            "apt-get clean",
+            "rm -rf /var/lib/apt/lists/*"
+        ],
+        "entry" : [
+            "xpra",
+            "start",
+            ":80",
+            "--bind-tcp=0.0.0.0:8080",
+            "--mdns=no",
+            "--webcam=no",
+            "--no-daemon",
+            "--start=xhost +"]
+    },
+
+    "origin" : {
+        "img" : {
+            "base" : "ubuntu",
+            "tag" : "20.04"
+        },
+        "args" : {
+            "DEBIAN_FRONTEND" : "noninteractive",
+            "ALL_PROXY" : ""
+        },
+        "envs" : {
+            "BASE" : "ubuntu:20.04"
+        },
+        "commands" : [
+            "APT_PKG",
+            "sed -i -e 's%http://archive.ubuntu.com/ubuntu%mirror://mirrors.ubuntu.com/mirrors.txt%' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
             "yes | unminimize",
             "APT_PKG"],
         "apt" : [
+            ["ca-certificates",
+             "gnupg"
+            ],
             ["libxext6",
              "libx11-6",
              "libglvnd0",
@@ -28,11 +69,9 @@
              "qt5-default",
              "apt-utils",
              "bzip2",
-             "ca-certificates",
              "curl",
              "locales",
              "unzip",
-             "gnupg",
              "bc",
              "dc",
              "man",
@@ -71,7 +110,7 @@
             "LC_ALL": "en_US.UTF-8",
             "RD_ENTRYPOINT": "/radiolabdocker/startup.sh"
         },
-        "entry" : "[\"/radiolabdocker/startup.sh\"]",
+        "entry" : ["/radiolabdocker/startup.sh"],
         "commands" : [
             "echo \"deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/\" >> /etc/apt/sources.list",
             "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80/ --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9",
@@ -463,17 +502,13 @@
             "COPY"
         ],
         "commands" : [
-            "apt-get update -qq",
-            "apt-get upgrade -qq",
-            "apt-get clean",
-            "rm -rf /var/lib/apt/lists/*",
             "chmod -R 755 /opt/dsi-studio",
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
             "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT",
             "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",
-            "echo 'source activate radioconda' >> /opt/bash_config/bashrc",
-            "mkdir /opt/bash_config"
+            "echo 'source activate radioconda' >> /opt/bash_config/bashrc"
         ],
+        "entry" : ["/radiolabdocker/startup.sh"],
         "bind_file" : [
             {
             "image" : "radiolab_afni",
