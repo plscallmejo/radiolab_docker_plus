@@ -129,7 +129,7 @@ docker run -it --name xpra-1 -p:8080:8080    echo -e "${PROCEED}: Base image bui
             -t radiolab_docker_${RUNTIME}:latest \
             --build-arg SYS_BUILD_DATE=UTC-$(date -u '+%Y-%m-%d') \
             --build-arg ALL_PROXY=${PROXY} \
-            -f build/tmp/Dockerfile_all .
+            -f build/Dockerfiles/Dockerfile_all .
 
     echo -e "${INFORM}: Initiate Radiolabconda environment in BASH?"
     read -r -p "[Y/N] " input
