@@ -454,14 +454,14 @@ class buildIMAGE:
         return docker_buildkit
     #
     def build(self):
-        pattern = r'\x1B\[(([0-9]{1,2})?(;)?([0-9]{1,2})?)?[m,K,H,f,J]'
+        # pattern = r'\x1B\[(([0-9]{1,2})?(;)?([0-9]{1,2})?)?[m,K,H,f,J]'
         os.environ["DOCKER_BUILDKIT"] = "1"
-        if self.loggin == 1:
-            try:
-                log_file = open(self.log_path, 'w')
-                log_file.close()
-            except:
-                self.loggin = 0
+        # if self.loggin == 1:
+        #     try:
+        #         log_file = open(self.log_path, 'w')
+        #         log_file.close()
+        #     except:
+        #         self.loggin = 0
         self.mkDockerfile()
         docker_buildkit = self.buildCommand()
         process = subprocess.Popen(docker_buildkit, shell=True, stdout=subprocess.PIPE)
@@ -471,20 +471,10 @@ class buildIMAGE:
                     value = line.decode("utf-8").strip()
                     if value:
                         print(value)
-                        log_file = open(self.log_path, 'a')
+                        # log_file = open(self.log_path, 'a')
                         # log_file.write(re.sub(pattern, '', value) + "\n")
-                        log_file.write(value)
-                        log_file.close()
+                        # log_file.write(value)
+                        # log_file.close()
             except subprocess.CalledProcessError as e:
                 print(f"{str(e)}")
             sleep(0.1)
-
-
-conf_path = './SRC/radiolabdocker_config.json'
-log_dir = "../build/log"
-dist = '../build/Dockerfiles/'
-tag = 'latest'
-args = {"ALL_PROXY": "172.31.64.1:1080"}
-base = 'docker'
-buildIMAGE(conf_path, dist, base, tag, args, log_dir).build()
-buildIMAGE(conf_path, dist, base, tag, args, log_dir).buildCommand()

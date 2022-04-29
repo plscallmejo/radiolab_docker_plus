@@ -1,4 +1,35 @@
 {
+    "xpra_alpine" : {
+        "img" : {
+            "base" : "alpine",
+            "tag" : "latest"
+        },
+        "envs" : {
+            "BASE" : "alpine:latest"
+        },
+        "commands" : [
+            "sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories",
+            "apk add --no-cache --update shadow bash xpra py-cairo py-pip py-netifaces xhost xterm dbus-x11",
+            "pip install pynotify",
+            "cp /etc/xpra/xorg.conf /etc/X11/xorg.conf.d/00_xpra.conf",
+            "adduser -D -s /bin/bash user",
+            "mkdir -p /run/user/1000 /run/xpra && chown user /run/user/1000 /run/xpra",
+            "echo \"xvfb=Xorg -dpi 96 -noreset -nolisten tcp +extension GLX +extension RANDR +extension RENDER\" >> /etc/xpra/xpra.conf"
+        ],
+        "entry" : [
+            "xpra",
+            "start",
+            ":80",
+            "--html=on",
+            "--bind-tcp=0.0.0.0:8080",
+            "--notifications=no",
+            "--dbus-proxy=no",
+            "--mdns=no",
+            "--webcam=no",
+            "--no-daemon",
+            "--start=xhost +"]
+    },
+
     "xpra" : {
         "img" : {
             "base" : "ubuntu",
@@ -21,7 +52,7 @@
             "apt-get update -qq",
             "apt-get install -y",
             "*    xpra",
-            "mkdir -p /run/user/0/xpra",
+            "mkdir -p /run/user/0 /run/xpra/80 /run/xpra && chmod 700 /run/user/0 /run/xpra/80 /run/xpra",
             "apt-get clean",
             "rm -rf /var/lib/apt/lists/*"
         ],
@@ -29,6 +60,9 @@
             "xpra",
             "start",
             ":80",
+            "--html=on",
+            "--notifications=no",
+            "--dbus-proxy=no",
             "--bind-tcp=0.0.0.0:8080",
             "--mdns=no",
             "--webcam=no",

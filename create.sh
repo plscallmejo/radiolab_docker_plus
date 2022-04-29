@@ -183,7 +183,7 @@ else
                     sed -i -e 's/host.docker.internal//g' build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml
                 fi
 
-                docker-compose -f docker-compose.yml up -d --force-recreate
+                docker-compose -f build/tmp/${RADIOLABDOCKER_NAME}/docker-compose.yml up -d --force-recreate
 
             else
                 echo -e "${ERROR}: your should own the rwx permissions to the data path \"${hint}${DATA_PATH_OG}${normal}\"! Please check again!"
