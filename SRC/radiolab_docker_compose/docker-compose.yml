@@ -14,7 +14,7 @@ services:
             - DISPLAY=:80.0
             - USER={USER}
         ports:
-            - {PORT}:8888
+            - {JUPYTER_PORT}:8888
         volumes:
             - {HOME}:{HOME}
             - {MOUNT}:/DATA
@@ -22,19 +22,6 @@ services:
             - radiolab_xpra_X11:/tmp/.X11-unix:rw
             - ../group:/etc/group:ro
             - ../passwd:/etc/passwd:ro
-        tty: true
-
-    radiolab_xpra:
-        image: radiolab_xpra
-        container_name: {RADIOLAB_DOCKER}_xpra
-        shm_size: 512M
-        stdin_open: true
-        environment:
-            - DISPLAY=:80.0
-        ports:
-            - 8080:8080
-        volumes:
-            - radiolab_xpra_X11:/tmp/.X11-unix:rw
         tty: true
 
 volumes:

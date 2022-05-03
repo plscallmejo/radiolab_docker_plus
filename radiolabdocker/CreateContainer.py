@@ -1,13 +1,12 @@
 import os
 import getpass
 import shutil
-import subprocess
-from time import sleep
+from radiolabdocker.miscellaneous import streamProcess
 
 class makeCompose:
     """
     """
-    def __init__(self, mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, port = "8888", fs_license = ""):
+    def __init__(self, mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port = "8888", fs_license = ""):
         self.user = getpass.getuser()
         self.uid = os.getuid()
         self.gid = os.getgid()
@@ -25,18 +24,24 @@ class makeCompose:
         else:
             fs = '#'
             fs_license = 'NotSupplied'
-        self.port = port
+        self.jupyter_port = jupyter_port
         self.fs = fs
         self.fs_license = fs_license
         self.radiolabdocker_name = radiolabdocker_name
         self.radiolabdocker_img = radiolabdocker_img
         self.compose_src = compose_src
         self.compose_dist = compose_dist
+    def copy(self):
+        dist_dir = os.path.dirname(self.compose_dist)
+        if not os.path.exists(dist_dir):
+            os.makedirs(dist_dir)
+        shutil.copy(self.compose_src, self.compose_dist)
+        return 0
     #
     def make(self):
         # copy from source
-        shutil.copy(self.compose_src, self.compose_dist)
         # read it
+        self.copy()
         with open(self.compose_dist, 'r') as file:
             docker_compose = file.read()
         file.close()
@@ -49,7 +54,7 @@ class makeCompose:
                 GID = self.gid,
                 HOME = self.home,
                 USER = self.user,
-                PORT = self.port,
+                JUPYTER_PORT = self.jupyter_port,
                 MOUNT = self.mount,
                 FS = self.fs,
                 FS_LICENSE = self.fs_license)
@@ -57,6 +62,10 @@ class makeCompose:
         file.close()
 
 class createContainer:
+    """
+    Invoke the docker-compose CMD to setup the service.
+    :param compose_dist: the path to the docker-compose.yml
+    """
     def __init__(self, compose_dist):
         self.compose_dist = compose_dist
     def createCommand(self):
@@ -65,25 +74,5 @@ class createContainer:
         return docker_create
     def create(self):
         docker_create = self.createCommand()
-        process = subprocess.Popen(docker_create, shell=True, stdout=subprocess.PIPE)
-        while process.poll() is None:
-            try:
-                for line in iter(process.stdout.readline, b''):
-                    value = line.decode("utf-8").strip()
-                    if value:
-                        print(value)
-            except subprocess.CalledProcessError as e:
-                print(f"{str(e)}")
-            sleep(0.1)
+        streamProcess(docker_create)
 
-mount = '~/Downloads'
-port = 8888
-fs_license = './build/tmp/license.txt'
-radiolabdocker_name = 'radiolab_docker'
-radiolabdocker_img = 'radiolab_docker'
-compose_src = './SRC/docker-compose.yml'
-compose_dist = './build/tmp/radiolab_docker/docker-compose.yml'
-a = makeCompose(mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, port, fs_license)
-a.make()
-b = createContainer(compose_dist)
-b.create()

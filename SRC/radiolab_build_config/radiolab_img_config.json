@@ -1,35 +1,4 @@
 {
-    "xpra_alpine" : {
-        "img" : {
-            "base" : "alpine",
-            "tag" : "latest"
-        },
-        "envs" : {
-            "BASE" : "alpine:latest"
-        },
-        "commands" : [
-            "sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories",
-            "apk add --no-cache --update shadow bash xpra py-cairo py-pip py-netifaces xhost xterm dbus-x11",
-            "pip install pynotify",
-            "cp /etc/xpra/xorg.conf /etc/X11/xorg.conf.d/00_xpra.conf",
-            "adduser -D -s /bin/bash user",
-            "mkdir -p /run/user/1000 /run/xpra && chown user /run/user/1000 /run/xpra",
-            "echo \"xvfb=Xorg -dpi 96 -noreset -nolisten tcp +extension GLX +extension RANDR +extension RENDER\" >> /etc/xpra/xpra.conf"
-        ],
-        "entry" : [
-            "xpra",
-            "start",
-            ":80",
-            "--html=on",
-            "--bind-tcp=0.0.0.0:8080",
-            "--notifications=no",
-            "--dbus-proxy=no",
-            "--mdns=no",
-            "--webcam=no",
-            "--no-daemon",
-            "--start=xhost +"]
-    },
-
     "xpra" : {
         "img" : {
             "base" : "ubuntu",
@@ -83,8 +52,8 @@
             "BASE" : "ubuntu:20.04"
         },
         "commands" : [
+            "sed -i -e 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
             "APT_PKG",
-            "sed -i -e 's%http://archive.ubuntu.com/ubuntu%mirror://mirrors.ubuntu.com/mirrors.txt%' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
             "yes | unminimize",
             "APT_PKG"],
         "apt" : [
@@ -148,7 +117,6 @@
         "commands" : [
             "echo \"deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/\" >> /etc/apt/sources.list",
             "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80/ --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9",
-            "add-apt-repository -y ppa:ubuntugis/ppa",
             "APT_PKG",
             "ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19",
             "ldconfig",
@@ -166,7 +134,8 @@
             "*    echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
             "*fi",
             "chmod 755 /radiolabdocker/startup.sh",
-            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT"
+            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT",
+            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT"
         ],
         "apt" : [
             ["x11-utils",
@@ -228,6 +197,15 @@
              "libfftw3-dev",
              "libtiff5-dev",
              "libpng-dev"]
+        ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
         ]
     },
 
@@ -254,6 +232,15 @@
             {
             "src" : "https://afni.nimh.nih.gov/pub/dist/tgz/linux_${AFNI_VERSION}.tgz",
             "dist" : "/opt/afni"}
+        ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
         ]
     },
 
@@ -284,7 +271,16 @@
             "installation": "/tmp/ants-build/build/ANTS-build",
             "build" :"/tmp/ants-build/build",
             "dist" : "/opt/ants"
-        }]
+        }],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
+        ]
     },
 
     "mrtrix" : {
@@ -312,7 +308,16 @@
             {
             "remote_src" : "https://github.com/MRtrix3/mrtrix3.git",
             "local_src" : "/opt/mrtrix3"}
-      ]
+      ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
+        ]
     },
 
     "c3d_dcm2niix_dsi" : {
@@ -349,7 +354,16 @@
             {
             "src" : "https://github.com/frankyeh/DSI-Studio/releases/download/${DSISTUDIO_VERSION}/dsi_studio_ubuntu_2004.zip",
             "dist" : "/opt"}
-      ]
+      ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
+        ]
     },
 
     "fsl" : {
@@ -368,7 +382,7 @@
         "commands" : [
             "TAR_PKG",
             "bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl",
-            "sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $RD_ENTRYPOINT",
+            "sed -i '$isource \"$FSLDIR/etc/fslconf/fsl.sh\"' \"$RD_ENTRYPOINT\"",
             "echo \"Getting neurolabusc's fsl_sub for a better parallel computing experience ...\"",
             "git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub",
             "rm /opt/fsl/bin/fsl_sub",
@@ -379,6 +393,15 @@
             {
             "src" : "https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-${FSL_VERSION}-centos7_64.tar.gz",
             "dist" : "/opt/fsl"}
+        ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
         ]
     },
 
@@ -447,7 +470,9 @@
             "rm -rf ~/.cache/pip/*",
             "rm -rf ~/.condarc",
             "rm -rf ~/.config/pip/pip.conf",
-            "sync"
+            "sync",
+            "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",
+            "echo 'source activate radioconda' >> /opt/bash_config/bashrc"
         ],
         "conda" : [
             [
@@ -482,6 +507,15 @@
              "vtk==8.1.2",
              "fury",
              "nilearn"]
+        ],
+        "copy" : [
+            "COPY"
+        ],
+        "copy_file" : [
+            {
+            "src" : "SRC/bash_config",
+            "dist" : "/opt/bash_config"
+            }
         ]
     },
 
@@ -537,8 +571,8 @@
         ],
         "commands" : [
             "chmod -R 755 /opt/dsi-studio",
+            "sed -i '$isource \"$FSLDIR/etc/fslconf/fsl.sh\"' \"$RD_ENTRYPOINT\"",
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
-            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT",
             "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",
             "echo 'source activate radioconda' >> /opt/bash_config/bashrc"
         ],

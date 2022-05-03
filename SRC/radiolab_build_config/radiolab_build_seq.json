@@ -1,0 +1,53 @@
+{
+    "xpra" : {
+        "dep" : {}
+    },
+
+    "origin" : {
+        "dep" : {}
+    },
+
+    "base" : {
+        "dep" : {"origin" : "latest"}
+    },
+
+    "afni" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "ants" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "mrtrix" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "c3d_dcm2niix_dsi" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "fsl" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "freesurfer" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "miniconda" : {
+        "dep" : {"base" : "latest"}
+    },
+
+    "docker" : {
+        "dep" : {
+            "afni" : "latest",
+            "ants" : "latest",
+            "mrtrix" : "latest",
+            "c3d_dcm2niix_dsi" : "latest",
+            "fsl" : "latest",
+            "freesurfer" : "latest",
+            "miniconda" : "latest"
+        }
+    }
+}

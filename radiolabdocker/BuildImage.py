@@ -1,9 +1,9 @@
 import os
 import os.path as op
-import re
 import json
-import subprocess
-from time import sleep
+import datetime
+from os import makedirs
+from radiolabdocker.miscellaneous import streamProcess
 
 class DockerConfig:
     """
@@ -107,7 +107,7 @@ class DockerConfig:
     """
     def mkDockerfile(self):
         # Check the current line, and set the (indent, start, end) for a line
-        def __identifyLine__(l, length, head):
+        def identifyLine(l, length, head):
                 # The first line
                 if l == 1:
                     # One line command
@@ -124,7 +124,7 @@ class DockerConfig:
                     # Not the end
                     else:
                         return (' ' * 4, '', ' \\\n')
-        def __identifyEntryLine__(l, length, head):
+        def identifyEntryLine(l, length, head):
                 # The first line
                 if l == 1:
                     # One line command
@@ -142,20 +142,20 @@ class DockerConfig:
                     else:
                         return (' ' * 4, '\"', '\", \\\n')
         # Stack the package list, one pkg a line
-        def __listPKG__(apps, indent):
+        def listPKG(apps, indent):
             arg = ''
             for app in apps:
                 arg = arg + indent * 2 + app + ' \\\n'
             return(arg)
         # Script for apt installation
-        def __aptPKG__(apts, indent, start):
+        def aptPKG(apts, indent, start):
             start = start +'apt-get update -qq \\\n' + indent + '&& apt-get install -y -q --no-install-recommends \\\n'
             indent = " " * 4
-            arg = __listPKG__(apts, indent)
+            arg = listPKG(apts, indent)
             arg = arg + indent + '&& apt-get clean \\\n' + indent + '&& rm -rf /var/lib/apt/lists/*'
             return (start, arg)
         # Script for tarball installation
-        def __tarPKG__(tar, indent, start):
+        def tarPKG(tar, indent, start):
             start = '{start}mkdir -p {dist} \\\n'.format(start = start, dist = tar['dist'])
             indent = " " * 4
             arg = '{indent}&& curl -fSL --retry 5 {src} | tar -xz -C {dist} --strip-components 1'.format(
@@ -165,7 +165,7 @@ class DockerConfig:
             )
             return (start, arg)
         # Script for zipfile installation
-        def __zipPKG__(tar, indent, start):
+        def zipPKG(tar, indent, start):
             start = '{start}cd /tmp && mkdir -p {dist} \\\n'.format(start = start, dist = tar['dist'])
             indent = " " * 4
             arg = '{indent}&& curl -fSL --retry 5 {src} -o tmp.zip && unzip tmp.zip -d {dist} && rm tmp.zip'.format(
@@ -175,7 +175,7 @@ class DockerConfig:
             )
             return (start, arg)
         # Script for making software from git repo
-        def __gitMAKE__(git_make, indent, start):
+        def gitMAKE(git_make, indent, start):
             start = '{start}mkdir -p {build} \\\n'.format(start = start, build = git_make['build'])
             indent = " " * 4
             arg = '{indent}&& git clone {remote_src} {local_src} \\\n'.format(
@@ -202,7 +202,7 @@ class DockerConfig:
             )
             return (start, arg)
         # Script for building software from git repo
-        def __gitBUILD__(git_build, indent, start):
+        def gitBUILD(git_build, indent, start):
             start = '{start}git clone {remote_src} {local_src} \\\n'.format(
                 start = start,
                 remote_src = git_build['remote_src'],
@@ -220,23 +220,23 @@ class DockerConfig:
             )
             return (start, arg)
         # Script for conda installation (activate radioconda, then install)
-        def __condaPKG__(conda, indent, start):
+        def condaPKG(conda, indent, start):
             start = start + 'bash -c \"source activate radioconda \\\n' +  indent  + '&& conda install -y  \\\n'
             indent = " " * 4
-            arg = __listPKG__(conda, indent) + indent * 2 + '\"'
+            arg = listPKG(conda, indent) + indent * 2 + '\"'
             return (start, arg)
         # Script for pip installation (activate radioconda, then install)
-        def __pipPKG__(pip, indent, start):
+        def pipPKG(pip, indent, start):
             start = start + 'bash -c \"source activate radioconda \\\n' +  indent  + '&& pip install --no-cache-dir  \\\n'
             indent = " " * 4
-            arg = __listPKG__(pip, indent) + indent * 2 + '\"'
+            arg = listPKG(pip, indent) + indent * 2 + '\"'
             return (start, arg)
         """
         Compose the scripts, just expose mkDockfile
         :param head: config the build step. FROM, RUN, COPY, etc.
         :param scr: scripts for the step
         """
-        def __mkSCR__(self, head, scr):
+        def mkSCR(self, head, scr):
             args = scr
             # Point to the first line
             l = 1
@@ -258,7 +258,7 @@ class DockerConfig:
                         length = len(args.items())
                         for arg, val in args.items():
                             # Formating the line
-                            indent, start, end = __identifyLine__(l, length, head)
+                            indent, start, end = identifyLine(l, length, head)
                             # For ARG step, to set empty ARG, or get ARG passed from outside command
                             if len(val) == 0 and head == "ARG ":
                                     val = ""
@@ -282,9 +282,9 @@ class DockerConfig:
                     for arg in args:
                         # Formating the line
                         if head == 'ENTRYPOINT ':
-                            indent, start, end = __identifyEntryLine__(l, length, head)
+                            indent, start, end = identifyEntryLine(l, length, head)
                         else:
-                            indent, start, end = __identifyLine__(l, length, head)
+                            indent, start, end = identifyLine(l, length, head)
                         #
                         if head == 'RUN ' and l != 1:
                             if arg.startswith('*'):
@@ -335,7 +335,7 @@ class DockerConfig:
                                 APT_PKG
                             except NameError:
                                 APT_PKG = 0
-                            start, arg = __aptPKG__(self.apts[APT_PKG], indent, start)
+                            start, arg = aptPKG(self.apts[APT_PKG], indent, start)
                             APT_PKG += 1
                         #
                         if arg == 'TAR_PKG':
@@ -343,7 +343,7 @@ class DockerConfig:
                                 TAR_PKG
                             except NameError:
                                 TAR_PKG = 0
-                            start, arg = __tarPKG__(self.tar[TAR_PKG], indent, start)
+                            start, arg = tarPKG(self.tar[TAR_PKG], indent, start)
                             TAR_PKG += 1
                         #
                         if arg == 'ZIP_PKG':
@@ -351,7 +351,7 @@ class DockerConfig:
                                 ZIP_PKG
                             except NameError:
                                 ZIP_PKG = 0
-                            start, arg = __zipPKG__(self.zip[ZIP_PKG], indent, start)
+                            start, arg = zipPKG(self.zip[ZIP_PKG], indent, start)
                             ZIP_PKG += 1
                         #
                         if arg == 'GIT_MAKE':
@@ -359,7 +359,7 @@ class DockerConfig:
                                 GIT_MAKE
                             except NameError:
                                 GIT_MAKE = 0
-                            start, arg = __gitMAKE__(self.git_make[GIT_MAKE], indent, start)
+                            start, arg = gitMAKE(self.git_make[GIT_MAKE], indent, start)
                             GIT_MAKE += 1
                         #
                         if arg == 'GIT_BUILD':
@@ -367,7 +367,7 @@ class DockerConfig:
                                 GIT_BUILD
                             except NameError:
                                 GIT_BUILD = 0
-                            start, arg = __gitBUILD__(self.git_build[GIT_BUILD], indent, start)
+                            start, arg = gitBUILD(self.git_build[GIT_BUILD], indent, start)
                             GIT_BUILD += 1
                         #
                         if arg == 'CONDA_PKG':
@@ -375,7 +375,7 @@ class DockerConfig:
                                 CONDA_PKG
                             except NameError:
                                 CONDA_PKG = 0
-                            start, arg = __condaPKG__(self.conda[CONDA_PKG], indent, start)
+                            start, arg = condaPKG(self.conda[CONDA_PKG], indent, start)
                             CONDA_PKG += 1
                         #
                         if arg == 'PIP_PKG':
@@ -383,7 +383,7 @@ class DockerConfig:
                                 PIP_PKG
                             except NameError:
                                 PIP_PKG = 0
-                            start, arg = __pipPKG__(self.pip[PIP_PKG], indent, start)
+                            start, arg = pipPKG(self.pip[PIP_PKG], indent, start)
                             PIP_PKG += 1
                         # Final format
                         txt = '{indent}{start}{arg}{end}'.format(
@@ -399,7 +399,7 @@ class DockerConfig:
                     l = length = 1
                     arg = args
                     # Formating the line
-                    indent, start, end = __identifyLine__(l, length, head)
+                    indent, start, end = identifyLine(l, length, head)
                     # Final format
                     txt = '{indent}{start}{arg}{end}'.format(
                                                             indent = indent,
@@ -418,16 +418,20 @@ class DockerConfig:
                 ))
         f.close()
         for head, scr in self.steps.items():
-            __mkSCR__(self, head, scr)
+            mkSCR(self, head, scr)
 
 class buildIMAGE:
 #
 #
-    def __init__(self, conf_path, dist, base, tag, args, log_dir = ''):
+    def __init__(self, conf_path, dist, base, args, log_dir = ''):
         self.config = DockerConfig(conf_path, dist, base)
+        self.base = 'radiolab_{base}'.format(
+            base = base,
+        )
         self.tag = 'radiolab_{base}:{tag}'.format(
             base = base,
-            tag = tag
+            tag = datetime.datetime.now().strftime('%Y%m%d')
+
         )
         self.args = args
         self.path = dist
@@ -462,19 +466,32 @@ class buildIMAGE:
         #         log_file.close()
         #     except:
         #         self.loggin = 0
+        # TODO            # log_file.write(re.sub(pattern, '', value) + "\n")
         self.mkDockerfile()
         docker_buildkit = self.buildCommand()
-        process = subprocess.Popen(docker_buildkit, shell=True, stdout=subprocess.PIPE)
-        while process.poll() is None:
-            try:
-                for line in iter(process.stdout.readline, b''):
-                    value = line.decode("utf-8").strip()
-                    if value:
-                        print(value)
-                        # log_file = open(self.log_path, 'a')
-                        # log_file.write(re.sub(pattern, '', value) + "\n")
-                        # log_file.write(value)
-                        # log_file.close()
-            except subprocess.CalledProcessError as e:
-                print(f"{str(e)}")
-            sleep(0.1)
+        streamProcess(docker_buildkit)
+        streamProcess('docker image tag {tag} {base}:latest'.format(tag = self.tag, base = self.base))
+
+def buildSeq(build_seq_config, base, tag):
+    import json
+    seq = {base : [tag]}
+    stage = seq
+    dep = {'none' : 'none'}
+    while dep:
+        dep = dict()
+        for img in stage.keys():
+            with open(build_seq_config, 'r') as f:
+                img_list = json.load(f)[img]['dep']
+                for base, tag in img_list.items():
+                    if base not in dep.keys():
+                        dep[base] = [tag]
+                    elif tag not in dep[base]:
+                        multi_tag = dep[base]
+                        multi_tag.append(tag)
+                        dep[base] = multi_tag
+            f.close()
+        stage = dep
+        seq = {**dep, **seq}
+    return seq
+
+
