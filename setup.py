@@ -6,13 +6,13 @@ setup(
    author='Haoming Huang',
    author_email='fsplscallmejo@live.com',
    packages=['radiolabdocker'],
-   scripts=['bin/*'],
-   url='http://pypi.python.org/pypi/???',
-   license='LICENSE.txt',
+   scripts=['bin/radiolabdocker'],
+   url='https://github.com/plscallmejo/radiolab_docker',
+   license='LICENSE',
    description='Build radiolab_docker everywhere!',
-   long_description=open('README.txt').read(),
+   long_description=open('README.md').read(),
    install_requires=[
        "docker",
-       "pandas"
+       "dockerpty"
    ],
 )

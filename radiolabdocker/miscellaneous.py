@@ -1,11 +1,9 @@
-import subprocess
-from time import sleep
-
 def streamProcess(CMD: str):
     """
     Stream the cmd running process.
     :param CMD: the cmd to execute.
     """
+    from time import sleep
     import subprocess
     process = subprocess.Popen(CMD, shell=True, stdout=subprocess.PIPE)
     while process.poll() is None:
@@ -18,9 +16,12 @@ def streamProcess(CMD: str):
             print(f"{str(e)}")
         sleep(0.1)
 
-import pty
-class LocalShell:
-    def __init__(self, cmd):
-        self.cmd = cmd
-    def run(self):
-        pty.spawn(self.cmd)
+def timerHMS(time):
+    """
+    Return convert min-second to hour:minute:second format.
+    :param time: time in ms
+    """
+    hour = time // 3600
+    minute = (time - 3600 * hour) // 60
+    second = (time - 3600 * hour - 60 * minute) // 1
+    return (hour, minute, second)
