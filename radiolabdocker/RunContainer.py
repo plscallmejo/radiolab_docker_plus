@@ -16,4 +16,5 @@ def runpty(container_name: str):
             container.start()
         dockerpty.exec_command(client.api, container.id, '/bin/bash')
     else:
-        raise Exception("the container {container_name} is not exist, please check the spelling or create it.".format(container_name = container_name))
+        import sys
+        sys.exit("the container {container_name} is not exist, please check the spelling or create it.".format(container_name = container_name))

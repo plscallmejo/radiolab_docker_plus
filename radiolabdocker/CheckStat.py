@@ -39,3 +39,15 @@ def checkImageStat(check_img: str):
         tags = None
     #
     return (exist, tags)
+
+def checkVolumeStat(volume):
+    '''
+    '''
+    import docker
+    client = docker.from_env()
+    volumes_ls = client.volumes.list()
+    volumes = [vol.name for vol in volumes_ls]
+    if volume in volumes:
+        return True
+    else:
+        return False

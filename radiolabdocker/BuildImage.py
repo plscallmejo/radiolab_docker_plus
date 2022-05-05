@@ -499,6 +499,7 @@ def buildSeq(build_seq_config, base, tag):
 def buildCMD(arguments):
     """
     """
+    import sys
     import datetime
     import os.path as op
     import pkg_resources
@@ -531,21 +532,19 @@ def buildCMD(arguments):
         base = base[0]
         tag = 'latest'
     else:
-        raise Exception('errors in the given base name, should be \'base\' or \'base:tag\'')
+        sys.exit('errors in the given base name, should be \'base\' or \'base:tag\'')
     if not (tag == 'latest' or tag == datetime.datetime.now().strftime('%Y%m%d')):
-        raise Exception('the tag should be \'latest\' or the current date in YYYYMMDD format.')
+        sys.exit('the tag should be \'latest\' or the current date in YYYYMMDD format.')
     _, base = base.split('_')
     exist, tags = checkImageStat('radiolab_' + base)
     if exist and tag in tags and not (rebuild or force_rebuild):
-        print('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
-        return 0
+        sys.exit('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
     seq = buildSeq(seq_path, base, tag)
     for base, tags in seq.items():
         for tag in tags:
             exist, img_tags = checkImageStat("radiolab_" + base)
             if exist and tag in img_tags and not force_rebuild:
-                print('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
-                return 0
+                sys.exit('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
             tag = int(tag) if tag != 'latest' else tag
             if exist:
                 img_tags = [ int(t) for t in img_tags if t != 'latest']
@@ -557,7 +556,7 @@ def buildCMD(arguments):
                 elif tag in img_tags:
                     tag = tag
                 else:
-                    raise Exception("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
+                    sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
             retry = -1
             while not exist or tag not in img_tags:
                 retry += 1

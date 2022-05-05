@@ -12,7 +12,7 @@ class makeCompose:
         self.uid = os.getuid()
         self.gid = os.getgid()
         self.home = os.path.expanduser('~')
-        # TODO: check mount point
+        # check mount point
         self.mount = os.path.expanduser(mount)
         if not os.path.exists(self.mount) or not os.path.isdir(self.mount):
             raise Exception('mount path is not valid!')
@@ -41,7 +41,6 @@ class makeCompose:
         if not os.path.exists(dist_dir):
             os.makedirs(dist_dir)
         shutil.copy(self.compose_src, self.compose_dist)
-        return 0
     #
     def make(self):
         # copy from source
@@ -98,7 +97,7 @@ def createCMD(arguments):
     """
     import pkg_resources
     from radiolabdocker.CreateContainer import makeCompose, createContainer
-    from radiolabdocker.CheckStat import checkContainerStat, checkImageStat
+    from radiolabdocker.CheckStat import checkContainerStat, checkImageStat, checkVolumeStat
     from radiolabdocker.ManageContainer import startContainer
     def _create(mount,
                 radiolabdocker_name,
@@ -122,10 +121,12 @@ def createCMD(arguments):
                 makeCompose(mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port, fs_license).make()
                 createContainer(compose_dist).create()
             else:
-                raise Exception('image {image} dose not exist, please build it first.'.format(image = radiolabdocker_img))
+                import sys
+                sys.exit('image {image} dose not exist, please build it first.'.format(image = radiolabdocker_img))
         else:
             print('container {container} setted'.format(container = radiolabdocker_name))
-        startContainer(radiolabdocker_name)
+        if start:
+            startContainer(radiolabdocker_name)
         #
     mount = arguments.mount
     jupyter_port = arguments.jupyter_port
@@ -141,6 +142,9 @@ def createCMD(arguments):
         recreate = False
     elif arguments.recreate == 'True':
         recreate = True
+    if not checkVolumeStat('radiolab_xpra_X11'):
+        import docker
+        docker.from_env().volumes.create('radiolab_xpra_X11')
     _create(mount, radiolabdocker_name, radiolabdocker_img, jupyter_port, fs_license, start, recreate)
     image = 'radiolab_xpra'
     base = 'radiolab_xpra'
