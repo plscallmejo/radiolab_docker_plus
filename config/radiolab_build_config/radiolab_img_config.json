@@ -12,7 +12,8 @@
             "BASE" : "ubuntu:20.04"
         },
         "commands" : [
-            "sed -i -e 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
+            "sed -i -e 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list",
+            "sed -i -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
             "apt-get update -qq",
             "apt-get install -y",
             "*    wget gnupg xvfb x11-xserver-utils python3-pyinotify mesa-utils",
@@ -39,23 +40,51 @@
             "--start=xhost +"]
     },
 
-    "origin" : {
+    "base" : {
         "img" : {
             "base" : "ubuntu",
             "tag" : "20.04"
         },
+        "user" : "root",
         "args" : {
             "DEBIAN_FRONTEND" : "noninteractive",
             "ALL_PROXY" : ""
         },
         "envs" : {
-            "BASE" : "ubuntu:20.04"
+            "BASE" : "ubuntu:20.04",
+            "LANG": "en_US.UTF-8",
+            "LC_ALL": "en_US.UTF-8",
+            "RD_ENTRYPOINT": "/radiolabdocker/startup.sh"
         },
+        "entry" : ["/radiolabdocker/startup.sh"],
         "commands" : [
-            "sed -i -e 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
+            "sed -i -e 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' -e 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list",
+            "sed -i -e 's/^deb-src/#deb-src/' /etc/apt/sources.list",
             "APT_PKG",
             "yes | unminimize",
-            "APT_PKG"],
+            "APT_PKG",
+            "echo \"deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/\" >> /etc/apt/sources.list",
+            "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80/ --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9",
+            "APT_PKG",
+            "ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19",
+            "ldconfig",
+            "rm -rf /var/lib/apt/lists/*",
+            "sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen",
+            "dpkg-reconfigure --frontend=noninteractive locales",
+            "update-locale LANG=\"en_US.UTF-8\"",
+            "chmod 777 /opt && chmod a+s /opt",
+            "mkdir -p /radiolabdocker",
+            "chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker",
+            "export RD_ENTRYPOINT=\"/radiolabdocker/startup.sh\"",
+            "if [ ! -f \"$RD_ENTRYPOINT\" ]; then",
+            "*    echo '#!/usr/bin/env bash' >> \"$RD_ENTRYPOINT\"",
+            "*    echo 'set -e' >> \"$RD_ENTRYPOINT\"",
+            "*    echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
+            "*fi",
+            "chmod 755 /radiolabdocker/startup.sh",
+            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT",
+            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT"
+        ],
         "apt" : [
             ["ca-certificates",
              "gnupg"
@@ -94,50 +123,7 @@
              "parallel",
              "pexec",
              "tcsh",
-             "software-properties-common"]
-            ]
-    },
-
-    "base" : {
-        "img" : {
-            "base" : "radiolab_origin",
-            "tag" : "latest"
-        },
-        "user" : "root",
-        "args" : {
-            "DEBIAN_FRONTEND" : "noninteractive",
-            "ALL_PROXY" : ""
-        },
-        "envs" : {
-            "LANG": "en_US.UTF-8",
-            "LC_ALL": "en_US.UTF-8",
-            "RD_ENTRYPOINT": "/radiolabdocker/startup.sh"
-        },
-        "entry" : ["/radiolabdocker/startup.sh"],
-        "commands" : [
-            "echo \"deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/\" >> /etc/apt/sources.list",
-            "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80/ --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9",
-            "APT_PKG",
-            "ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.23 /usr/lib/x86_64-linux-gnu/libgsl.so.19",
-            "ldconfig",
-            "rm -rf /var/lib/apt/lists/*",
-            "sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen",
-            "dpkg-reconfigure --frontend=noninteractive locales",
-            "update-locale LANG=\"en_US.UTF-8\"",
-            "chmod 777 /opt && chmod a+s /opt",
-            "mkdir -p /radiolabdocker",
-            "chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker",
-            "export RD_ENTRYPOINT=\"/radiolabdocker/startup.sh\"",
-            "if [ ! -f \"$RD_ENTRYPOINT\" ]; then",
-            "*    echo '#!/usr/bin/env bash' >> \"$RD_ENTRYPOINT\"",
-            "*    echo 'set -e' >> \"$RD_ENTRYPOINT\"",
-            "*    echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
-            "*fi",
-            "chmod 755 /radiolabdocker/startup.sh",
-            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT",
-            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash --rcfile /opt/bash_config/bashrc; fi' $RD_ENTRYPOINT"
-        ],
-        "apt" : [
+             "software-properties-common"],
             ["x11-utils",
              "xfonts-base",
              "xfonts-100dpi",
@@ -197,13 +183,13 @@
              "libfftw3-dev",
              "libtiff5-dev",
              "libpng-dev"]
-        ],
+            ],
         "copy" : [
             "COPY"
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -238,7 +224,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -277,7 +263,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -314,7 +300,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -360,7 +346,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -399,7 +385,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -513,7 +499,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]
@@ -621,7 +607,7 @@
         ],
         "copy_file" : [
             {
-            "src" : "SRC/bash_config",
+            "src" : "config/bash_config",
             "dist" : "/opt/bash_config"
             }
         ]

@@ -9,7 +9,7 @@ class DockerConfig:
     """
     Make a Dockerfile according to the config file.
     :param conf_path: path to config file
-    :param dist: path to Dockerfile, the Dockerfile will be renamed to Dockerfile_{base}
+    :param dist: path to the Dockerfile dir, the Dockerfile will be renamed to Dockerfile_{base}
     :param base: the configured base name of the image.
     """
     def __init__(self, conf_path, dist, base):
@@ -451,10 +451,12 @@ class buildIMAGE:
     #
     def buildCommand(self):
         build_args = ' '.join(str(arg) for arg in ['--build-arg {}={}'.format(var, val) for var, val in self.args.items()])
-        docker_buildkit = 'docker build {args} --tag {tag} -f {dockerfile} .'.format(
+        parent_dir = op.dirname(op.dirname(op.expanduser(self.dist)))
+        docker_buildkit = 'docker build {args} --tag {tag} -f {dockerfile} {build_locate}'.format(
                 tag = self.tag,
-                args = '{args}'.format( args = build_args),
-                dockerfile = self.dist)
+                args = '{args}'.format(args = build_args),
+                dockerfile = self.dist,
+                build_locate = parent_dir)
         return docker_buildkit
     #
     def build(self):
@@ -493,5 +495,77 @@ def buildSeq(build_seq_config, base, tag):
         stage = dep
         seq = {**dep, **seq}
     return seq
+
+def buildCMD(arguments):
+    """
+    """
+    import datetime
+    import os.path as op
+    import pkg_resources
+    import shutil
+    from os import makedirs
+    from radiolabdocker.CheckStat import checkImageStat
+    seq_path = pkg_resources.resource_filename('radiolabdocker', '../config/radiolab_build_config/radiolab_build_seq.json')
+    conf_path = pkg_resources.resource_filename('radiolabdocker', '../config/radiolab_build_config/radiolab_img_config.json')
+    base = arguments.base.split(':')
+    df_dir = op.expanduser(arguments.dockerfile_dir)
+    parent = op.dirname(df_dir)
+    if not os.path.exists(parent + '/config/bash_config'):
+        os.makedirs(parent + '/config/bash_config')
+    shutil.copy(pkg_resources.resource_filename('radiolabdocker', '../config/bash_config/bashrc'), parent + '/config/bash_config/bashrc')
+    if hasattr(arguments, 'proxy'):
+        args = {"ALL_PROXY": arguments.proxy}
+    else:
+        args = {"ALL_PROXY": ''}
+    if arguments.rebuild == 'False':
+        rebuild = False
+    elif arguments.rebuild == 'True':
+        rebuild = True
+    if arguments.force_rebuild == 'False':
+        force_rebuild = False
+    elif arguments.force_rebuild == 'True':
+        force_rebuild = True
+    if len(base) == 2:
+        base, tag = base
+    elif len(base) == 1:
+        base = base[0]
+        tag = 'latest'
+    else:
+        raise Exception('errors in the given base name, should be \'base\' or \'base:tag\'')
+    if not (tag == 'latest' or tag == datetime.datetime.now().strftime('%Y%m%d')):
+        raise Exception('the tag should be \'latest\' or the current date in YYYYMMDD format.')
+    _, base = base.split('_')
+    exist, tags = checkImageStat('radiolab_' + base)
+    if exist and tag in tags and not (rebuild or force_rebuild):
+        print('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
+        return 0
+    seq = buildSeq(seq_path, base, tag)
+    for base, tags in seq.items():
+        for tag in tags:
+            exist, img_tags = checkImageStat("radiolab_" + base)
+            if exist and tag in img_tags and not force_rebuild:
+                print('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
+                return 0
+            tag = int(tag) if tag != 'latest' else tag
+            if exist:
+                img_tags = [ int(t) for t in img_tags if t != 'latest']
+                if tag == 'latest':
+                    if rebuild == True:
+                        tag = int(datetime.datetime.now().strftime('%Y%m%d'))
+                    else:
+                        tag = max(img_tags)
+                elif tag in img_tags:
+                    tag = tag
+                else:
+                    raise Exception("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
+            retry = -1
+            while not exist or tag not in img_tags:
+                retry += 1
+                if not op.exists(df_dir):
+                    makedirs(df_dir)
+                buildIMAGE(conf_path, df_dir, base, args).build()
+                exist, img_tags = checkImageStat("radiolab_" + base)
+                if retry > 5:
+                    break
 
 

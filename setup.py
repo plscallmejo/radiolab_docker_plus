@@ -11,6 +11,7 @@ setup(
    license='LICENSE',
    description='Build radiolab_docker everywhere!',
    long_description=open('README.md').read(),
+   include_package_data=True,
    install_requires=[
        "docker",
        "dockerpty"

@@ -20,8 +20,8 @@ services:
             - {MOUNT}:/DATA
 {FS}            - {FS_LICENSE}:/opt/freesurfer/license.txt
             - radiolab_xpra_X11:/tmp/.X11-unix:rw
-            - ../group:/etc/group:ro
-            - ../passwd:/etc/passwd:ro
+            - {GROUP}:/etc/group:ro
+            - {PASSWD}:/etc/passwd:ro
         tty: true
 
 volumes:

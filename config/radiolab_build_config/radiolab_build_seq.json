@@ -3,12 +3,8 @@
         "dep" : {}
     },
 
-    "origin" : {
-        "dep" : {}
-    },
-
     "base" : {
-        "dep" : {"origin" : "latest"}
+        "dep" : {}
     },
 
     "afni" : {

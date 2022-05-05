@@ -2,7 +2,7 @@
 version: "2.3"
 services:
     radiolab_xpra:
-        image: radiolab_xpra
+        image: {IMAGE}
         container_name: radiolab_xpra
         shm_size: 512M
         stdin_open: true

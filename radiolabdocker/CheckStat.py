@@ -33,9 +33,9 @@ def checkImageStat(check_img: str):
     # Check existance and tags
     if check_img in img_name:
         exist = True
-        stat = img_tags[check_img]
+        tags = img_tags[check_img]
     else:
         exist = False
-        stat = None
+        tags = None
     #
-    return(exist, stat)
+    return (exist, tags)
