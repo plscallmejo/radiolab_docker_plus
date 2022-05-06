@@ -518,23 +518,26 @@ def buildCMD(arguments):
         args = {"ALL_PROXY": arguments.proxy}
     else:
         args = {"ALL_PROXY": ''}
-    if arguments.rebuild == 'False':
+    if arguments.rebuild in ['False', 'F']:
         rebuild = False
-    elif arguments.rebuild == 'True':
+    elif arguments.rebuild in ['True', 'T']:
         rebuild = True
-    if arguments.force_rebuild == 'False':
+    else:
+        sys.exit('error: \'--rebuild\' should be either \'Ture(T)\' or \'False(F)\'')
+    if arguments.force_rebuild in ['False', 'F']:
         force_rebuild = False
-    elif arguments.force_rebuild == 'True':
+    elif arguments.force_rebuild in ['True', 'T']:
         force_rebuild = True
+        sys.exit('error: \'--force_rebuild\' should be either \'Ture(T)\' or \'False(F)\'')
     if len(base) == 2:
         base, tag = base
     elif len(base) == 1:
         base = base[0]
         tag = 'latest'
     else:
-        sys.exit('errors in the given base name, should be \'base\' or \'base:tag\'')
+        sys.exit('error: errors in the given base name, should be \'base\' or \'base:tag\'')
     if not (tag == 'latest' or tag == datetime.datetime.now().strftime('%Y%m%d')):
-        sys.exit('the tag should be \'latest\' or the current date in YYYYMMDD format.')
+        sys.exit('error: the tag should be \'latest\' or the current date in YYYYMMDD format.')
     _, base = base.split('_')
     exist, tags = checkImageStat('radiolab_' + base)
     if exist and tag in tags and not (rebuild or force_rebuild):
@@ -556,7 +559,7 @@ def buildCMD(arguments):
                 elif tag in img_tags:
                     tag = tag
                 else:
-                    sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
+                    sys.exit("error: the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
             retry = -1
             while not exist or tag not in img_tags:
                 retry += 1

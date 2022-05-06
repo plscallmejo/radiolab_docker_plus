@@ -15,22 +15,22 @@ def create(arguments):
 
 def Cstart(arguments):
     from radiolabdocker.ManageContainer import startContainer
-    for container_name in arguments.container_name:
+    for container_name in [arguments.container_name]:
         startContainer(container_name)
 
 def Cstop(arguments):
     from radiolabdocker.ManageContainer import stopContainer
-    for container_name in arguments.container_name:
+    for container_name in [arguments.container_name]:
         stopContainer(container_name)
 
 def Cpause(arguments):
     from radiolabdocker.ManageContainer import pauseContainer
-    for container_name in arguments.container_name:
+    for container_name in [arguments.container_name]:
         pauseContainer(container_name)
 
 def Cunpause(arguments):
     from radiolabdocker.ManageContainer import unpauseContainer
-    for container_name in arguments.container_name:
+    for container_name in [arguments.container_name]:
         unpauseContainer(container_name)
 
 def run(arguments):
@@ -55,7 +55,7 @@ cmd_run = subparser.add_parser('create', help = '???')
 cmd_run.add_argument('--image', '-i', action='store', nargs='?', default='radiolab_docker', help='???')
 cmd_run.add_argument('--container_name', '-n', action='store', nargs='?', default='radiolab_docker', help='???')
 cmd_run.add_argument('--compose_dir', '-d', action='store', nargs='?', default='~/.radiolabdocker/docker-composes', help='???')
-cmd_run.add_argument('--mount', '-m', action='store', nargs='?', default='', help='???')
+cmd_run.add_argument('--mount', '-m', action='store', nargs='?', default='./', help='???')
 cmd_run.add_argument('--fs_license', '-l', action='store', nargs='?', default='', help='???')
 cmd_run.add_argument('--jupyter_port', action='store', nargs='?', default='8888', help='???')
 cmd_run.add_argument('--start', '-s', action='store', nargs='?', default='False', help='???')

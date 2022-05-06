@@ -1,5 +1,5 @@
 import os
-import getpass
+import platform
 import shutil
 import os.path as op
 from radiolabdocker.miscellaneous import streamProcess
@@ -8,12 +8,17 @@ class makeCompose:
     """
     """
     def __init__(self, mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port = "8888", fs_license = ""):
-        self.user = getpass.getuser()
-        self.uid = os.getuid()
-        self.gid = os.getgid()
+        self.user = 'radiolabuser'
+        os_type = platform.system()
+        if os_type == 'Windows':
+            self.uid = 1000
+            self.gid = 1000
+        else:
+            self.uid = os.getuid()
+            self.gid = os.getgid()
         self.home = os.path.expanduser('~')
         # check mount point
-        self.mount = os.path.expanduser(mount)
+        self.mount = os.path.abspath(os.path.expanduser(mount))
         if not os.path.exists(self.mount) or not os.path.isdir(self.mount):
             raise Exception('mount path is not valid!')
         # Check if freesurfer license path is exist
@@ -33,9 +38,9 @@ class makeCompose:
         self.radiolabdocker_name = radiolabdocker_name
         self.radiolabdocker_img = radiolabdocker_img
         self.compose_src = compose_src
-        self.compose_dist = os.path.expanduser(compose_dist)
-        self.group = os.path.dirname(op.dirname(self.compose_dist)) + '/group'
-        self.passwd = os.path.dirname(op.dirname(self.compose_dist)) + '/passwd'
+        self.compose_dist = os.path.abspath(os.path.expanduser(compose_dist))
+        self.group = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/group')
+        self.passwd = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/passwd')
     def copy(self):
         dist_dir = os.path.dirname(self.compose_dist)
         if not os.path.exists(dist_dir):
@@ -71,7 +76,7 @@ class makeCompose:
             file.write('{user}:x:{uid}:{gid}:{user}:{home}:/bin/bash'.format(user = self.user,
                                                                              uid = self.uid,
                                                                              gid = self.gid,
-                                                                             home = self.home.replace('\\', '\\\\').replace('/', '\\/')))
+                                                                             home = "/home/radiolabuser".replace('\\', '\\\\').replace('/', '\\/')))
         file.close()
         with open(self.group, 'w') as file:
             file.write('{user}:x:{gid}'.format(user = self.user, gid = self.gid))
@@ -86,7 +91,7 @@ class createContainer:
         self.compose_dist = compose_dist
     def createCommand(self):
         docker_create = 'docker-compose -f {compose_dist} up --no-start --force-recreate'.format(
-                compose_dist = self.compose_dist)
+                compose_dist = op.expanduser(self.compose_dist))
         return docker_create
     def create(self):
         docker_create = self.createCommand()
@@ -95,6 +100,7 @@ class createContainer:
 def createCMD(arguments):
     """
     """
+    import sys
     import pkg_resources
     from radiolabdocker.CreateContainer import makeCompose, createContainer
     from radiolabdocker.CheckStat import checkContainerStat, checkImageStat, checkVolumeStat
@@ -121,8 +127,7 @@ def createCMD(arguments):
                 makeCompose(mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port, fs_license).make()
                 createContainer(compose_dist).create()
             else:
-                import sys
-                sys.exit('image {image} dose not exist, please build it first.'.format(image = radiolabdocker_img))
+                sys.exit('error: image {image} dose not exist, please build it first.'.format(image = radiolabdocker_img))
         else:
             print('container {container} setted'.format(container = radiolabdocker_name))
         if start:
@@ -134,14 +139,18 @@ def createCMD(arguments):
     radiolabdocker_name = arguments.container_name
     radiolabdocker_img = arguments.image
     compose_dir = arguments.compose_dir
-    if arguments.start == 'False':
+    if arguments.start in ['False', 'F']:
         start = False
-    elif arguments.start == 'True':
+    elif arguments.start in ['True', 'T']:
         start = True
-    if arguments.recreate == 'False':
+    else:
+        sys.exit('error: \'--start\' should be either \'Ture(T)\' or \'False(F)\'')
+    if arguments.recreate in ['False', 'F']:
         recreate = False
-    elif arguments.recreate == 'True':
+    elif arguments.recreate in ['True', 'T']:
         recreate = True
+    else:
+        sys.exit('error: \'--recreate\' should be either \'Ture(T)\' or \'False(F)\'')
     if not checkVolumeStat('radiolab_xpra_X11'):
         import docker
         docker.from_env().volumes.create('radiolab_xpra_X11')

@@ -9,14 +9,14 @@ services:
         working_dir: /DATA
         stdin_open: true
         environment:
-            - HOME={HOME}
+            - HOME=/home/{USER}
             - LIBGL_ALWAYS_INDIRECT=0
             - DISPLAY=:80.0
             - USER={USER}
         ports:
             - {JUPYTER_PORT}:8888
         volumes:
-            - {HOME}:{HOME}
+            - {HOME}:/home/{USER}
             - {MOUNT}:/DATA
 {FS}            - {FS_LICENSE}:/opt/freesurfer/license.txt
             - radiolab_xpra_X11:/tmp/.X11-unix:rw
