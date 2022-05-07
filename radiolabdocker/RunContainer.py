@@ -8,7 +8,9 @@ def runpty(container_name: str):
     # import dockerpty
     from radiolabdocker.CheckStat import checkContainerStat
     client = docker.from_env()
-    load_config = '-c "source /radiolabdocker/startup.sh"'
+    # load_config = '-c "source /radiolabdocker/startup.sh"'
+    load_config = ''
+    exist, (status, id) = checkContainerStat(container_name)
     exist, (status, id) = checkContainerStat(container_name)
     if exist:
         container = client.containers.get(id)

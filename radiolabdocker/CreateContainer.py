@@ -7,7 +7,7 @@ from radiolabdocker.miscellaneous import streamProcess
 class makeCompose:
     """
     """
-    def __init__(self, mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port = "8888", fs_license = ""):
+    def __init__(self, mount, radiolabdocker_name, radiolabdocker_img, home, compose_src, compose_dist, jupyter_port = "8888", fs_license = ""):
         self.user = 'radiolabuser'
         os_type = platform.system()
         if os_type == 'Windows':
@@ -16,7 +16,6 @@ class makeCompose:
         else:
             self.uid = os.getuid()
             self.gid = os.getgid()
-        self.home = os.path.expanduser('~')
         # check mount point
         self.mount = os.path.abspath(os.path.expanduser(mount))
         if not os.path.exists(self.mount) or not os.path.isdir(self.mount):
@@ -39,8 +38,11 @@ class makeCompose:
         self.radiolabdocker_img = radiolabdocker_img
         self.compose_src = compose_src
         self.compose_dist = os.path.abspath(os.path.expanduser(compose_dist))
+        # self.home = os.path.expanduser('~')
+        self.home = home
         self.group = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/group')
         self.passwd = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/passwd')
+    #
     def copy(self):
         dist_dir = os.path.dirname(self.compose_dist)
         if not os.path.exists(dist_dir):
@@ -106,6 +108,7 @@ def createCMD(arguments):
     from radiolabdocker.CheckStat import checkContainerStat, checkImageStat, checkVolumeStat
     from radiolabdocker.ManageContainer import startContainer
     def _create(mount,
+                home_dir,
                 radiolabdocker_name,
                 radiolabdocker_img,
                 jupyter_port,
@@ -124,7 +127,7 @@ def createCMD(arguments):
         compose_dist = '{compose_dir}/{radiolabdocker_name}/docker-compose.yml'.format(compose_dir = compose_dir, radiolabdocker_name = radiolabdocker_name)
         if (exist and recreate) or (not exist):
             if img_exist and tag in tags:
-                makeCompose(mount, radiolabdocker_name, radiolabdocker_img, compose_src, compose_dist, jupyter_port, fs_license).make()
+                makeCompose(mount, radiolabdocker_name, radiolabdocker_img, home_dir, compose_src, compose_dist, jupyter_port, fs_license).make()
                 createContainer(compose_dist).create()
             else:
                 sys.exit('error: image {image} dose not exist, please build it first.'.format(image = radiolabdocker_img))
@@ -138,7 +141,15 @@ def createCMD(arguments):
     fs_license = arguments.fs_license
     radiolabdocker_name = arguments.container_name
     radiolabdocker_img = arguments.image
-    compose_dir = arguments.compose_dir
+    home_dir = op.abspath(op.expanduser('~/.radiolabdocker'))
+    home_bash_src = home_dir + '/.config/radiolabdocker/bash_config'
+    compose_dir = home_dir + '/.config/radiolabdocker/docker-composes'
+    bashrc_src = pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc')
+    if not op.exists(home_bash_src):
+        os.makedirs(home_bash_src)
+    if not op.exists(home_bash_src + '/bashrc'):
+        shutil.copy(bashrc_src, home_bash_src + '/bashrc')
+    shutil.copy(home_bash_src + '/bashrc', home_dir + '/.bashrc')
     if arguments.start in ['False', 'F']:
         start = False
     elif arguments.start in ['True', 'T']:
@@ -154,7 +165,7 @@ def createCMD(arguments):
     if not checkVolumeStat('radiolab_xpra_X11'):
         import docker
         docker.from_env().volumes.create('radiolab_xpra_X11')
-    _create(mount, radiolabdocker_name, radiolabdocker_img, jupyter_port, fs_license, start, recreate)
+    _create(mount, home_dir, radiolabdocker_name, radiolabdocker_img, jupyter_port, fs_license, start, recreate)
     image = 'radiolab_xpra'
     base = 'radiolab_xpra'
-    _create('~', base, image, '', '', start, False)
+    _create('~', home_dir, base, image, '', '', start, False)
