@@ -472,6 +472,7 @@ class buildIMAGE:
         self.mkDockerfile()
         docker_buildkit = self.buildCommand()
         streamProcess(docker_buildkit)
+        streamProcess('docker image rm {base}:latest'.format(base = self.base))
         streamProcess('docker image tag {tag} {base}:latest'.format(tag = self.tag, base = self.base))
 
 def buildSeq(build_seq_config, base, tag):
@@ -529,6 +530,7 @@ def buildCMD(arguments):
         force_rebuild = False
     elif arguments.force_rebuild in ['True', 'T']:
         force_rebuild = True
+    else:
         sys.exit('error: \'--force_rebuild\' should be either \'Ture(T)\' or \'False(F)\'')
     if len(base) == 2:
         base, tag = base
@@ -544,10 +546,11 @@ def buildCMD(arguments):
     if exist and tag in tags and not (rebuild or force_rebuild):
         sys.exit('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
     seq = buildSeq(seq_path, base, tag)
+    target = base
     for base, tags in seq.items():
         for tag in tags:
             exist, img_tags = checkImageStat("radiolab_" + base)
-            if exist and tag in img_tags and not force_rebuild:
+            if not (base == target and rebuild) and exist and (tag in img_tags) and not force_rebuild:
                 sys.exit('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
             tag = int(tag) if tag != 'latest' else tag
             if exist:
@@ -562,7 +565,7 @@ def buildCMD(arguments):
                 else:
                     sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
             retry = -1
-            while not exist or tag not in img_tags:
+            while not exist or (tag not in img_tags) or (base == target and rebuild) or force_rebuild:
                 retry += 1
                 if not op.exists(df_dir):
                     makedirs(df_dir)

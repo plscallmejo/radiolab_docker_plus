@@ -28,6 +28,11 @@ def Cunpause(arguments):
     for container_name in arguments.container_name:
         unpauseContainer(container_name)
 
+def Cremove(arguments):
+    from radiolabdocker.ManageContainer import removeContainer
+    for container_name in arguments.container_name:
+        removeContainer(container_name)
+
 def run(arguments):
     from radiolabdocker.RunContainer import runpty
     runpty(arguments.container_name)
@@ -51,9 +56,9 @@ def cli():
     cmd_build = subparser.add_parser('build', help = '???')
     cmd_build.add_argument('base', action='store', nargs='?', default='radiolab_docker:latest', help='???')
     cmd_build.add_argument('--dockerfile_dir', '-d', action='store', nargs='?', default='~/.radiolabdocker/.config/radiolabdocker/Dockerfiles', help='???')
-    cmd_build.add_argument('--proxy', '-p', action='store', default=argparse.SUPPRESS, help='???')
-    cmd_build.add_argument('--rebuild', '-r', action='store', default='False', help='???')
-    cmd_build.add_argument('--force_rebuild', '-f', action='store', default='False', help='???')
+    cmd_build.add_argument('--proxy', '-p', action='store', nargs='?', default=argparse.SUPPRESS, help='???')
+    cmd_build.add_argument('--rebuild', '-r', action='store', nargs='?', default='False', help='???')
+    cmd_build.add_argument('--force_rebuild', '-f', action='store', nargs='?', default='False', help='???')
     cmd_build.set_defaults(func = build)
 
     # 'create' CMD
@@ -99,6 +104,11 @@ def cli():
     cmd_run.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='???')
     cmd_run.set_defaults(func = Cunpause)
 
+    # 'remove' CMD
+    cmd_run = subparser.add_parser('remove', help = '???')
+    cmd_run.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='???')
+    cmd_run.set_defaults(func = Cremove)
+
     # 'run' CMD
     cmd_run = subparser.add_parser('run', help = '???')
     cmd_run.add_argument('container_name', action='store', nargs='?', default='radiolab_docker', help='???')
@@ -108,3 +118,6 @@ def cli():
     if not hasattr(args, 'func'):
         args = parser.parse_args(['-h'])
     args.func(args)
+
+if __name__ == '__main__':
+    cli()
