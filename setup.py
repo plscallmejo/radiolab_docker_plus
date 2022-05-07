@@ -1,3 +1,4 @@
+from importlib.metadata import entry_points
 import platform
 from setuptools import setup
 
@@ -13,11 +14,15 @@ setup(
    author='Haoming Huang',
    author_email='fsplscallmejo@live.com',
    packages=['radiolabdocker'],
-   scripts=['bin/radiolabdocker'],
+   entry_points={
+       'console_scripts':[
+           'radiolabdocker=radiolabdocker.CommandLine:cli'
+       ]
+   },
    url='https://github.com/plscallmejo/radiolab_docker',
    license='LICENSE',
    description='Build radiolab_docker everywhere!',
    long_description=open('README.md').read(),
    include_package_data=True,
-   install_requires=requirements,
+   install_requires=requirements
 )

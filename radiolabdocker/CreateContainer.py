@@ -120,7 +120,7 @@ def createCMD(arguments):
             tag = 'latest'
         exist, (status, id) = checkContainerStat(radiolabdocker_name)
         img_exist, tags = checkImageStat(base)
-        compose_src = pkg_resources.resource_filename('radiolabdocker', '../config/{base}_compose/docker-compose.yml'.format(base = base))
+        compose_src = pkg_resources.resource_filename('radiolabdocker', '/config/{base}_compose/docker-compose.yml'.format(base = base))
         compose_dist = '{compose_dir}/{radiolabdocker_name}/docker-compose.yml'.format(compose_dir = compose_dir, radiolabdocker_name = radiolabdocker_name)
         if (exist and recreate) or (not exist):
             if img_exist and tag in tags:

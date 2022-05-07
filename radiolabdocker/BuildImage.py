@@ -475,6 +475,7 @@ class buildIMAGE:
         streamProcess('docker image tag {tag} {base}:latest'.format(tag = self.tag, base = self.base))
 
 def buildSeq(build_seq_config, base, tag):
+    """"""
     import json
     seq = {base : [tag]}
     stage = seq
@@ -506,14 +507,14 @@ def buildCMD(arguments):
     import shutil
     from os import makedirs
     from radiolabdocker.CheckStat import checkImageStat
-    seq_path = pkg_resources.resource_filename('radiolabdocker', '../config/radiolab_build_config/radiolab_build_seq.json')
-    conf_path = pkg_resources.resource_filename('radiolabdocker', '../config/radiolab_build_config/radiolab_img_config.json')
+    seq_path = pkg_resources.resource_filename('radiolabdocker', '/config/radiolab_build_config/radiolab_build_seq.json')
+    conf_path = pkg_resources.resource_filename('radiolabdocker', '/config/radiolab_build_config/radiolab_img_config.json')
     base = arguments.base.split(':')
     df_dir = op.expanduser(arguments.dockerfile_dir)
     parent = op.dirname(df_dir)
     if not os.path.exists(parent + '/config/bash_config'):
         os.makedirs(parent + '/config/bash_config')
-    shutil.copy(pkg_resources.resource_filename('radiolabdocker', '../config/bash_config/bashrc'), parent + '/config/bash_config/bashrc')
+    shutil.copy(pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc'), parent + '/config/bash_config/bashrc')
     if hasattr(arguments, 'proxy'):
         args = {"ALL_PROXY": arguments.proxy}
     else:
@@ -535,9 +536,9 @@ def buildCMD(arguments):
         base = base[0]
         tag = 'latest'
     else:
-        sys.exit('error: errors in the given base name, should be \'base\' or \'base:tag\'')
+        sys.exit('errors in the given base name, should be \'base\' or \'base:tag\'')
     if not (tag == 'latest' or tag == datetime.datetime.now().strftime('%Y%m%d')):
-        sys.exit('error: the tag should be \'latest\' or the current date in YYYYMMDD format.')
+        sys.exit('the tag should be \'latest\' or the current date in YYYYMMDD format.')
     _, base = base.split('_')
     exist, tags = checkImageStat('radiolab_' + base)
     if exist and tag in tags and not (rebuild or force_rebuild):
@@ -559,7 +560,7 @@ def buildCMD(arguments):
                 elif tag in img_tags:
                     tag = tag
                 else:
-                    sys.exit("error: the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
+                    sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
             retry = -1
             while not exist or tag not in img_tags:
                 retry += 1

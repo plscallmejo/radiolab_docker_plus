@@ -18,8 +18,8 @@ def runpty(container_name: str):
             container.start()
         os.system('docker exec -it {container_name} /bin/bash {load_config}'.
                 format(container_name = container_name,
-                       load_config = load_config))
+                 load_config = load_config))
         # dockerpty.exec_command(client.api, container.id, '/bin/bash')
     else:
         import sys
-        sys.exit("error: the container {container_name} is not exist, please check the spelling or create it.".format(container_name = container_name))
+        sys.exit("the container {container_name} is not exist, please check the spelling or create it.".format(container_name = container_name))
