@@ -1,0 +1,29 @@
+# docker-compose.yml
+version: "2.3"
+services:
+    {RADIOLAB_DOCKER}:
+        image: {IMAGE}
+        container_name: {RADIOLAB_DOCKER}
+        shm_size: 512M
+        user: {UID}:{GID}
+        working_dir: /DATA
+        stdin_open: true
+        environment:
+            - HOME=/home/{USER}
+            - LIBGL_ALWAYS_INDIRECT=0
+            - DISPLAY=:80.0
+            - USER={USER}
+        ports:
+            - {JUPYTER_PORT}:8888
+        volumes:
+            - {HOME}:/home/{USER}
+            - {MOUNT}:/DATA
+{FS}            - {FS_LICENSE}:/opt/freesurfer/license.txt
+            - radiolab_xpra_X11:/tmp/.X11-unix:rw
+            - {GROUP}:/etc/group:ro
+            - {PASSWD}:/etc/passwd:ro
+        tty: true
+
+volumes:
+  radiolab_xpra_X11:
+    external: true
