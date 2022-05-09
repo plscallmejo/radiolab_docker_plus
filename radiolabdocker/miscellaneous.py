@@ -1,5 +1,5 @@
-from threading import Thread
-
+import sys
+import threading
 
 def streamProcess(CMD: str):
     """
@@ -29,8 +29,6 @@ def timerHMS(time):
     second = (time - 3600 * hour - 60 * minute) // 1
     return (hour, minute, second)
 
-import sys
-import threading
 class asyncRunner(threading.Thread):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

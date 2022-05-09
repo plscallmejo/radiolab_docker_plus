@@ -4,9 +4,9 @@ from setuptools import setup
 
 os_type = platform.system()
 if os_type == 'Windows':
-    requirements = ['docker', 'pypiwin32', 'pywin32']
+    requirements = ['docker', 'docker-compose', 'pypiwin32', 'pywin32']
 else:
-    requirements = ['docker']
+    requirements = ['docker', 'docker-compose']
 
 setup(
    name='radiolabdocker',

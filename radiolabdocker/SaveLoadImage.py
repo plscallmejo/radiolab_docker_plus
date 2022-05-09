@@ -54,7 +54,9 @@ def saveImage(path, base, tag = 'latest'):
         # Just est. iters
         iters = round(image_size / chunk_size)
         # Get Chunks from generator
+        # Use Thread module for async run the image.save and the timer
         job = asyncRunner(target = image.save, kwargs={'named':'{}:{}'.format(base, tag)})
+        # Run the image save
         job.start()
         # chunks = image.save(chunk_size, named = '{}:{}'.format(base, tag))
         while job.is_alive():
@@ -64,6 +66,7 @@ def saveImage(path, base, tag = 'latest'):
             tl = tl2 - tl1
             hour, minute, second = timerHMS(tl)
             print('\rconsumed %02d:%02d:%02d' % (hour, minute, second), end = '', flush = True)
+        # Gether the result
         chunks = job.join()
         print('\nsaving {}:{} to {}'.format(base, tag, tarball))
         # Gzip it
@@ -154,6 +157,7 @@ def loadImage(tarball):
     print('loading {tarball}.'.format(tarball = tarball))
     process = subprocess.Popen('docker load', shell=True, stdout=subprocess.PIPE, stdin = subprocess.PIPE)
     adjusted_estimate = estGzipDecompress(tarball)
+    percentage_estimate = adjusted_estimate / 100
     t = 0
     last = 0
     t1_next = perf_counter()
@@ -170,43 +174,47 @@ def loadImage(tarball):
     for chunk in iter(lambda:gz.read(1024*1024*2), ''):
         chunk_size = len(chunk)
         total_chunk += chunk_size
-        if chunk_size == 0:
+        # Timer 1
+        t1_last = t1_next
+        t1_next = perf_counter()
+        gap = t1_next - t1_last
+        t1 = t1_next
+        last = last + gap
+        # Accumulate time
+        _, _, last_s = timerHMS(last)
+        per = round(total_chunk / adjusted_estimate * 100)
+        # Subpress the percentage to 100%
+        per = 100 if per > 100 else per
+        num = per // round(100 / bar_width)
+        num = bar_width if num > bar_width else num
+        # smoother at boundary estimate
+        if chunk_size == 0 and per < 100:
+            sleep(0.4)
+            total_chunk += percentage_estimate
+        elif chunk_size == 0 and per == 100:
             process.stdin.close()
             break
         else:
-            # Timer 1
-            t1_last = t1_next
-            t1_next = perf_counter()
-            gap = t1_next - t1_last
-            t1 = t1_next
-            last = last + gap
-            # Accumulate time
-            _, _, last_s = timerHMS(last)
-            per = round(total_chunk / adjusted_estimate * 100)
-            # Subpress the percentage to 100%
-            per = 100 if per > 100 else per
-            num = per // round(100 / bar_width)
-            num = bar_width if num > bar_width else num
             _ = process.stdin.write(chunk)
-            if per < 3:
-                proc = "\r[%3s%%]: |%-{bar_width}s| estimating ...".format(bar_width = bar_width) % (per, '|' * num)
-            elif per == 100 and (total_chunk / adjusted_estimate) > 1:
-                proc = "\r[%3s%%]: |%-{bar_width}s| almost ...    ".format(bar_width = bar_width) % (per, '|' * num)
-            else:
-                proc = "\r[%3s%%]: |%-{bar_width}s| est. %02d:%02d:%02d ".format(bar_width = bar_width) % (per, '|' * num, hour, minute, second)
-            print(proc, end='', flush=True)
-            # Timer 4
-            t2 = perf_counter()
-            # Calcu time consumed, est time left.
-            t = t + (t2 - t1)
-            per_iter = t / total_chunk
-            # is acuumulate time > 0.5s, refresh the est.
-            if last_s > 0.5:
-                last = 0
-                # In case strange thing happen, if i > iters, cause the image size is just an est.
-                # that smaller than the actual size
-                est_left = (0 if (adjusted_estimate - total_chunk) < 0 else (adjusted_estimate - total_chunk)) * per_iter
-                hour, minute, second = timerHMS(est_left)
+        if per < 3:
+            proc = "\r[%3s%%]: |%-{bar_width}s| estimating ...".format(bar_width = bar_width) % (per, '|' * num)
+        elif per == 100 and (total_chunk / adjusted_estimate) > 1:
+            proc = "\r[%3s%%]: |%-{bar_width}s| almost ...    ".format(bar_width = bar_width) % (per, '|' * num)
+        else:
+            proc = "\r[%3s%%]: |%-{bar_width}s| est. %02d:%02d:%02d ".format(bar_width = bar_width) % (per, '|' * num, hour, minute, second)
+        print(proc, end='', flush=True)
+        # Timer 4
+        t2 = perf_counter()
+        # Calcu time consumed, est time left.
+        t = t + (t2 - t1)
+        per_iter = t / total_chunk
+        # is acuumulate time > 0.5s, refresh the est.
+        if last_s > 0.5:
+            last = 0
+            # In case strange thing happen, if i > iters, cause the image size is just an est.
+            # that smaller than the actual size
+            est_left = (0 if (adjusted_estimate - total_chunk) < 0 else (adjusted_estimate - total_chunk)) * per_iter
+            hour, minute, second = timerHMS(est_left)
     gz.close()
     # Start a new line
     print("\r[%3s%%]: |%-{bar_width}s| loading complete".format(bar_width = bar_width) % (per, '|' * num), end = '\n', flush = True)
