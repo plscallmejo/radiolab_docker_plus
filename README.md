@@ -1,6 +1,6 @@
-## radiolab_docker
+## radiolab_docker plus
 
-Tools for constructing, managing, and deploying a robust and reproducible neuroimage analysis environment.
+A fully upgraded version of radiolab_docker, the previous bash scripts for constructing, managing, and deploying a robust and reproducible neuroimage analysis environment, and are now re-written in python (puls for upgrade and for python), hence, compatible with linux and windows. Also, a `xpra` server with html5 frontend will be set up in docker for display, and no xvcsrv or other kind of xserver is needed (I would rather regard `xpra` as the os boundary breaker for radiolab_docker plus).
 
 ## Included softwares
 
@@ -10,13 +10,9 @@ Tools for constructing, managing, and deploying a robust and reproducible neuroi
 * Freesuefer
 * convert3D
 * dcm2niix
+* dsistudio
+* qsiprep
 * miniconda (Radiolabconda environment with python3.7)
-
-## Ongoing
-
-Switching python docker API.
-
-## Use Xpra for Display
 
 ## Acknowledgements
 

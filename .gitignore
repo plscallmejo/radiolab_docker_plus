@@ -1,3 +1,4 @@
+radiolabdocker_plus.egg-info
 radiolabdocker.egg-info
 radiolabdocker/__pycache__/*
 /docker-compose.yml
