@@ -1,3 +1,4 @@
+from email.mime import base
 import os
 import os.path as op
 import json
@@ -8,8 +9,8 @@ from radiolabdocker.miscellaneous import streamProcess
 class DockerConfig:
     """
     Make a Dockerfile according to the config file.
-    :param conf_path: path to config file
-    :param dist: path to the Dockerfile dir, the Dockerfile will be renamed to Dockerfile_{base}
+    :param conf_path: path to config file.
+    :param dist: path to the Dockerfile dir, the Dockerfile will be renamed to Dockerfile_{base}.
     :param base: the configured base name of the image.
     """
     def __init__(self, conf_path, dist, base):
@@ -102,9 +103,7 @@ class DockerConfig:
         except:
             pass
         self.dist = op.join(dist, "Dockerfile_" + base)
-    """
-    Write the Dockerfile
-    """
+    # Write the Dockerfile
     def mkDockerfile(self):
         # Check the current line, and set the (indent, start, end) for a line
         def identifyLine(l, length, head):
@@ -421,10 +420,17 @@ class DockerConfig:
             mkSCR(self, head, scr)
 
 class buildIMAGE:
-#
-#
+    """
+    Build the docker image.
+    :param conf_path:
+    :param dist:
+    :param base:
+    :param args:
+    :param log_dir: preserved (WIP)
+    """
     def __init__(self, conf_path, dist, base, args, log_dir = ''):
         self.config = DockerConfig(conf_path, dist, base)
+        self.short_base = base
         self.base = 'radiolab_{base}'.format(
             base = base,
         )
@@ -445,20 +451,20 @@ class buildIMAGE:
                 log_dir = log_dir,
                 base = base
             )
-    #
-    def mkDockerfile(self):
-        self.config.mkDockerfile()
-    #
+    # Construct the build command
+    # we didn't use docker-py api here, 'cause of output streaming and DOCKER_BUILDKIT support
+    # the image will be temperally named radiolab_tmp:{base}
     def buildCommand(self):
         build_args = ' '.join(str(arg) for arg in ['--build-arg {}={}'.format(var, val) for var, val in self.args.items()])
         parent_dir = op.dirname(op.dirname(op.expanduser(self.dist)))
         docker_buildkit = 'docker build {args} --tag {tag} -f {dockerfile} {build_locate}'.format(
-                tag = self.tag,
+                tag = 'radiolab_tmp:{base}'.format(base = self.short_base),
                 args = '{args}'.format(args = build_args),
                 dockerfile = self.dist,
                 build_locate = parent_dir)
         return docker_buildkit
-    #
+    # Run the build command and stream the output
+    # TODO how to log the streaming output?
     def build(self):
         # pattern = r'\x1B\[(([0-9]{1,2})?(;)?([0-9]{1,2})?)?[m,K,H,f,J]'
         os.environ["DOCKER_BUILDKIT"] = "1"
@@ -468,15 +474,25 @@ class buildIMAGE:
         #         log_file.close()
         #     except:
         #         self.loggin = 0
-        # TODO            # log_file.write(re.sub(pattern, '', value) + "\n")
-        self.mkDockerfile()
+        #         # log_file.write(re.sub(pattern, '', value) + "\n")
+        #
+        # Invoke Dockerconfig class mkDockerfile method
+        self.config.mkDockerfile()
+        # build command
         docker_buildkit = self.buildCommand()
+        # Build!
         streamProcess(docker_buildkit)
-        streamProcess('docker image rm {base}:latest'.format(base = self.base))
-        streamProcess('docker image tag {tag} {base}:latest'.format(tag = self.tag, base = self.base))
+        # name to image to its true name radiolab_{base}:{tag}, but preseve the tmp tag
+        streamProcess('docker image tag radiolab_tmp:{base} {tag}'.format(tag = self.tag, base = self.short_base))
 
 def buildSeq(build_seq_config, base, tag):
-    """"""
+    """
+    Return the sequence (dependence) of the images.
+    :param build_seq_config: the path to the sequence config file.
+    :param base: the target base name.
+    :param: tag: the target tag.
+    :return a dict {base:[tag]} with the lowest dependent image first and the target at the end.
+    """
     import json
     seq = {base : [tag]}
     stage = seq
@@ -502,6 +518,7 @@ def buildCMD(arguments):
     """
     """
     import sys
+    import time
     import datetime
     import os.path as op
     import pkg_resources
@@ -554,24 +571,33 @@ def buildCMD(arguments):
                 sys.exit('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
             tag = int(tag) if tag != 'latest' else tag
             if exist:
-                img_tags = [ int(t) for t in img_tags if t != 'latest']
+                img_tags = [ t for t in img_tags if t != 'latest']
                 if tag == 'latest':
                     if rebuild == True:
                         tag = int(datetime.datetime.now().strftime('%Y%m%d'))
-                    else:
-                        tag = max(img_tags)
-                elif tag in img_tags:
-                    tag = tag
                 else:
                     sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
             retry = -1
             while not exist or (tag not in img_tags) or (base == target and rebuild) or force_rebuild:
                 retry += 1
+                print('building radiolab_{base}:{tag}'.format(base = base, tag = tag))
+                if retry > 0:
+                    print('build attemt {retry}'.format(retry = retry))
                 if not op.exists(df_dir):
                     makedirs(df_dir)
                 buildIMAGE(conf_path, df_dir, base, args).build()
-                exist, img_tags = checkImageStat("radiolab_" + base)
-                if retry > 5:
+                exist, img_tags = checkImageStat('radiolab_tmp')
+                if exist and (base in img_tags):
+                    if 'latest' in img_tags:
+                        streamProcess('docker image rm radiolab_{base}:latest'.format(base = base))
+                        time.sleep(1)
+                    streamProcess('docker image tag radiolab_tmp:{base} radiolab_{base}:latest'.format(base = base))
+                    time.sleep(1)
+                    streamProcess('docker image rm radiolab_tmp:{base}'.format(base = base))
+                    time.sleep(1)
+                    exist, img_tags = checkImageStat("radiolab_" + base)
+                    break
+                if retry > 4:
                     break
 
 

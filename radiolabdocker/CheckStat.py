@@ -28,7 +28,9 @@ def checkImageStat(check_img: str):
     import docker
     client = docker.from_env()
     image_ls = client.images.list()
-    img_tags = { base:[ tag for sublist in [ [tag.split(':')[1] for tag in img.tags] for img in image_ls if len(img.tags) != 0 and img.tags[0].split(':')[0] == base ] for tag in sublist ] for base in [ base for base in set( img.tags[0].split(':')[0] for img in image_ls if len(img.tags) != 0 ) ] }
+    # what a mess!
+    # construct a dict that with the base name as keys and tags as values regardless the image id
+    img_tags = { base: [ tag.split(':')[1] for img in image_ls for tag in img.tags if len(img.tags) != 0 and tag.split(':')[0] == base ] for base in [ base for base in set( tag.split(':')[0] for img in image_ls for tag in img.tags if len(img.tags) != 0 ) ] }
     img_name = img_tags.keys()
     # Check existance and tags
     if check_img in img_name:
@@ -42,6 +44,8 @@ def checkImageStat(check_img: str):
 
 def checkVolumeStat(volume):
     '''
+    Return the existance of a docker volume.
+    :param volume: the name of a volume.
     '''
     import docker
     client = docker.from_env()
