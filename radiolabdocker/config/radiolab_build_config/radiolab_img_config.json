@@ -77,13 +77,10 @@
             "chmod -R 777 /radiolabdocker && chmod a+s /radiolabdocker",
             "export RD_ENTRYPOINT=\"/radiolabdocker/startup.sh\"",
             "if [ ! -f \"$RD_ENTRYPOINT\" ]; then",
-            "*    echo '#!/usr/bin/env bash' >> \"$RD_ENTRYPOINT\"",
-            "*    echo 'set -e' >> \"$RD_ENTRYPOINT\"",
-            "*    echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
+            "*    echo '#!/usr/bin/env bash' > \"$RD_ENTRYPOINT\" && echo 'set -e' >> \"$RD_ENTRYPOINT\" && echo 'export USER=\"${USER:=`whoami`}\"' >> \"$RD_ENTRYPOINT\";",
             "*fi",
             "chmod 755 /radiolabdocker/startup.sh",
-            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT",
-            "sed -i -e '$c if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' $RD_ENTRYPOINT"
+            "echo 'if [ -n \"$1\" ]; then \"$@\"; else /usr/bin/env bash; fi' >> $RD_ENTRYPOINT"
         ],
         "apt" : [
             ["ca-certificates",
@@ -368,10 +365,9 @@
             "rm /opt/fsl/bin/fsl_sub",
             "chmod a+x /opt/fsl_sub/fsl_sub",
             "ln -s /opt/fsl_sub/fsl_sub /opt/fsl/bin/fsl_sub",
-            "sed -i '$isource \"$FSLDIR/etc/fslconf/fsl.sh\"' \"$RD_ENTRYPOINT\"",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate fsl, freesurfer' >> /opt/bash_config/bashrc",
-            "echo 'source \"$FSLDIR/etc/fslconf/fsl.sh\"' /opt/bash_config/bashrc"
+            "echo 'source \"$FSLDIR/etc/fslconf/fsl.sh\"' >> /opt/bash_config/bashrc"
         ],
         "tar" : [
             {
@@ -563,7 +559,7 @@
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate fsl, freesurfer' >> /opt/bash_config/bashrc",
-            "echo 'source \"$FSLDIR/etc/fslconf/fsl.sh\"' /opt/bash_config/bashrc",
+            "echo 'source \"$FSLDIR/etc/fslconf/fsl.sh\"' >> /opt/bash_config/bashrc",
             "echo 'source \"/opt/freesurfer/SetUpFreeSurfer.sh\"' >> /opt/bash_config/bashrc",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",

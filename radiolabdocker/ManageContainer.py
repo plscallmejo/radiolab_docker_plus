@@ -8,7 +8,7 @@ def startContainer(container_name):
         print('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
         return 0
     if status == 'created' or status == 'exited':
-        print('bringing the container {container} up ...'.format(container = container_name))
+        print('bringing up the container {container} ...'.format(container = container_name))
         client = docker.from_env()
         client.containers.get(id).start()
         print('done.')

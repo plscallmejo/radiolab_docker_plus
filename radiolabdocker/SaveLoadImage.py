@@ -1,3 +1,6 @@
+from distro import like
+
+
 def saveImage(path, base, tag = 'latest'):
     """
     Save the image to tar.gz archive.
@@ -100,6 +103,7 @@ def saveImage(path, base, tag = 'latest'):
                 per = 100 if per > 100 else per
                 num = per // 2
                 _ = tf.write(chunk)
+                # do not display ets. on the first 3%
                 if per < 3:
                     proc = "\r[%3s%%]: |%-{bar_width}s| estimating ...".format(bar_width = bar_width) % (per, '|' * num)
                 elif per == 100 and (i / iters) > 1:
@@ -141,37 +145,56 @@ def saveCMD(path, image):
         sys.exit('errors in the given base name, should be \'base\' or \'base:tag\'')
     saveImage(path = path, base = base, tag = tag)
 
-def loadImage(tarball):
+def loadImage(tarball: str):
     """
+    Load the image in tar.gz format that previously save by `docker save` and piped to gzip for compression.
+    :param tarball: the path to the tar.gz archive.
     """
     import re
     import gzip
     import subprocess
     import os
+    import sys
     import os.path as op
     from time import sleep, perf_counter
     from radiolabdocker.CheckStat import checkImageStat
     from radiolabdocker.miscellaneous import streamProcess, estGzipDecompress, timerHMS
     tarball = op.abspath(op.expanduser(tarball))
+    if not op.exists(tarball):
+        sys.exit('the {tarball} is not exist'.format(tarball = tarball))
+    # Get the base name, assuming named as it save
+    # TODO test the naming validility of a gzip tar
     base = re.sub(r'(radiolab_[a-z]+)#[0-9]*_[0-9]*.tar.gz', r'\1', op.basename(tarball))
+    # Loading
     print('loading {tarball}.'.format(tarball = tarball))
+    # Setup a cmd pipe subprocess
     process = subprocess.Popen('docker load', shell=True, stdout=subprocess.PIPE, stdin = subprocess.PIPE)
+    # Get the estimate size of the gzip tarball
     adjusted_estimate = estGzipDecompress(tarball)
+    # Calculate 1% size for smoother loading display (just a trick)
     percentage_estimate = adjusted_estimate / 100
+    # Timer
     t = 0
     last = 0
     t1_next = perf_counter()
     hour = 0
     minute = 0
     second = 0
+    # avoid divided by zero error
     total_chunk = 1
+    # Auto suit the terminal width
+    # Get terminal width
     term_width = os.get_terminal_size().columns
     if term_width >= 79:
         bar_width = 50
     else:
         bar_width = term_width - 28
+    # Open a gzip
     gz = gzip.open(tarball, 'rb')
-    for chunk in iter(lambda:gz.read(1024*1024*2), ''):
+    # chunk_size for 2mb by default
+    chunk_size = 2
+    # Read the file chunk by chunk
+    for chunk in iter(lambda:gz.read(1024*1024*chunk_size), ''):
         chunk_size = len(chunk)
         total_chunk += chunk_size
         # Timer 1
@@ -187,15 +210,19 @@ def loadImage(tarball):
         per = 100 if per > 100 else per
         num = per // round(100 / bar_width)
         num = bar_width if num > bar_width else num
-        # smoother at boundary estimate
+        # smoother at boundary estimate (just a trick)
+        # if file ended and per bar have't finished, just run the remaining for per 0.4s interval 1%
         if chunk_size == 0 and per < 100:
             sleep(0.4)
             total_chunk += percentage_estimate
+        # if file ended and per bar finished, a true finish, just close the subprocess, break the loop
         elif chunk_size == 0 and per == 100:
             process.stdin.close()
             break
+        # the lefting suituations pipe to stdin
         else:
             _ = process.stdin.write(chunk)
+        # do not display ets. on the first 3%
         if per < 3:
             proc = "\r[%3s%%]: |%-{bar_width}s| estimating ...".format(bar_width = bar_width) % (per, '|' * num)
         elif per == 100 and (total_chunk / adjusted_estimate) > 1:
@@ -203,12 +230,12 @@ def loadImage(tarball):
         else:
             proc = "\r[%3s%%]: |%-{bar_width}s| est. %02d:%02d:%02d ".format(bar_width = bar_width) % (per, '|' * num, hour, minute, second)
         print(proc, end='', flush=True)
-        # Timer 4
+        # Timer 2
         t2 = perf_counter()
         # Calcu time consumed, est time left.
         t = t + (t2 - t1)
         per_iter = t / total_chunk
-        # is acuumulate time > 0.5s, refresh the est.
+        # if acuumulate time > 0.5s, refresh the est.
         if last_s > 0.5:
             last = 0
             # In case strange thing happen, if i > iters, cause the image size is just an est.
@@ -218,6 +245,7 @@ def loadImage(tarball):
     gz.close()
     # Start a new line
     print("\r[%3s%%]: |%-{bar_width}s| loading complete".format(bar_width = bar_width) % (per, '|' * num), end = '\n', flush = True)
+    # Check the subprocess is running (after stdin finish, docker load should load layers internally for a while)
     while process.poll() is None:
         try:
             for i in range(4):
@@ -227,13 +255,14 @@ def loadImage(tarball):
             print(f"{str(e)}")
         sleep(0.1)
     else:
+        # If load complete, update the base status
         exist, tags = checkImageStat(base)
-    #
+    # Retag the latest image to 'latest'
     if exist:
         tags = [ int(t) for t in tags if t != 'latest']
         latest_tag = str(max(tags))
         streamProcess('docker image tag {base}:{latest_tag} {base}:latest'.format(base = base, latest_tag = latest_tag))
-        #
+    # Print the total time comsumed
     hour, minute, second = timerHMS(t + perf_counter() - t2)
     print(' done.')
     print('\rtotal time consumed %02d:%02d:%02d' % (hour, minute, second))
