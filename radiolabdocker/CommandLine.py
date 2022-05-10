@@ -53,7 +53,7 @@ def cli():
     subparser = parser.add_subparsers(title="actions")
 
     # 'build' CMD
-    cmd_build = subparser.add_parser('build', help = 'Build the radiolab_docker plus images.')
+    cmd_build = subparser.add_parser('build', help = 'build the radiolab_docker plus images.')
     cmd_build.add_argument('-b', '--base', action='store', nargs='?', default='radiolab_docker:latest', help='the base name of the target, default: radiolab_docker:latest.')
     cmd_build.add_argument('-d', '--dockerfile_dir', action='store', nargs='?', default='~/.radiolabdocker/.config/radiolabdocker/Dockerfiles', help='the folder to save the dockerfiles, default: ~/.radiolabdocker/.config/radiolabdocker/Dockerfiles.')
     cmd_build.add_argument('-p', '--proxy', action='store', nargs='?', default=argparse.SUPPRESS, help='set the proxy while building the images, the argument will be passed to ALL_PROXY in the intermediate containers.')
@@ -70,7 +70,7 @@ def cli():
     cmd_create.add_argument('-l', '--fs_license', action='store', nargs='?', default='', help='provide the freesurfer license')
     cmd_create.add_argument('-r', '--recreate', action='store', nargs='?', default='False', help='force re-create the container, (T)rue or (F)alse, default: False.')
     cmd_create.add_argument('-p', '--jupyter_port', action='store', nargs='?', default='8888', help='the host port for jupyter hub, default:8888.')
-    cmd_create.add_argument('--home_dir', action='store', nargs='?', default='~/.radiolabdocker', help='the home of the creating container, default: ~/.radiolabdocker.')
+    cmd_create.add_argument('--home_dir', action='store', nargs='?', default='radiolab_docker_home', help='the home of the creating container, default: radiolabdocker.')
     cmd_create.set_defaults(func = create)
 
     # 'save' CMD

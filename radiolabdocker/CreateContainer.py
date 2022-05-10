@@ -1,7 +1,9 @@
 import os
 import platform
+from posixpath import islink
 import shutil
 import os.path as op
+from turtle import home
 from radiolabdocker.miscellaneous import streamProcess
 
 class makeCompose:
@@ -40,6 +42,8 @@ class makeCompose:
         self.compose_dist = os.path.abspath(os.path.expanduser(compose_dist))
         # self.home = os.path.expanduser('~')
         self.home = home
+        self.hv = '' if not op.islink(home) else '#'
+        self.home_volume = home if not op.islink(home) else 'NotSupplied'
         self.group = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/group')
         self.passwd = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/passwd')
     #
@@ -70,7 +74,9 @@ class makeCompose:
                 FS = self.fs,
                 FS_LICENSE = self.fs_license,
                 GROUP = self.group,
-                PASSWD = self.passwd)
+                PASSWD = self.passwd,
+                HV = self.hv,
+                HOME_VOLUME = self.home_volume)
             file.write(docker_compose)
         file.close()
         # make group and passwd files
@@ -141,15 +147,29 @@ def createCMD(arguments):
     fs_license = arguments.fs_license
     radiolabdocker_name = arguments.container_name
     radiolabdocker_img = arguments.image
-    home_dir = op.abspath(op.expanduser('~/.radiolabdocker'))
-    home_bash_src = home_dir + '/.config/radiolabdocker/bash_config'
-    compose_dir = home_dir + '/.config/radiolabdocker/docker-composes'
-    bashrc_src = pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc')
-    if not op.exists(home_bash_src):
-        os.makedirs(home_bash_src)
-    if not op.exists(home_bash_src + '/bashrc'):
-        shutil.copy(bashrc_src, home_bash_src + '/bashrc')
-    shutil.copy(home_bash_src + '/bashrc', home_dir + '/.bashrc')
+    home_dir = op.abspath(op.expanduser(arguments.home_dir)) if op.islink(arguments.home_dir) else arguments.home_dir
+    if (not os.path.exists(home_dir) or not os.path.isdir(home_dir)) and not op.islink(home_dir):
+        if not checkVolumeStat(home_dir):
+            create_home = input('create a {home_dir} volume for home dir in container (network connection may be needed)? (Y)es or (N)o\n'.format(home_dir = home_dir))
+            if create_home in ['Yes', 'Y', 'yes', 'y']:
+                print('creating the {home_dir}'.format(home_dir = home_dir))
+                import docker
+                docker.from_env().volumes.create(home_dir)
+                print('setting a full privilliage to the volume ... ', end = '')
+                _ = os.system('docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \'chmod 777 -R /home/radiolabuser\''.format(home_dir = home_dir))
+                print('done.')
+            elif create_home in ['No', 'N', 'no', 'n']:
+                sys.exit('home path is not valid!')
+            else:
+                sys.exit('invalid input.')
+    compose_dir = '~/.radiolabdocker/.config/radiolabdocker/docker-composes'
+    # home_bash_src = home_dir + '/.config/radiolabdocker/bash_config'
+    # bashrc_src = pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc')
+    # if not op.exists(home_bash_src):
+    #     os.makedirs(home_bash_src)
+    # if not op.exists(home_bash_src + '/bashrc'):
+    #     shutil.copy(bashrc_src, home_bash_src + '/bashrc')
+    # shutil.copy(home_bash_src + '/bashrc', home_dir + '/.bashrc')
     if arguments.start in ['False', 'F']:
         start = False
     elif arguments.start in ['True', 'T']:

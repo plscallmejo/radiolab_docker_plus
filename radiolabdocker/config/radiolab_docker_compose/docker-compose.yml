@@ -16,7 +16,7 @@ services:
         ports:
             - {JUPYTER_PORT}:8888
         volumes:
-            - {HOME}:/home/{USER}
+            - {HOME}:/home/{USER}:z
             - {MOUNT}:/DATA
 {FS}            - {FS_LICENSE}:/opt/freesurfer/license.txt
             - radiolab_xpra_X11:/tmp/.X11-unix:rw
@@ -25,5 +25,7 @@ services:
         tty: true
 
 volumes:
-  radiolab_xpra_X11:
-    external: true
+    radiolab_xpra_X11:
+        external: true
+{HV}    {HOME_VOLUME}:
+{HV}        external: true

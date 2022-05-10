@@ -6,7 +6,7 @@ os_type = platform.system()
 if os_type == 'Windows':
     requirements = ['docker', 'pypiwin32', 'pywin32']
 else:
-    requirements = ['docker', 'docker-compose']
+    requirements = ['docker']
 
 setup(
    name='radiolabdocker-plus',
