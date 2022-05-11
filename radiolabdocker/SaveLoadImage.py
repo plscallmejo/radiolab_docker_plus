@@ -1,6 +1,3 @@
-from distro import like
-
-
 def saveImage(path, base, tag = 'latest'):
     """
     Save the image to tar.gz archive.
@@ -25,7 +22,7 @@ def saveImage(path, base, tag = 'latest'):
     # Check image stat
     exist, tags = checkImageStat(base)
     # If not exist
-    if not exist:
+    if (not exist) and (tag not in tags):
         sys.exit('the image {base}:{tag} is not exist.'.format(base = base, tag = tag))
     # If 'latest', set tag to latest build
     if exist:
@@ -269,4 +266,19 @@ def loadImage(tarball: str):
 
 def loadCMD(tarball):
     loadImage(tarball)
+
+def removeImage(base, tag, force):
+    '''
+    '''
+    import sys
+    import docker
+    from radiolabdocker.CheckStat import checkImageStat
+    exist, tags = checkImageStat(base)
+    # If not exist
+    if not exist and tag not in tags:
+        sys.exit('the image {base}:{tag} is not exist.'.format(base = base, tag = tag))
+    print('removing the image {base}:{tag} ...'.format(base = base, tag = tag))
+    client = docker.from_env()
+    image = client.images.remove('{}:{}'.format(base, tag), force = force)
+    print('done.')
 

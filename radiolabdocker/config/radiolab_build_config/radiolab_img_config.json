@@ -559,11 +559,17 @@
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate fsl, freesurfer' >> /opt/bash_config/bashrc",
-            "echo 'source \"$FSLDIR/etc/fslconf/fsl.sh\"' >> /opt/bash_config/bashrc",
-            "echo 'source \"/opt/freesurfer/SetUpFreeSurfer.sh\"' >> /opt/bash_config/bashrc",
+            "echo 'if [ -e \"$FSLDIR/etc/fslconf/fsl.sh\" ]; then' >> /opt/bash_config/bashrc",
+            "echo '    source \"$FSLDIR/etc/fslconf/fsl.sh\"' >> /opt/bash_config/bashrc",
+            "echo 'fi' >> /opt/bash_config/bashrc",
+            "echo 'if [ -e \"$FREESURFER_HOME/SetUpFreeSurfer.sh\" ]; then' >> /opt/bash_config/bashrc",
+            "echo '    source \"$FREESURFER_HOME/SetUpFreeSurfer.sh\"' >> /opt/bash_config/bashrc",
+            "echo 'fi' >> /opt/bash_config/bashrc",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate \"radioconda\"' >> /opt/bash_config/bashrc",
-            "echo 'source activate radioconda' >> /opt/bash_config/bashrc"
+            "echo 'if [[ -n `conda env list | grep radioconda` ]]; then' >> /opt/bash_config/bashrc",
+            "echo '    source activate radioconda' >> /opt/bash_config/bashrc",
+            "echo 'fi' >> /opt/bash_config/bashrc"
         ],
         "entry" : ["/radiolabdocker/startup.sh"],
         "bind_file" : [

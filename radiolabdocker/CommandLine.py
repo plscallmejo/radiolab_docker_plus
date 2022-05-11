@@ -33,6 +33,10 @@ def Cremove(arguments):
     for container_name in arguments.container_name:
         removeContainer(container_name, arguments.force_remove)
 
+def Iremove(arguments):
+    from radiolabdocker.SaveLoadImage import removeImage
+    removeImage(arguments.base, arguments.tag, arguments.force_remove)
+
 def run(arguments):
     from radiolabdocker.RunContainer import runpty
     runpty(arguments.container_name)
@@ -46,6 +50,14 @@ def load(arguments):
     from radiolabdocker.SaveLoadImage import loadCMD
     for tarball in arguments.tarball:
         loadCMD(tarball)
+
+def lsContainerCMD(*args, **kwargs):
+    from radiolabdocker.CheckStat import listContainerStat
+    listContainerStat()
+
+def lsImageCMD(*args, **kwargs):
+    from radiolabdocker.CheckStat import listImageStat
+    listImageStat()
 
 def cli():
     # Setup the arg parser
@@ -67,8 +79,8 @@ def cli():
     cmd_create.add_argument('-n', '--container_name', action='store', nargs='?', default='radiolab_docker', help='specified the container name (use it for instance of working with different projects), default: radiolab_docker.')
     cmd_create.add_argument('-m', '--mount', action='store', nargs='?', default='~/.radiolabdocker', help='specified the mounting point, default: ~/.radiolabdocker.')
     cmd_create.add_argument('-s', '--start', action='store', nargs='?', default='False', help='start the container after creating, (T)rue or (F)alse, default: False.')
+    cmd_create.add_argument('-r', '--recreate', action='store', nargs='?', default='False', help='force recreate the container, (T)rue or (F)alse, default: False.')
     cmd_create.add_argument('-l', '--fs_license', action='store', nargs='?', default='', help='provide the freesurfer license')
-    cmd_create.add_argument('-r', '--recreate', action='store', nargs='?', default='False', help='force re-create the container, (T)rue or (F)alse, default: False.')
     cmd_create.add_argument('-p', '--jupyter_port', action='store', nargs='?', default='8888', help='the host port for jupyter hub, default:8888.')
     cmd_create.add_argument('--home_dir', action='store', nargs='?', default='radiolab_docker_home', help='the home of the creating container, default: radiolabdocker.')
     cmd_create.set_defaults(func = create)
@@ -85,35 +97,50 @@ def cli():
     cmd_load.set_defaults(func = load)
 
     # 'start' CMD
-    cmd_start = subparser.add_parser('start', help = 'start the container(s).')
+    cmd_start = subparser.add_parser('start', help = 'start container(s).')
     cmd_start.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
     cmd_start.set_defaults(func = Cstart)
 
     # 'stop' CMD
-    cmd_stop = subparser.add_parser('stop', help = 'stop the container(s)')
+    cmd_stop = subparser.add_parser('stop', help = 'stop container(s)')
     cmd_stop.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
     cmd_stop.set_defaults(func = Cstop)
 
     # 'pause' CMD
-    cmd_pause = subparser.add_parser('pause', help = 'pause the container(s).')
+    cmd_pause = subparser.add_parser('pause', help = 'pause container(s).')
     cmd_pause.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
     cmd_pause.set_defaults(func = Cpause)
 
     # 'unpause' CMD
-    cmd_unpause = subparser.add_parser('unpause', help = 'unpause the container(s).')
+    cmd_unpause = subparser.add_parser('unpause', help = 'unpause container(s).')
     cmd_unpause.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
     cmd_unpause.set_defaults(func = Cunpause)
 
-    # 'remove' CMD
-    cmd_remove = subparser.add_parser('remove', help = 'remove a container(s).')
-    cmd_remove.add_argument('-f', '--force_remove', action='store', nargs='?', default='False', help='force to remove, (T)rue or (F)alse, default: False.')
-    cmd_remove.add_argument('container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
-    cmd_remove.set_defaults(func = Cremove)
+    # 'rmbox' CMD
+    cmd_cremove = subparser.add_parser('rmbox', help = 'remove container(s).')
+    cmd_cremove.add_argument('-f', '--force_remove', action='store', nargs='?', default='False', help='force to remove, (T)rue or (F)alse, default: False.')
+    cmd_cremove.add_argument('-c', '--container_name', action='store', nargs='*', default='radiolab_docker', help='the name(s) of the container(s), default: radiolab_docker.')
+    cmd_cremove.set_defaults(func = Cremove)
+
+    # 'rmimg' CMD
+    cmd_iremove = subparser.add_parser('rmimg', help = 'remove an given image.')
+    cmd_iremove.add_argument('-f', '--force_remove', action='store', nargs='?', default='False', help='force to remove, (T)rue or (F)alse, default: False.')
+    cmd_iremove.add_argument('-i', '--base', action='store', nargs='?', required=True, help='the base name of the image.')
+    cmd_iremove.add_argument('-t', '--tag', action='store', nargs='?', required=True, help='the tag of the image')
+    cmd_iremove.set_defaults(func = Iremove)
 
     # 'run' CMD
-    cmd_run = subparser.add_parser('run', help = 'enter the shell to a running container')
+    cmd_run = subparser.add_parser('run', help = 'enter the shell to a running container.')
     cmd_run.add_argument('container_name', action='store', nargs='?', default='radiolab_docker', help='the name of the targeting container, default: radiolab_docker.')
     cmd_run.set_defaults(func = run)
+
+    # 'lsbox' CMD
+    cmd_lscon = subparser.add_parser('lsbox', help = 'list the statuses of the available radiolab containers.')
+    cmd_lscon.set_defaults(func = lsContainerCMD)
+
+    # 'lsimg' CMD
+    cmd_lscon = subparser.add_parser('lsimg', help = 'list the available tags of the radiolab images.')
+    cmd_lscon.set_defaults(func = lsImageCMD)
 
     args = parser.parse_args()
     if not hasattr(args, 'func'):

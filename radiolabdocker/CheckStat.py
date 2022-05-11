@@ -55,3 +55,22 @@ def checkVolumeStat(volume):
         return True
     else:
         return False
+
+def listContainerStat():
+    import docker
+    client = docker.from_env()
+    container_ls = client.containers.list(all = True)
+    container_stat = {container.name: [container.status, container.short_id, container.image.tags[0].split(':')[0], container.image.tags[0].split(':')[1]] for container in container_ls if container.image.tags[0].startswith('radiolab_') }
+    print ('{:<10}  {:<8}  {:<20}  {:<25}'.format('ID', 'STATUS', 'CONTAINER', 'IMAGE:TAG'))
+    for stat in container_stat.items():
+        container, [status, id, image, tag] = stat
+        print ("{:<10}  {:<8}  {:<20}  {:<25}".format(id, status, container, '{image}:{tag}'.format(image = image, tag = tag)))
+
+def listImageStat():
+    import docker
+    client = docker.from_env()
+    image_ls = client.images.list()
+    img_tags = { base: [ tag.split(':')[1] for img in image_ls for tag in img.tags if len(img.tags) != 0 and tag.split(':')[0] == base ] for base in [ base for base in set( tag.split(':')[0] for img in image_ls for tag in img.tags if len(img.tags) != 0 ) ] if base.startswith('radiolab_') }
+    print('{:<25}  {}'.format('IMAGE', 'TAGS'))
+    for img, tags in img_tags.items():
+        print('{:<25}  {}'.format(img, tags))
