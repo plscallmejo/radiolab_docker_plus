@@ -87,13 +87,13 @@ def cli():
 
     # 'save' CMD
     cmd_save = subparser.add_parser('save', help = 'save the images.')
-    cmd_save.add_argument('image', action='store', nargs='*', default='radiolab_docker:latest', help='specified the image(s) to be saved, default: radiolab_docker:latest.')
     cmd_save.add_argument('path', action='store', nargs='?', default='./', help='the folder path for the resulting archive(s).')
+    cmd_save.add_argument('image', action='store', nargs='*', default='radiolab_docker:latest', help='specified the image(s) to be saved, default: radiolab_docker:latest.')
     cmd_save.set_defaults(func = save)
 
     # 'load' CMD
-    cmd_load = subparser.add_parser('load', help = 'load the tag.gz archive that saved with `radiolabdocker save` or `docker save` and pipe stdout to gzip.')
-    cmd_load.add_argument('tarball', action='store', nargs='*', default='', help='the path to the tar.gz archive file.')
+    cmd_load = subparser.add_parser('load', help = 'load the tag.gz archives that saved with `radiolabdocker save` or `docker save` and pipe stdout to gzip.')
+    cmd_load.add_argument('tarball', action='store', nargs='*', default='', help='the path to the tar.gz archive files.')
     cmd_load.set_defaults(func = load)
 
     # 'start' CMD
