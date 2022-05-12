@@ -156,7 +156,7 @@ def createCMD(arguments):
                 import docker
                 docker.from_env().volumes.create(home_dir)
                 print('setting a full privilliage to the volume ... ', end = '')
-                _ = os.system('docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \'chmod 777 -R /home/radiolabuser\''.format(home_dir = home_dir))
+                _ = os.system("docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \"chmod 777 -R /home/radiolabuser\"".format(home_dir = home_dir))
                 print('done.')
             elif create_home in ['No', 'N', 'no', 'n']:
                 sys.exit('home path is not valid!')
