@@ -190,8 +190,9 @@ def loadImage(tarball: str):
     gz = gzip.open(tarball, 'rb')
     # chunk_size for 2mb by default
     chunk_size = 2
+    chunk_size = chunk_size * 1024 * 1024
     # Read the file chunk by chunk
-    for chunk in iter(lambda:gz.read(1024*1024*chunk_size), ''):
+    for chunk in iter(lambda:gz.read(chunk_size), ''):
         chunk_size = len(chunk)
         total_chunk += chunk_size
         # Timer 1
