@@ -42,8 +42,8 @@ class makeCompose:
         self.compose_dist = os.path.abspath(os.path.expanduser(compose_dist))
         # self.home = os.path.expanduser('~')
         self.home = home
-        self.hv = '' if not op.islink(home) else '#'
-        self.home_volume = home if not op.islink(home) else 'NotSupplied'
+        self.hv = '#' if os.path.exists(home) and os.path.isdir(home) else ''
+        self.home_volume = home if not (os.path.exists(home) and os.path.isdir(home)) else 'NotSupplied'
         self.group = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/group')
         self.passwd = os.path.abspath(os.path.dirname(op.dirname(op.dirname(self.compose_dist))) + '/passwd')
     #
@@ -147,8 +147,9 @@ def createCMD(arguments):
     fs_license = arguments.fs_license
     radiolabdocker_name = arguments.container_name
     radiolabdocker_img = arguments.image
+    compose_dir = '~/.radiolabdocker/.config/radiolabdocker/docker-composes'
     home_dir = op.abspath(op.expanduser(arguments.home_dir)) if op.islink(arguments.home_dir) else arguments.home_dir
-    if (not os.path.exists(home_dir) or not os.path.isdir(home_dir)) and not op.islink(home_dir):
+    if not os.path.exists(home_dir) or not os.path.isdir(home_dir):
         if not checkVolumeStat(home_dir):
             create_home = input('create a {home_dir} volume for home dir in container (network connection may be needed)? (Y)es or (N)o\n'.format(home_dir = home_dir))
             if create_home in ['Yes', 'Y', 'yes', 'y']:
@@ -157,19 +158,24 @@ def createCMD(arguments):
                 docker.from_env().volumes.create(home_dir)
                 print('setting a full privilliage to the volume ... ', end = '')
                 _ = os.system("docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \"chmod 777 -R /home/radiolabuser\"".format(home_dir = home_dir))
+                _ = os.system("docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \"ln -s /opt/bash_config/bashrc /home/radiolabuser/.bashrc\"".format(home_dir = home_dir))
                 print('done.')
             elif create_home in ['No', 'N', 'no', 'n']:
                 sys.exit('home path is not valid!')
             else:
                 sys.exit('invalid input.')
-    compose_dir = '~/.radiolabdocker/.config/radiolabdocker/docker-composes'
-    # home_bash_src = home_dir + '/.config/radiolabdocker/bash_config'
-    # bashrc_src = pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc')
-    # if not op.exists(home_bash_src):
-    #     os.makedirs(home_bash_src)
-    # if not op.exists(home_bash_src + '/bashrc'):
-    #     shutil.copy(bashrc_src, home_bash_src + '/bashrc')
-    # shutil.copy(home_bash_src + '/bashrc', home_dir + '/.bashrc')
+    elif os.path.exists(home_dir) and os.path.isdir(home_dir):
+        if not op.exists(home_dir):
+            os.makedirs(home_dir)
+        home_bash_src = home_dir + '/.bashrc'
+        if not op.exists(home_bash_src):
+            _ = os.system("docker run -it --rm -v {home_dir}:/home/radiolabuser:z alpine:latest /bin/sh -c \"ln -s /opt/bash_config/bashrc /home/radiolabuser/.bashrc\"".format(home_dir = home_dir))
+    else:
+        sys.exit('home path is not valid!')
+        # bashrc_src = pkg_resources.resource_filename('radiolabdocker', '/config/bash_config/bashrc')
+        # if not op.exists(home_bash_src + '/bashrc'):
+        #     shutil.copy(bashrc_src, home_bash_src + '/bashrc')
+        # shutil.copy(home_bash_src + '/bashrc', home_dir + '/.bashrc')
     if arguments.start in ['False', 'F']:
         start = False
     elif arguments.start in ['True', 'T']:

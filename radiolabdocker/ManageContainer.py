@@ -8,7 +8,7 @@ def startContainer(container_name):
     if not exist:
         sys.exit('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
     if status == 'created' or status == 'exited':
-        print('bringing up the container {container} ...'.format(container = container_name))
+        print('bringing up the container {container} ...'.format(container = container_name), end = '')
         client = docker.from_env()
         client.containers.get(id).start()
         print('done.')
@@ -27,7 +27,7 @@ def stopContainer(container_name):
     if not exist:
         sys.exit('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
     if status == 'running' or status == 'paused':
-        print('exiting the container {container} ...'.format(container = container_name))
+        print('exiting the container {container} ...'.format(container = container_name), end = '')
         client = docker.from_env()
         client.containers.get(id).stop()
         print('done.')
@@ -44,7 +44,7 @@ def pauseContainer(container_name):
     if not exist:
         sys.exit('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
     if status == 'running':
-        print('pausing the container {container} ...'.format(container = container_name))
+        print('pausing the container {container} ...'.format(container = container_name), end = '')
         client = docker.from_env()
         client.containers.get(id).pause()
         print('done.')
@@ -63,7 +63,7 @@ def unpauseContainer(container_name):
     if not exist:
         sys.exit('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
     if status == 'paused':
-        print('unpausing the container {container} ...'.format(container = container_name))
+        print('unpausing the container {container} ...'.format(container = container_name), end = '')
         client = docker.from_env()
         client.containers.get(id).unpause()
         print('done.')
@@ -81,7 +81,7 @@ def removeContainer(container_name, force):
     exist, (_, id) = checkContainerStat(container_name)
     if not exist:
         sys.exit('the container {container} dose not exist, please check the spell or create it.'.format(container = container_name))
-    print('removing the container {container} ...'.format(container = container_name))
+    print('removing the container {container} ... '.format(container = container_name), end = '')
     client = docker.from_env()
     client.containers.get(id).remove(force = force)
     print('done.')
