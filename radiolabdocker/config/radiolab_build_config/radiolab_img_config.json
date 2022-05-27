@@ -403,6 +403,7 @@
             "TAR_PKG",
             "ZIP_PKG",
             "/tmp/MCRv84/install -mode silent -agreeToLicense yes -destinationFolder ${FREESURFER_HOME}/MCRv84",
+            "cp -r ${FREESURFER_HOME}/MCRv84/v84/* ${FREESURFER_HOME}/MCRv84/",
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate fsl, freesurfer' >> /opt/bash_config/bashrc",
