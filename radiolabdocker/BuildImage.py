@@ -569,13 +569,13 @@ def buildCMD(arguments):
             exist, img_tags = checkImageStat("radiolab_" + base)
             tag = int(tag) if tag != 'latest' else tag
             if exist:
-                img_tags = [ t for t in img_tags if t != 'latest']
+                img_tags = [ t for t in img_tags]
                 if tag == 'latest':
                     if force_rebuild or (base == target and rebuild):
                         tag = int(datetime.datetime.now().strftime('%Y%m%d'))
                 else:
                     sys.exit("the tag {tag} for {base} is not valid, please check the build_seq.json file".format(tag = tag, base = base))
-            if not (base == target and rebuild) or (base != target and exist and (tag in img_tags) and not force_rebuild):
+            if (base == target and not rebuild) or (base != target and exist and (tag in img_tags) and not force_rebuild):
                 print('radiolab_{base}:{tag} exist, no need to build.'.format(base = base, tag = tag))
                 break
             retry = -1

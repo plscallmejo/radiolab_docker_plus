@@ -402,8 +402,9 @@
         "commands" : [
             "TAR_PKG",
             "ZIP_PKG",
-            "/tmp/MCRv84/install -mode silent -agreeToLicense yes -destinationFolder ${FREESURFER_HOME}/MCRv84",
-            "cp -r ${FREESURFER_HOME}/MCRv84/v84/* ${FREESURFER_HOME}/MCRv84/",
+            "/tmp/MCRv84/install -mode silent -agreeToLicense yes -destinationFolder ${FREESURFER_HOME}",
+            "rm -rf ${FREESURFER_HOME}/MCRv84/",
+            "mv ${FREESURFER_HOME}/v84 ${FREESURFER_HOME}/MCRv84",
             "sed -i '$isource \"/opt/freesurfer/SetUpFreeSurfer.sh\"' \"$RD_ENTRYPOINT\"",
             "echo '' >> /opt/bash_config/bashrc",
             "echo '# Activate fsl, freesurfer' >> /opt/bash_config/bashrc",
@@ -445,7 +446,7 @@
             "conda config --system --set auto_update_conda false",
             "conda config --system --set show_channel_urls true",
             "sync && conda clean -y --all && sync",
-            "ALL_PROXY=\"\" conda create -y -q --name radioconda python=3.7",
+            "ALL_PROXY=\"\" conda create -y -q --name radioconda python=3.8",
             "bash -c \"source activate radioconda",
             "ALL_PROXY=\"\" pip install pysocks\"",
             "CONDA_PKG",
@@ -476,7 +477,6 @@
         "pip" : [
             [
              "git+https://github.com/PennLINC/qsiprep.git",
-             "scikit-image==0.16.2",
              "pydicom",
              "nipype[all]",
              "graphviz",
@@ -489,7 +489,7 @@
              "dcm2bids",
              "dmri-amico",
              "dipy",
-             "vtk==8.1.2",
+             "vtk",
              "fury",
              "nilearn"]
         ],
