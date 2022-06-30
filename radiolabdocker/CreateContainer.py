@@ -15,9 +15,11 @@ class makeCompose:
         if os_type == 'Windows':
             self.uid = 1000
             self.gid = 1000
+            self.host = "*"
         else:
             self.uid = os.getuid()
             self.gid = os.getgid()
+            self.host = ""
         # check mount point
         self.mount = os.path.abspath(os.path.expanduser(mount))
         if not os.path.exists(self.mount) or not os.path.isdir(self.mount):
@@ -67,6 +69,7 @@ class makeCompose:
                 IMAGE = self.radiolabdocker_img,
                 UID = self.uid,
                 GID = self.gid,
+                HOST = self.host,
                 HOME = self.home,
                 USER = self.user,
                 JUPYTER_PORT = self.jupyter_port,

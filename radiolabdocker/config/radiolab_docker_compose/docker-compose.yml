@@ -8,6 +8,8 @@ services:
         user: {UID}:{GID}
         working_dir: /DATA
         stdin_open: true
+{HOST}        extra_hosts:
+{HOST}            - "host.docker.internal:host-gateway"
         environment:
             - HOME=/home/{USER}
             - LIBGL_ALWAYS_INDIRECT=0
