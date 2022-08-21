@@ -19,7 +19,7 @@
         "dep" : {"base" : "latest"}
     },
 
-    "c3d_dcm2niix_dsi" : {
+    "c3d-dcm2niix-dsi" : {
         "dep" : {"base" : "latest"}
     },
 
@@ -40,7 +40,7 @@
             "afni" : "latest",
             "ants" : "latest",
             "mrtrix" : "latest",
-            "c3d_dcm2niix_dsi" : "latest",
+            "c3d-dcm2niix-dsi" : "latest",
             "fsl" : "latest",
             "freesurfer" : "latest",
             "miniconda" : "latest"

@@ -457,7 +457,7 @@ class buildIMAGE:
     def buildCommand(self):
         build_args = ' '.join(str(arg) for arg in ['--build-arg {}={}'.format(var, val) for var, val in self.args.items()])
         parent_dir = op.dirname(op.dirname(op.expanduser(self.dist)))
-        docker_buildkit = 'docker build {args} --tag {tag} -f {dockerfile} {build_locate}'.format(
+        docker_buildkit = 'docker build {args} --tag {tag} -f {dockerfile} {build_locate} --network=host'.format(
                 tag = 'radiolab_tmp:{base}'.format(base = self.short_base),
                 args = '{args}'.format(args = build_args),
                 dockerfile = self.dist,

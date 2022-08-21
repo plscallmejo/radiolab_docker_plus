@@ -297,7 +297,7 @@
         ]
     },
 
-    "c3d_dcm2niix_dsi" : {
+    "c3d-dcm2niix-dsi" : {
         "img" : {
             "base" : "radiolab_base",
             "tag" : "latest"
@@ -354,12 +354,12 @@
             "ALL_PROXY" : ""
         },
         "envs" : {
-            "FSL_VERSION" : "6.0.5.1",
+            "FSL_VERSION" : "6.0.5.2",
             "PATH": "/opt/fsl/bin:$PATH"
         },
         "commands" : [
             "TAR_PKG",
-            "bash /opt/fsl/etc/fslconf/fslpython_install.sh -f /opt/fsl",
+            "bash /opt/fsl/etc/fslconf/post_install.sh -f /opt/fsl",
             "echo \"Getting neurolabusc's fsl_sub for a better parallel computing experience ...\"",
             "git clone https://github.com/neurolabusc/fsl_sub /opt/fsl_sub",
             "rm /opt/fsl/bin/fsl_sub",
@@ -395,7 +395,7 @@
             "ALL_PROXY" : ""
         },
         "envs" : {
-            "FREESURFER_VERSION" : "7.2.0",
+            "FREESURFER_VERSION" : "7.3.2",
             "FREESURFER_HOME" : "/opt/freesurfer",
             "PATH": "/opt/freesurfer/bin:$PATH"
         },
@@ -483,6 +483,7 @@
              "pydot"  ,
              "nibabel",
              "pybids",
+             "pyafq",
              "bids-validator",
              "sentry-sdk",
              "cvxpy",
@@ -595,20 +596,20 @@
             "target" : "/tmp/opt",
             "dist" : "/opt"},
             {
-            "image" : "radiolab_c3d_dcm2niix_dsi",
+            "image" : "radiolab_c3d-dcm2niix-dsi",
             "tag" : "latest",
             "target" : "/tmp/opt",
             "dist" : "/opt"},
             {
             "image" : "radiolab_fsl",
             "tag" : "latest",
-            "target" : "/tmp/opt",
-            "dist" : "/opt"},
+            "target" : "/tmp/opt/fsl",
+            "dist" : "/opt/fsl"},
             {
-            "image" : "radiolab_freesurfer",
-            "tag" : "latest",
-            "target" : "/tmp/opt",
-            "dist" : "/opt"},
+            "image" : "radiolab_docker",
+            "tag" : "20220606",
+            "target" : "/tmp/opt/freesurfer",
+            "dist" : "/opt/freesurfer"},
             {
             "image" : "radiolab_miniconda",
             "tag" : "latest",

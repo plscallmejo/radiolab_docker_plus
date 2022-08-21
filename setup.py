@@ -10,7 +10,7 @@ else:
 
 setup(
    name='radiolabdocker-plus',
-   version='v0.1.0b',
+   version='v0.1.1b',
    author='Haoming Huang',
    author_email='fsplscallmejo@live.com',
    packages=['radiolabdocker'],

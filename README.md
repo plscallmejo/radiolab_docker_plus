@@ -12,7 +12,13 @@ A fully upgraded version of radiolab_docker, the previous bash scripts for const
 * dcm2niix
 * dsistudio
 * qsiprep
-* miniconda (Radiolabconda environment with python3.7)
+* miniconda (Radiolabconda environment with python3.8)
+
+## TODOs
+
+- [ ] Host network
+- [ ] Clear build cache
+- [ ] Port host x11
 
 ## Acknowledgements
 
